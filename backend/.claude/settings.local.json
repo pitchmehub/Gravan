@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/KiazII/Desktop/pitchme_v2_completo/**)",
+      "Bash(dir \"C:\\\\Users\\\\KiazII\\\\Desktop\\\\pitchme_v2_completo\\\\pitchme_frontend\")",
+      "Bash(dir \"C:\\\\Users\\\\KiazII\\\\Desktop\\\\pitchme_v2_completo\\\\pitchme_frontend\\\\src\")",
+      "Bash(dir \"C:\\\\Users\\\\KiazII\\\\Desktop\\\\pitchme_v2_completo\\\\pitchme_frontend\\\\src\\\\pages\")",
+      "Bash(dir \"C:\\\\Users\\\\KiazII\\\\Desktop\\\\pitchme_v2_completo\\\\pitchme_frontend\\\\src\\\\components\")",
+      "Bash(dir \"C:\\\\Users\\\\KiazII\\\\Desktop\\\\pitchme_v2_completo\\\\pitchme_frontend\\\\src\\\\styles\")",
+      "Bash(node -e ' *)",
+      "Bash(sed -i 's/#EDE9FE; color: #5B21B6/rgba\\(230,57,70,.12\\); color: #E63946/g' \"C:\\\\Users\\\\KiazII\\\\Desktop\\\\pitchme_v2_completo\\\\pitchme_frontend\\\\src\\\\components\\\\ProfileMenu.css\")",
+      "Bash(sed -i 's/linear-gradient\\(135deg,#7C3AED,#5B21B6\\)/linear-gradient\\(135deg,#E63946,#8b1a23\\)/g' \"C:\\\\Users\\\\KiazII\\\\Desktop\\\\pitchme_v2_completo\\\\pitchme_frontend\\\\src\\\\components\\\\PWAInstall.jsx\")",
+      "Bash(sed -i \"s/background: '#fff', color: '#7C3AED'/background: 'rgba\\(255,255,255,.12\\)', color: '#fff'/g\" \"C:\\\\Users\\\\KiazII\\\\Desktop\\\\pitchme_v2_completo\\\\pitchme_frontend\\\\src\\\\components\\\\PWAInstall.jsx\")",
+      "Bash(sed -i 's/linear-gradient\\(135deg,#7C3AED,#EC4899\\)/linear-gradient\\(135deg,#E63946,#8b1a23\\)/g' \"C:\\\\Users\\\\KiazII\\\\Desktop\\\\pitchme_v2_completo\\\\pitchme_frontend\\\\src\\\\components\\\\PWAInstaller.jsx\")",
+      "Bash(sed -i \"s/background: '#fff', color: '#7C3AED'/background: 'rgba\\(255,255,255,.12\\)', color: '#fff'/g\" \"C:\\\\Users\\\\KiazII\\\\Desktop\\\\pitchme_v2_completo\\\\pitchme_frontend\\\\src\\\\components\\\\PWAInstaller.jsx\")"
+    ]
+  }
+}

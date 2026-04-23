@@ -1,0 +1,29 @@
+<svg width="900" height="240" viewBox="0 0 900 240" xmlns="http://www.w3.org/2000/svg">
+  <!-- Logo completo Pitch.me — mark + wordmark lado a lado -->
+  <defs>
+    <clipPath id="m">
+      <rect x="16" y="28" width="184" height="184" rx="38" ry="38"/>
+    </clipPath>
+  </defs>
+
+  <!-- MARK: quadrado arredondado com barras ascendentes -->
+  <g clip-path="url(#m)">
+    <rect x="16" y="28" width="184" height="184" fill="#E11D48"/>
+    <g fill="#FFFFFF">
+      <rect x="48"  y="134" width="22" height="46"  rx="6"/>
+      <rect x="82"  y="112" width="22" height="68"  rx="6"/>
+      <rect x="116" y="86"  width="22" height="94"  rx="6"/>
+      <rect x="150" y="60"  width="22" height="120" rx="6"/>
+    </g>
+    <circle cx="161" cy="48" r="8" fill="#FFFFFF"/>
+  </g>
+
+  <!-- WORDMARK "Pitch.me" -->
+  <g font-family="Inter, -apple-system, 'Segoe UI', system-ui, sans-serif"
+     font-weight="800"
+     font-size="108"
+     letter-spacing="-3">
+    <text x="230" y="158" fill="#0A0A0A">Pitch</text>
+    <text x="530" y="158" fill="#E11D48">.me</text>
+  </g>
+</svg>

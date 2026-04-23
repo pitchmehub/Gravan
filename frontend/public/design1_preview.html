@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitch.me - Design 1 Minimalista</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #FFFFFF;
+            color: #09090B;
+        }
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 80px;
+            border-bottom: 1px solid #E4E4E7;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 100;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #09090B;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: #E11D48;
+            color: white;
+            padding: 12px 32px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .hero {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            padding: 120px 80px;
+            align-items: center;
+        }
+        .hero h1 {
+            font-size: 72px;
+            font-weight: 900;
+            line-height: 0.95;
+            letter-spacing: -3px;
+            margin-bottom: 24px;
+        }
+        .hero p {
+            font-size: 20px;
+            color: #71717A;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        .hero-image {
+            width: 100%;
+            height: 500px;
+            background: #F4F4F5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+        .how-it-works {
+            padding: 120px 80px;
+            background: #F4F4F5;
+        }
+        .section-title {
+            font-size: 48px;
+            font-weight: 900;
+            letter-spacing: -2px;
+            margin-bottom: 60px;
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+            background: #E4E4E7;
+            border: 1px solid #E4E4E7;
+        }
+        .card {
+            background: white;
+            padding: 60px 40px;
+        }
+        .card h3 {
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 32px;
+        }
+        .card ul {
+            list-style: none;
+        }
+        .card li {
+            padding: 16px 0;
+            border-bottom: 1px solid #E4E4E7;
+            font-size: 18px;
+        }
+        .features {
+            padding: 120px 80px;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            background: #E4E4E7;
+            border: 1px solid #E4E4E7;
+        }
+        .feature-item {
+            background: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        .feature-icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+        }
+        .feature-item h4 {
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 16px;
+        }
+        .testimonial {
+            padding: 120px 80px;
+            background: #F4F4F5;
+        }
+        .testimonial blockquote {
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 1.2;
+            letter-spacing: -2px;
+            margin-bottom: 40px;
+        }
+        .testimonial cite {
+            font-size: 20px;
+            font-style: normal;
+            color: #71717A;
+        }
+        footer {
+            background: #09090B;
+            color: white;
+            padding: 120px 80px;
+            text-align: center;
+        }
+        footer h2 {
+            font-size: 96px;
+            font-weight: 900;
+            letter-spacing: -4px;
+            margin-bottom: 40px;
+        }
+        .btn-footer {
+            background: white;
+            color: #09090B;
+            padding: 20px 60px;
+            border: none;
+            font-weight: 900;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">🎵 Pitch.me</div>
+        <div class="nav-links">
+            <a href="#">Como Funciona</a>
+            <a href="#">Preços</a>
+            <button class="btn-primary">LOGIN</button>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div>
+            <h1>VENDA SUAS OBRAS MUSICAIS</h1>
+            <p>O marketplace que conecta compositores e compradores de forma simples, segura e lucrativa.</p>
+            <button class="btn-primary" style="padding: 20px 48px; font-size: 18px;">▶ COMEÇAR AGORA</button>
+        </div>
+        <div class="hero-image">
+            🎚️
+        </div>
+    </section>
+
+    <section class="how-it-works">
+        <h2 class="section-title">COMO FUNCIONA</h2>
+        <div class="cards-grid">
+            <div class="card">
+                <h3>PARA COMPOSITORES</h3>
+                <ul>
+                    <li>1. Cadastre sua obra</li>
+                    <li>2. Faça upload do MP3</li>
+                    <li>3. Defina o preço</li>
+                    <li>4. Receba pagamentos</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>PARA COMPRADORES</h3>
+                <ul>
+                    <li>1. Descubra obras</li>
+                    <li>2. Ouça previews</li>
+                    <li>3. Compre licenças</li>
+                    <li>4. Use legalmente</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <h2 class="section-title">RECURSOS</h2>
+        <div class="features-grid">
+            <div class="feature-item">
+                <div class="feature-icon">🎵</div>
+                <h4>Upload MP3</h4>
+                <p>Até 10MB por obra</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">💰</div>
+                <h4>Pagamento Fácil</h4>
+                <p>Stripe & PayPal</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🔒</div>
+                <h4>100% Seguro</h4>
+                <p>Criptografia total</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="testimonial">
+        <blockquote>"Vendi 50 obras no primeiro mês!"</blockquote>
+        <cite>— João Silva, Compositor</cite>
+    </section>
+
+    <footer>
+        <h2>COMECE AGORA</h2>
+        <button class="btn-footer">CADASTRAR GRÁTIS</button>
+    </footer>
+</body>
+</html>

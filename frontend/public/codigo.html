@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Pitch.me — Código Design 1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono&display=swap');
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    background: #FFFFFF;
+    color: #09090B;
+    line-height: 1.55;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: 100vh;
+  }
+  aside {
+    position: sticky; top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    border-right: 1px solid #E4E4E7;
+    padding: 24px 20px;
+    background: #FAFAFA;
+  }
+  aside h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  aside h1::before { content: '●'; color: #E11D48; font-size: 10px; }
+  aside p { font-size: 11px; color: #71717A; margin: 0 0 20px; letter-spacing: 0.04em; text-transform: uppercase; }
+  aside nav ol { padding-left: 22px; margin: 0; }
+  aside nav li {
+    font-size: 12px;
+    margin-bottom: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  aside nav a { color: #3F3F46; text-decoration: none; }
+  aside nav a:hover { color: #E11D48; }
+  main { padding: 40px 56px 120px; max-width: 1100px; }
+  h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em; }
+  main h1 { font-size: 32px; margin: 0 0 8px; }
+  main h2 {
+    font-size: 20px;
+    margin: 56px 0 8px;
+    padding-top: 24px;
+    border-top: 1px solid #E4E4E7;
+    font-family: 'IBM Plex Mono', monospace;
+    color: #09090B;
+  }
+  main h2 code { background: none; padding: 0; color: inherit; }
+  em { color: #71717A; font-size: 12px; display: block; margin-bottom: 16px; letter-spacing: 0.08em; text-transform: uppercase; font-style: normal; font-weight: 600; }
+  pre {
+    border: 1px solid #E4E4E7;
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    max-height: 600px;
+    overflow-y: auto;
+  }
+  code { font-family: 'IBM Plex Mono', monospace; }
+  main p code {
+    background: #F4F4F5;
+    padding: 2px 6px;
+    font-size: 12px;
+    border: 1px solid #E4E4E7;
+  }
+  hr { display: none; }
+  .header-bar {
+    position: sticky;
+    top: 0;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E4E4E7;
+    padding: 18px 56px;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-bar h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px; margin: 0;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #71717A;
+    border: none; padding: 0;
+  }
+  .download-btn {
+    background: #E11D48; color: #fff;
+    border: 1px solid #E11D48;
+    padding: 10px 18px;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    font-family: inherit;
+    transition: background .2s;
+  }
+  .download-btn:hover { background: #09090B; border-color: #09090B; }
+  @media (max-width: 900px) {
+    body { grid-template-columns: 1fr; }
+    aside { position: static; height: auto; }
+    main { padding: 24px; }
+    .header-bar { padding: 16px 24px; }
+  }
+</style>
+</head>
+<body>
+<aside>
+  <h1>PITCH.ME</h1>
+  <p>Código · Design 1</p>
+  <nav id="toc"></nav>
+</aside>
+<div>
+  <div class="header-bar">
+    <h2>Documento navegável · gerado em 2026-04-21</h2>
+    <a class="download-btn" href="/CODIGO_DESIGN1.md" download>↓ Baixar .md</a>
+  </div>
+  <main id="content">Carregando…</main>
+</div>
+<script>
+  fetch('/CODIGO_DESIGN1.md')
+    .then(r => r.text())
+    .then(md => {
+      const html = marked.parse(md);
+      document.getElementById('content').innerHTML = html;
+      // Build TOC
+      const tocEl = document.getElementById('toc');
+      const headers = document.querySelectorAll('#content h2');
+      const ol = document.createElement('ol');
+      headers.forEach(h => {
+        const id = h.textContent.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+        h.id = id;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + id;
+        a.textContent = h.textContent.replace(/^\d+\.\s*/, '');
+        li.appendChild(a);
+        ol.appendChild(li);
+      });
+      tocEl.appendChild(ol);
+      hljs.highlightAll();
+    })
+    .catch(e => { document.getElementById('content').innerText = 'Erro ao carregar: ' + e.message; });
+</script>
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitch.me - Design 2 Cinematográfico</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background: #0A0A0A;
+            color: #FAFAFA;
+        }
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 32px 80px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            margin: 24px 80px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #FAFAFA;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: #D4AF37;
+            color: #0A0A0A;
+            padding: 14px 36px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .hero {
+            position: relative;
+            height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                        url('https://images.pexels.com/photos/29467857/pexels-photo-29467857.jpeg?auto=compress&cs=tinysrgb&w=1920');
+            background-size: cover;
+            background-position: center;
+        }
+        .hero-content {
+            max-width: 900px;
+            padding: 0 40px;
+        }
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 80px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 32px;
+            font-style: italic;
+        }
+        .hero p {
+            font-size: 24px;
+            color: #A1A1AA;
+            margin-bottom: 48px;
+            line-height: 1.6;
+        }
+        .btn-hero {
+            background: #D4AF37;
+            color: #0A0A0A;
+            padding: 20px 60px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
+        }
+        .how-it-works {
+            padding: 160px 80px;
+        }
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 64px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            padding: 60px 40px;
+        }
+        .glass-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            font-weight: 900;
+            margin-bottom: 32px;
+            color: #D4AF37;
+        }
+        .glass-card ul {
+            list-style: none;
+        }
+        .glass-card li {
+            padding: 20px 0;
+            font-size: 18px;
+            color: #A1A1AA;
+            display: flex;
+            align-items: center;
+        }
+        .glass-card li:before {
+            content: '✦';
+            color: #D4AF37;
+            margin-right: 16px;
+            font-size: 20px;
+        }
+        .features {
+            padding: 160px 80px;
+            background: #141414;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .feature-item {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 48px 32px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        .feature-item:hover {
+            transform: translateY(-8px);
+        }
+        .feature-icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+        }
+        .feature-item h4 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .testimonial {
+            padding: 160px 80px;
+            text-align: center;
+        }
+        .testimonial blockquote {
+            font-family: 'Playfair Display', serif;
+            font-size: 56px;
+            font-weight: 700;
+            line-height: 1.3;
+            max-width: 1000px;
+            margin: 0 auto 40px;
+            font-style: italic;
+        }
+        .testimonial cite {
+            font-size: 20px;
+            font-style: normal;
+            color: #A1A1AA;
+        }
+        footer {
+            background: #141414;
+            padding: 160px 80px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        footer h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 120px;
+            font-weight: 900;
+            margin-bottom: 60px;
+            background: linear-gradient(135deg, #D4AF37, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-footer {
+            background: rgba(255, 255, 255, 0.05);
+            color: #FAFAFA;
+            border: 2px solid #D4AF37;
+            padding: 24px 80px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">🎵 Pitch.me</div>
+        <div class="nav-links">
+            <a href="#">Descobrir</a>
+            <a href="#">Vender</a>
+            <button class="btn-primary">ENTRAR</button>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>A Sua Obra Merece Ser Ouvida</h1>
+            <p>Marketplace premium para compositores de excelência</p>
+            <button class="btn-hero">⚡ COMEÇAR JORNADA</button>
+        </div>
+    </section>
+
+    <section class="how-it-works">
+        <h2 class="section-title">Como Funciona</h2>
+        <div class="cards-grid">
+            <div class="glass-card">
+                <h3>Para Compositores</h3>
+                <ul>
+                    <li>Upload de obras em alta qualidade</li>
+                    <li>Receba pagamentos instantâneos</li>
+                    <li>Sistema de coautoria inteligente</li>
+                    <li>Dashboard com analytics</li>
+                </ul>
+            </div>
+            <div class="glass-card">
+                <h3>Para Compradores</h3>
+                <ul>
+                    <li>Descubra obras exclusivas</li>
+                    <li>Licenças claras e transparentes</li>
+                    <li>Pagamento seguro e rápido</li>
+                    <li>Suporte dedicado</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <h2 class="section-title">Recursos Exclusivos</h2>
+        <div class="features-grid">
+            <div class="feature-item">
+                <div class="feature-icon">🎵</div>
+                <h4>Alta Qualidade</h4>
+                <p style="color: #71717A;">Upload MP3 até 10MB</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">💎</div>
+                <h4>Segurança Total</h4>
+                <p style="color: #71717A;">Criptografia de ponta</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">⚡</div>
+                <h4>Pagamento Rápido</h4>
+                <p style="color: #71717A;">Stripe & PayPal</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="testimonial">
+        <blockquote>"Esta plataforma mudou minha carreira"</blockquote>
+        <cite>— Maria Santos, Compositora</cite>
+    </section>
+
+    <footer>
+        <h2>PITCH.ME</h2>
+        <button class="btn-footer">CADASTRAR AGORA</button>
+    </footer>
+</body>
+</html>

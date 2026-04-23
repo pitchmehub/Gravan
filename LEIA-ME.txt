@@ -1,0 +1,105 @@
+═══════════════════════════════════════════════════════════════
+  PITCH.ME — Sistema de Notificações (pacote de instalação)
+═══════════════════════════════════════════════════════════════
+
+Como instalar (siga na ordem):
+
+1) BANCO DE DADOS (Supabase)
+   - Abra o Supabase → SQL Editor
+   - Cole o conteúdo de:  sql/01_criar_tabela_notificacoes.sql
+   - Execute (Run)
+
+2) BACKEND (substituir / adicionar arquivos)
+   Copie estes arquivos para dentro do seu projeto:
+
+   pitchme/backend/app.py
+       → SUBSTITUI o app.py existente
+
+   pitchme/backend/services/notificacoes.py
+       → ARQUIVO NOVO
+
+   pitchme/backend/routes/notificacoes.py
+       → ARQUIVO NOVO
+
+3) FRONTEND (adicionar componentes)
+   Copie estes arquivos:
+
+   pitchme/frontend/src/components/NotificationBell.jsx   (NOVO)
+   pitchme/frontend/src/components/NotificationBell.css   (NOVO)
+
+4) COLOCAR O SINO NO TOPO DA TELA
+   Abra o componente que renderiza o cabeçalho da aplicação
+   (geralmente frontend/src/App.jsx ou um Header/Navbar) e:
+
+   a) No topo do arquivo, adicione:
+      import NotificationBell from './components/NotificationBell'
+      (ajuste o caminho relativo conforme onde o arquivo estiver)
+
+   b) Dentro do <header>, no canto direito (perto do avatar /
+      botão de logout), adicione:
+      <NotificationBell />
+
+5) DISPARAR AS NOTIFICAÇÕES NOS EVENTOS
+   Em cada arquivo abaixo, importe o helper:
+       from services.notificacoes import notify
+
+   E chame `notify(...)` nos pontos certos. Exemplos:
+
+   ── services/obras.py (no fim de criar_obra) ──
+   notify(titular_id, tipo="obra_cadastrada",
+          titulo="Obra cadastrada com sucesso",
+          mensagem=f"A obra '{nome_obra}' foi publicada.",
+          link="/minhas-obras",
+          payload={"obra_id": obra_id})
+
+   ── services/contrato_publisher.py (após criar contrato) ──
+   notify(autor_id, tipo="contrato_gerado",
+          titulo="Novo contrato de edição",
+          mensagem="Um contrato foi gerado para sua assinatura.",
+          link="/meus-contratos",
+          payload={"obra_id": obra_id})
+
+   ── ao marcar contrato como assinado ──
+   notify(titular_id, tipo="contrato_assinado",
+          titulo="Contrato assinado",
+          mensagem=f"O contrato da obra '{nome_obra}' foi assinado.",
+          link="/meus-contratos",
+          payload={"contrato_id": contrato_id})
+
+   ── services/finance.py (após confirmar licenciamento) ──
+   notify(titular_id, tipo="licenciamento",
+          titulo="Sua composição foi licenciada!",
+          mensagem=f"'{nome_obra}' foi licenciada por R$ {valor_cents/100:.2f}.",
+          link="/dashboard",
+          payload={"obra_id": obra_id, "valor_cents": valor_cents})
+
+   ── routes/catalogo.py (rota de envio de oferta) ──
+   notify(titular_id, tipo="oferta",
+          titulo="Nova oferta recebida",
+          mensagem=f"{interprete_nome} fez uma oferta na obra '{nome_obra}'.",
+          link="/ofertas",
+          payload={"obra_id": obra_id})
+
+   ── routes/dossie.py (após gerar PDF) ──
+   notify(titular_id, tipo="dossie_download",
+          titulo="Dossiê baixado",
+          mensagem=f"O dossiê da obra '{nome_obra}' foi baixado.",
+          link="/minhas-obras",
+          payload={"obra_id": obra_id})
+
+6) REINICIAR
+   - Backend:  Ctrl+C  →  python run.py
+   - Frontend: Ctrl+C  →  npm run start
+   - Recarregue o navegador (Ctrl + F5)
+
+7) TESTAR
+   - Cadastre uma obra. O sino 🔔 no topo direito deve mostrar
+     uma bolinha vermelha. Clique para ver e abrir.
+
+═══════════════════════════════════════════════════════════════
+Observação:
+- Se o seu lib/api.js não tem o método `patch`, adicione um
+  igual ao `post` (mas usando method 'PATCH').
+- O componente faz polling a cada 30s. Mais tarde dá pra ligar
+  no Realtime do Supabase pra atualizar instantaneamente.
+═══════════════════════════════════════════════════════════════

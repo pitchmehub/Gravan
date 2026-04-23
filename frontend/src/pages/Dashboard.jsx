@@ -1,0 +1,375 @@
+import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { usePlayer } from '../contexts/PlayerContext'
+import { api } from '../lib/api'
+
+function fmt(cents) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents ?? 0) / 100)
+}
+
+/* ── Configuração dos níveis ─────────────────────────────── */
+const NIVEL_INFO = {
+  ouro: {
+    label: '🥇 Ouro',
+    bg: 'linear-gradient(135deg, #b8860b 0%, #f5c842 100%)',
+    glow: 'rgba(245,200,66,.25)',
+    texto: 'Licenciamento de R$ 500 a R$ 3.000',
+    proximoNivel: 'Venda 6 obras para desbloquear o nível Diamante (licenciamento até R$ 10.000).',
+  },
+  diamante: {
+    label: '💎 Diamante',
+    bg: 'linear-gradient(135deg, #BE123C 0%, #09090B 100%)',
+    glow: 'rgba(225,29,72,.25)',
+    texto: 'Licenciamento de R$ 500 a R$ 10.000',
+    proximoNivel: 'Você está no nível máximo! Continue publicando composições de alta qualidade.',
+  },
+}
+
+/* ── Status das obras ────────────────────────────────────── */
+const STATUS_STYLE = {
+  publicada: { bg: 'rgba(34,197,94,.12)',  cor: '#22c55e', label: '✓ Publicada' },
+  rascunho:  { bg: 'rgba(245,158,11,.12)', cor: '#f59e0b', label: 'Rascunho'   },
+  arquivada: { bg: 'rgba(255,255,255,.06)', cor: 'rgba(255,255,255,.4)', label: 'Arquivada' },
+}
+
+/* ── Componente StatCard ─────────────────────────────────── */
+function StatCard({ label, value, sub, accent = false }) {
+  return (
+    <div style={{
+      padding: '18px 20px',
+      background: accent ? 'rgba(225,29,72,.18)' : 'var(--surface)',
+      border: `1px solid ${accent ? 'rgba(225,29,72,.4)' : 'var(--border)'}`,
+      borderRadius: 14,
+    }}>
+      <div style={{
+        fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
+        textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8,
+      }}>
+        {label}
+      </div>
+      <div style={{
+        fontSize: 28, fontWeight: 900, color: accent ? 'var(--brand)' : 'var(--text-primary)',
+        lineHeight: 1, marginBottom: 6, letterSpacing: '-1px',
+      }}>
+        {value}
+      </div>
+      {sub && (
+        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{sub}</div>
+      )}
+    </div>
+  )
+}
+
+export default function Dashboard() {
+  const { perfil } = useAuth()
+  const navigate   = useNavigate()
+  const { playObra } = usePlayer()
+  const [data,       setData]       = useState(null)
+  const [loading,    setLoading]    = useState(true)
+  const [error,      setError]      = useState(null)
+  const [lastUpdate, setLastUpdate] = useState(Date.now())
+
+  async function load(silent = false) {
+    if (!silent) { setLoading(true); setError(null) }
+    try {
+      const d = await api.get('/perfis/me/dashboard')
+      setData(d)
+      setLastUpdate(Date.now())
+      setError(null)
+    } catch (e) {
+      console.error('Erro dashboard:', e)
+      setError(e?.message || 'Erro ao carregar dashboard')
+    } finally { setLoading(false) }
+  }
+
+  useEffect(() => {
+    load()
+    const interval = setInterval(() => load(true), 10_000)
+    return () => clearInterval(interval)
+  }, [])
+
+  if (error && !data) {
+    return (
+      <div style={{ padding: 40, maxWidth: 560 }}>
+        <div style={{
+          padding: 24, border: '1px solid var(--border)', background: 'var(--surface)',
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--error)', letterSpacing: '0.12em', marginBottom: 8, textTransform: 'uppercase' }}>
+            Erro ao carregar
+          </div>
+          <h2 style={{ fontSize: 20, marginBottom: 8, fontFamily: "'Space Grotesk', sans-serif" }}>
+            Não conseguimos carregar sua dashboard
+          </h2>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 16 }}>
+            {error}
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => load()} className="btn btn-primary" data-testid="dashboard-retry">
+              Tentar novamente
+            </button>
+            <button onClick={() => navigate('/perfil/completar')} className="btn btn-ghost">
+              Completar cadastro
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (loading || !data) {
+    return (
+      <div style={{ padding: 40 }}>
+        <div style={{
+          display: 'flex', gap: 12, flexDirection: 'column',
+        }}>
+          {[1,2,3].map(i => (
+            <div key={i} style={{
+              height: 60, borderRadius: 0,
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
+              animation: 'pulse 1.4s ease-in-out infinite',
+              opacity: .8,
+            }} />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const nivelInfo = NIVEL_INFO[data.nivel] ?? NIVEL_INFO.ouro
+  const segundosDesde = Math.floor((Date.now() - lastUpdate) / 1000)
+
+  return (
+    <div style={{ padding: 32, maxWidth: 1100, minHeight: '100vh' }}>
+
+      {/* ── Header ───────────────────────────── */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between',
+        alignItems: 'flex-start', marginBottom: 24,
+        flexWrap: 'wrap', gap: 12,
+      }}>
+        <div>
+          <h1 style={{
+            fontSize: 28, fontWeight: 900, color: 'var(--text-primary)',
+            letterSpacing: '-1px', marginBottom: 4,
+          }}>
+            Dashboard
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+            Olá, <strong style={{ color: 'var(--text-secondary)' }}>
+              {perfil?.nome_artistico || perfil?.nome}
+            </strong>
+            {' · '}atualizado {segundosDesde < 5 ? 'agora mesmo' : `há ${segundosDesde}s`}
+            <button
+              onClick={() => load()}
+              style={{
+                background: 'none', border: 'none',
+                color: 'var(--brand)', cursor: 'pointer',
+                marginLeft: 8, fontSize: 12, fontFamily: 'inherit',
+              }}>
+              ↻ atualizar
+            </button>
+          </p>
+        </div>
+        <button className="btn btn-primary" onClick={() => navigate('/obras/nova')}>
+          + Nova obra
+        </button>
+      </div>
+
+      {/* ── Card de nível ──────────────────── */}
+      <div style={{
+        padding: '22px 24px', marginBottom: 24,
+        background: nivelInfo.bg, color: '#fff',
+        borderRadius: 16,
+        boxShadow: `0 8px 40px ${nivelInfo.glow}`,
+        position: 'relative', overflow: 'hidden',
+      }}>
+        {/* Ruído de fundo */}
+        <div style={{
+          position: 'absolute', inset: 0, opacity: .04,
+          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', position: 'relative' }}>
+          <div style={{ fontSize: 36 }}>{nivelInfo.label.split(' ')[0]}</div>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, opacity: .7, textTransform: 'uppercase', letterSpacing: '.1em' }}>
+              Seu nível de compositor
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 900, marginTop: 2, letterSpacing: '-.5px' }}>
+              {nivelInfo.label.split(' ').slice(1).join(' ')}
+            </div>
+            <div style={{ fontSize: 13, opacity: .85, marginTop: 4 }}>{nivelInfo.texto}</div>
+          </div>
+          <div style={{
+            padding: '8px 16px',
+            background: 'rgba(0,0,0,.25)',
+            borderRadius: 99, fontSize: 13, fontWeight: 600,
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(9,9,11,.1)',
+          }}>
+            {data.total_vendas} venda{data.total_vendas !== 1 ? 's' : ''} confirmada{data.total_vendas !== 1 ? 's' : ''}
+          </div>
+        </div>
+
+        <div style={{
+          marginTop: 14, fontSize: 13, padding: '10px 14px',
+          background: 'rgba(0,0,0,.2)', borderRadius: 10,
+          backdropFilter: 'blur(8px)', position: 'relative',
+        }}>
+          💡 {nivelInfo.proximoNivel}
+        </div>
+      </div>
+
+      {/* ── Stats grid ─────────────────────── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+        gap: 14, marginBottom: 28,
+      }}>
+        <StatCard
+          label="Obras publicadas"
+          value={data.obras_publicadas}
+          sub={`de ${data.total_obras} cadastradas`}
+        />
+        <StatCard
+          label="Vendas confirmadas"
+          value={data.total_vendas}
+        />
+        <StatCard
+          label="Saldo disponível"
+          value={fmt(data.saldo_atual_cents)}
+          sub="Pronto para saque"
+          accent
+        />
+        <StatCard
+          label="Receita total"
+          value={fmt(data.receita_total_cents)}
+          sub={`Já sacado: ${fmt(data.total_sacado_cents)}`}
+        />
+      </div>
+
+      {/* ── Listagem de obras ───────────────── */}
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        {/* Header da listagem */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '18px 22px',
+          borderBottom: '1px solid var(--border)',
+        }}>
+          <h2 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>
+            Minhas obras ({data.obras.length})
+          </h2>
+          <button
+            onClick={() => navigate('/obras')}
+            style={{
+              background: 'none', border: 'none',
+              color: 'var(--brand)', fontSize: 13,
+              cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit',
+            }}>
+            Ver todas →
+          </button>
+        </div>
+
+        {/* Lista */}
+        {data.obras.length === 0 ? (
+          <div style={{ padding: '56px 32px', textAlign: 'center' }}>
+            <div style={{ fontSize: 48, opacity: .15, marginBottom: 12 }}>♪</div>
+            <p style={{ color: 'var(--text-muted)', marginBottom: 18, fontSize: 15 }}>
+              Você ainda não cadastrou nenhuma obra.
+            </p>
+            <button className="btn btn-primary" onClick={() => navigate('/obras/nova')}>
+              Cadastrar primeira obra
+            </button>
+          </div>
+        ) : (
+          <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {data.obras.slice(0, 8).map(obra => {
+              const st = STATUS_STYLE[obra.status] ?? STATUS_STYLE.rascunho
+              return (
+                <div key={obra.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  padding: '12px 10px',
+                  background: 'var(--surface-2)',
+                  borderRadius: 10,
+                  border: '1px solid transparent',
+                  transition: 'border-color .15s',
+                  cursor: 'default',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-2)'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}
+                >
+                  {/* Botão play */}
+                  {obra.audio_path && (
+                    <button
+                      onClick={() => playObra({
+                        id: obra.id,
+                        nome: obra.nome,
+                        audio_path: obra.audio_path,
+                        titular_nome: perfil?.nome,
+                      })}
+                      style={{
+                        width: 38, height: 38, borderRadius: 9,
+                        background: 'linear-gradient(135deg, #BE123C, #09090B)',
+                        color: '#fff', border: 'none', cursor: 'pointer',
+                        fontSize: 12, flexShrink: 0, fontFamily: 'inherit',
+                        boxShadow: '0 2px 12px rgba(225,29,72,.35)',
+                        transition: 'transform .1s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
+                      onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                    >▶</button>
+                  )}
+
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
+                      {obra.nome}
+                      {!obra.sou_titular && (
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8, fontWeight: 400 }}>
+                          (coautor)
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                      {obra.genero || 'Sem gênero'} · {fmt(obra.preco_cents)}
+                      {' · '}cadastrada em {new Date(obra.created_at).toLocaleDateString('pt-BR')}
+                    </div>
+                  </div>
+
+                  {/* Status badge */}
+                  <span style={{
+                    fontSize: 11, fontWeight: 700,
+                    padding: '4px 10px', borderRadius: 99,
+                    background: st.bg, color: st.cor,
+                    whiteSpace: 'nowrap', flexShrink: 0,
+                  }}>
+                    {st.label}
+                  </span>
+                </div>
+              )
+            })}
+
+            {data.obras.length > 8 && (
+              <button
+                onClick={() => navigate('/obras')}
+                style={{
+                  margin: '4px 0 8px', padding: 12,
+                  background: 'transparent',
+                  border: '1px dashed var(--border-2)',
+                  borderRadius: 10,
+                  color: 'var(--brand)', fontSize: 13,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'border-color .15s, background .15s',
+                }}>
+                Ver todas as {data.obras.length} obras
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

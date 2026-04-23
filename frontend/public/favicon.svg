@@ -1,0 +1,27 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Pitch.me mark — ondas de pitch ascendente (equalizador musical)
+       Símbolo: 4 barras verticais crescentes dentro de um quadrado arredondado.
+       Metáfora: "pitch" (tom musical) + volume/frequência subindo.
+       Cor primária: #E11D48 (Rose 600) -->
+  <defs>
+    <clipPath id="rounded">
+      <rect x="0" y="0" width="512" height="512" rx="104" ry="104"/>
+    </clipPath>
+  </defs>
+
+  <!-- Fundo quadrado arredondado -->
+  <g clip-path="url(#rounded)">
+    <rect width="512" height="512" fill="#E11D48"/>
+
+    <!-- 4 barras ascendentes (pitch subindo) -->
+    <g fill="#FFFFFF">
+      <rect x="104"  y="296" width="56" height="112" rx="14"/>
+      <rect x="184"  y="240" width="56" height="168" rx="14"/>
+      <rect x="264"  y="176" width="56" height="232" rx="14"/>
+      <rect x="344"  y="112" width="56" height="296" rx="14"/>
+    </g>
+
+    <!-- Ponto distintivo no topo da barra mais alta: representa o "." de .me -->
+    <circle cx="372" cy="80" r="18" fill="#FFFFFF"/>
+  </g>
+</svg>

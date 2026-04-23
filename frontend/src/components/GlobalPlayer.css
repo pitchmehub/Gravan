@@ -1,0 +1,231 @@
+/* ============================================================
+   GlobalPlayer — Design 1 (branco + preto + red REC accent)
+   ============================================================ */
+
+@keyframes gpSlideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes gpFadeIn {
+  from { opacity: 0; transform: scale(.9) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)  translateY(0); }
+}
+@keyframes gp-spin { to { transform: rotate(360deg); } }
+
+/* ── PLAYER COMPLETO ─────────────────────── */
+.gp-root {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 500;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 20px rgba(9,9,11,.06);
+  animation: gpSlideUp .22s ease;
+}
+
+.gp-top-bar {
+  height: 3px;
+  background: var(--surface-2);
+  cursor: pointer;
+  position: relative;
+  transition: height .15s;
+}
+.gp-top-bar:hover { height: 5px; }
+.gp-top-bar-fill {
+  height: 100%;
+  background: var(--brand);
+  transition: width .1s linear;
+  pointer-events: none;
+}
+
+.gp-body {
+  display: flex;
+  align-items: center;
+  padding: 10px 24px;
+  gap: 20px;
+  height: 68px;
+}
+
+/* Info */
+.gp-track-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 260px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+.gp-cover {
+  width: 42px; height: 42px;
+  border-radius: 0;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.gp-meta { min-width: 0; }
+.gp-nome {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gp-autor {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Controles */
+.gp-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  justify-content: center;
+}
+.gp-play-btn {
+  width: 44px; height: 44px;
+  border-radius: 0;
+  background: var(--brand);
+  color: #fff;
+  border: 1px solid var(--brand);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.gp-play-btn:hover  { background: var(--ink); border-color: var(--ink); }
+.gp-play-btn:active { transform: scale(.95); }
+
+.gp-icon-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 6px;
+  border-radius: 0;
+  transition: color .15s, background .15s;
+  flex-shrink: 0;
+}
+.gp-icon-btn:hover    { color: var(--text-primary); background: var(--surface-2); }
+.gp-icon-btn:disabled { opacity: .25; cursor: default; }
+.gp-close-btn:hover   { color: var(--error); }
+
+/* Área direita */
+.gp-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 260px;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+.gp-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.gp-queue-info { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+/* Volume */
+.gp-volume { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
+.gp-vol-slider {
+  width: 70px; height: 3px;
+  appearance: none;
+  background: var(--surface-2);
+  border-radius: 0;
+  outline: none;
+  cursor: pointer;
+}
+.gp-vol-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px; height: 12px;
+  border-radius: 0;
+  background: var(--brand);
+  cursor: pointer;
+}
+.gp-vol-slider::-moz-range-thumb {
+  width: 12px; height: 12px;
+  border-radius: 0;
+  background: var(--brand);
+  border: none;
+  cursor: pointer;
+}
+
+/* ── MINIMIZADO ──────────────────────────── */
+.gp-mini {
+  position: fixed;
+  bottom: 16px; right: 16px;
+  z-index: 500;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(9,9,11,.08);
+  min-width: 220px;
+  max-width: 300px;
+  transition: all .2s;
+  animation: gpFadeIn .2s ease;
+  overflow: hidden;
+}
+.gp-mini:hover {
+  box-shadow: 0 12px 40px rgba(9,9,11,.12);
+  border-color: var(--ink);
+}
+
+.gp-mini-cover {
+  width: 36px; height: 36px;
+  border-radius: 0;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.gp-mini-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.gp-mini-nome  {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gp-mini-autor { font-size: 10px; color: var(--text-muted); }
+
+.gp-mini-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.gp-mini-bar-fill {
+  height: 100%;
+  background: var(--brand);
+  transition: width .1s linear;
+}
+
+.main-content.player-open { padding-bottom: calc(68px + 4px + 40px); }
+
+/* ── RESPONSIVO ──────────────────────────── */
+@media (max-width: 767px) {
+  .gp-body    { padding: 8px 12px; height: 56px; gap: 10px; }
+  .gp-track-info { width: auto; flex: 1; min-width: 0; }
+  .gp-cover   { width: 36px; height: 36px; font-size: 14px; }
+  .gp-nome    { font-size: 12px; }
+  .gp-autor   { font-size: 10px; }
+  .gp-controls { gap: 8px; flex: 0 0 auto; }
+  .gp-play-btn { width: 38px; height: 38px; }
+  .gp-right   { width: auto; gap: 6px; }
+  .gp-volume  { display: none; }
+  .gp-time    { display: none; }
+  .gp-queue-info { display: none; }
+}

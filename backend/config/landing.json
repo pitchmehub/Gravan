@@ -1,0 +1,160 @@
+{
+  "brand": {
+    "eyebrow": "MARKETPLACE DE OBRAS MUSICAIS",
+    "logoText": "Pitch.me"
+  },
+  "nav": {
+    "ctaDeslogado": "Entrar",
+    "ctaLogado": "Dashboard →",
+    "link1": "Como Funciona",
+    "link2": "Recursos",
+    "link3": "Preços"
+  },
+  "hero": {
+    "ctaPrimary": "▶ Começar Agora",
+    "ctaSecondary": "Saiba mais →",
+    "imageLabel": "EM GRAVAÇÃO · 04:37",
+    "imageUrl": "https://images.pexels.com/photos/32725048/pexels-photo-32725048.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=900",
+    "subtitle": "O marketplace que conecta compositores e compradores com transparência, segurança e pagamento instantâneo.",
+    "titleLine1": "Venda suas",
+    "titleLine2": "obras musicais",
+    "titleLine3": "como nunca antes."
+  },
+  "stats": {
+    "fallbackCompositores": "",
+    "fallbackObras": "",
+    "fallbackPago": "",
+    "labelCompositores": "",
+    "labelObras": "",
+    "labelPago": "",
+    "showRealNumbers": false
+  },
+  "comoFunciona": {
+    "compositoresLabel": "PARA COMPOSITORES",
+    "compositoresSteps": [
+      {
+        "text": "Crie sua conta, configure seu perfil e dados bancários.",
+        "title": "Cadastre-se em 2 minutos"
+      },
+      {
+        "text": "Arquivos até 10MB. Metadados, coautoria e licenças claras.",
+        "title": "Faça upload do seu MP3"
+      },
+      {
+        "text": "Split automático, relatórios e pagamentos via Stripe/PayPal.",
+        "title": "Receba a cada venda"
+      }
+    ],
+    "compositoresTitle": "Transforme sua arte em receita recorrente.",
+    "compradoresLabel": "PARA COMPRADORES",
+    "compradoresSteps": [
+      {
+        "text": "Busque por gênero, BPM, humor e tipo de licença.",
+        "title": "Explore o catálogo"
+      },
+      {
+        "text": "Checkout criptografado e contrato gerado automaticamente.",
+        "title": "Compre com segurança"
+      },
+      {
+        "text": "Download instantâneo e licença rastreável.",
+        "title": "Use onde precisar"
+      }
+    ],
+    "compradoresTitle": "Descubra obras exclusivas e licencie sem fricção.",
+    "sectionLead": "Dois fluxos simples. Uma plataforma construída para todos os lados do palco.",
+    "sectionTitle": "Como Funciona"
+  },
+  "recursos": {
+    "items": [
+      {
+        "label": "01 / UPLOAD",
+        "text": "Upload rápido, validação de metadata e preview instantâneo no player.",
+        "title": "MP3 até 10MB"
+      },
+      {
+        "label": "02 / PAGAMENTOS",
+        "text": "Checkout em BRL e USD. Repasse automático e relatórios fiscais.",
+        "title": "Stripe & PayPal"
+      },
+      {
+        "label": "03 / SEGURANÇA",
+        "text": "CPF/RG criptografados, RLS no banco e logs de auditoria em tempo real.",
+        "title": "Criptografia de ponta"
+      },
+      {
+        "label": "04 / COAUTORIA",
+        "text": "Divida receitas com coautores direto no cadastro da obra.",
+        "title": "Split automático"
+      },
+      {
+        "label": "05 / ANALYTICS",
+        "text": "Vendas, plays, origem do tráfego e performance por obra.",
+        "title": "Dashboard completo"
+      },
+      {
+        "label": "06 / SUPORTE",
+        "text": "Equipe dedicada e base de conhecimento aberta 24/7.",
+        "title": "Humano, quando precisa"
+      }
+    ],
+    "title": "Recursos construídos para escalar."
+  },
+  "manifesto": {
+    "authorCaption": "Marketplace independente de composições musicais",
+    "authorName": "Pitch.me",
+    "line1": "Feito por quem respeita a obra.",
+    "line2": "Pago por quem respeita o autor."
+  },
+  "precos": {
+    "basico": {
+      "cta": "Comece Grátis",
+      "features": [
+        "Acessar todo o catálogo de músicas",
+        "Enviar suas composições",
+        "Licenciar músicas",
+        "Favoritar e salvar ideias",
+        "Mas:",
+        "Fee padrão de 20% por negociação",
+        "Sem destaque no catálogo",
+        "Sem acesso a dados de performance",
+        "Sem exclusividade nas músicas"
+      ],
+      "label": "STARTER",
+      "price": "Comece Agora"
+    },
+    "lead": "",
+    "pro": {
+      "cta": "Assinar PRO",
+      "features": [
+        "Tudo do Starter +",
+        "💰 Mais lucro em cada negócio",
+        "Fee reduzido de 20% → 15%",
+        "Ganhe mais em cada negociação",
+        "Negocie oportunidades mais valiosas",
+        "📊 Analytics completo",
+        "Veja quem ouviu suas músicas",
+        "Tome decisões com base em dados",
+        "❤️ Controle de repertório",
+        "Salve músicas",
+        "Crie listas e organize ideias"
+      ],
+      "label": "PRO",
+      "price": "Jogue pra ganhar",
+      "priceUnit": "R$29,90 / mês",
+      "ribbon": ""
+    },
+    "title": "Preço honesto. Sem pegadinhas."
+  },
+  "footer": {
+    "colContactTitle": "Contato",
+    "colLegalTitle": "Legal",
+    "colPlatformTitle": "Plataforma",
+    "copyright": "© 2025 Pitch.me — Todos os direitos reservados.",
+    "ctaButton": "▶ Criar conta grátis",
+    "ctaTitle": "Comece agora.",
+    "email": "contato@pitchme.com",
+    "tagline": "Feito com precisão para compositores.",
+    "wordmark": "PITCH.ME"
+  }
+}

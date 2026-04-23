@@ -1,0 +1,16 @@
+flask==3.1.0
+flask-cors==5.0.0
+flask-limiter==3.10.1
+flask-wtf==1.2.2
+supabase==2.10.0
+python-magic==0.4.27
+bleach==6.2.0
+python-dotenv==1.0.1
+gunicorn==23.0.0
+stripe==13.0.0
+cryptography==44.0.0
+pyjwt==2.10.1
+redis==5.2.1
+paypalrestsdk==1.13.3
+waitress==3.0.2
+reportlab==4.4.10

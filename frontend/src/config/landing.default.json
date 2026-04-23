@@ -1,0 +1,96 @@
+{
+  "brand": {
+    "logoText": "Pitch.me",
+    "eyebrow": "MARKETPLACE DE OBRAS MUSICAIS"
+  },
+  "nav": {
+    "link1": "Como Funciona",
+    "link2": "Recursos",
+    "link3": "Preços",
+    "ctaLogado": "Dashboard →",
+    "ctaDeslogado": "Entrar"
+  },
+  "hero": {
+    "titleLine1": "Venda suas",
+    "titleLine2": "obras musicais",
+    "titleLine3": "como nunca antes.",
+    "subtitle": "O marketplace que conecta compositores e compradores com transparência, segurança e pagamento instantâneo.",
+    "ctaPrimary": "▶ Começar Agora",
+    "ctaSecondary": "Saiba mais →",
+    "imageUrl": "https://images.pexels.com/photos/32725048/pexels-photo-32725048.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=900",
+    "imageLabel": "EM GRAVAÇÃO · 04:37"
+  },
+  "stats": {
+    "showRealNumbers": true,
+    "fallbackCompositores": "500+",
+    "fallbackObras": "12k+",
+    "fallbackPago": "R$ 2M+",
+    "labelCompositores": "Compositores",
+    "labelObras": "Obras publicadas",
+    "labelPago": "Pagos a compositores"
+  },
+  "comoFunciona": {
+    "sectionTitle": "Como Funciona",
+    "sectionLead": "Dois fluxos simples. Uma plataforma construída para todos os lados do palco.",
+    "compositoresLabel": "PARA COMPOSITORES",
+    "compositoresTitle": "Transforme sua arte em receita recorrente.",
+    "compositoresSteps": [
+      { "title": "Cadastre-se em 2 minutos", "text": "Crie sua conta, configure seu perfil e dados bancários." },
+      { "title": "Faça upload do seu MP3", "text": "Arquivos até 10MB. Metadados, coautoria e licenças claras." },
+      { "title": "Receba a cada venda", "text": "Split automático, relatórios e pagamentos via Stripe/PayPal." }
+    ],
+    "compradoresLabel": "PARA COMPRADORES",
+    "compradoresTitle": "Descubra obras exclusivas e licencie sem fricção.",
+    "compradoresSteps": [
+      { "title": "Explore o catálogo", "text": "Busque por gênero, BPM, humor e tipo de licença." },
+      { "title": "Compre com segurança", "text": "Checkout criptografado e contrato gerado automaticamente." },
+      { "title": "Use onde precisar", "text": "Download instantâneo e licença rastreável." }
+    ]
+  },
+  "recursos": {
+    "title": "Recursos construídos para escalar.",
+    "items": [
+      { "label": "01 / UPLOAD",     "title": "MP3 até 10MB",        "text": "Upload rápido, validação de metadata e preview instantâneo no player." },
+      { "label": "02 / PAGAMENTOS", "title": "Stripe & PayPal",     "text": "Checkout em BRL e USD. Repasse automático e relatórios fiscais." },
+      { "label": "03 / SEGURANÇA",  "title": "Criptografia de ponta","text": "CPF/RG criptografados, RLS no banco e logs de auditoria em tempo real." },
+      { "label": "04 / COAUTORIA",  "title": "Split automático",    "text": "Divida receitas com coautores direto no cadastro da obra." },
+      { "label": "05 / ANALYTICS",  "title": "Dashboard completo",  "text": "Vendas, plays, origem do tráfego e performance por obra." },
+      { "label": "06 / SUPORTE",    "title": "Humano, quando precisa","text": "Equipe dedicada e base de conhecimento aberta 24/7." }
+    ]
+  },
+  "manifesto": {
+    "line1": "Feito por quem respeita a obra.",
+    "line2": "Pago por quem respeita o autor.",
+    "authorName": "Pitch.me",
+    "authorCaption": "Marketplace independente de composições musicais"
+  },
+  "precos": {
+    "title": "Preço honesto. Sem pegadinhas.",
+    "lead": "Sem mensalidade. Você só paga quando vende.",
+    "basico": {
+      "label": "PLANO BÁSICO",
+      "price": "Grátis",
+      "features": ["Upload ilimitado", "Taxa de 12% por venda", "Pagamento em até 7 dias", "Suporte por e-mail"],
+      "cta": "Começar grátis →"
+    },
+    "pro": {
+      "ribbon": "MAIS POPULAR",
+      "label": "PLANO PRO",
+      "price": "R$ 49",
+      "priceUnit": "/mês",
+      "features": ["Tudo do Básico", "Taxa reduzida de 7% por venda", "Pagamento em 24h", "Analytics avançado", "Suporte prioritário"],
+      "cta": "Assinar Pro ▶"
+    }
+  },
+  "footer": {
+    "colPlatformTitle": "Plataforma",
+    "colLegalTitle": "Legal",
+    "colContactTitle": "Contato",
+    "email": "contato@pitchme.com",
+    "ctaTitle": "Comece agora.",
+    "ctaButton": "▶ Criar conta grátis",
+    "wordmark": "PITCH.ME",
+    "copyright": "© 2025 Pitch.me — Todos os direitos reservados.",
+    "tagline": "Feito com precisão para compositores."
+  }
+}

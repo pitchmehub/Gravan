@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+
+    <title>Pitch.me — Composições Musicais</title>
+    <meta name="description" content="Marketplace de composições musicais — conectando compositores e intérpretes." />
+
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#E11D48" />
+    <meta name="color-scheme" content="light" />
+
+    <!-- iOS PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Pitch.me" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Favicons (SVG moderno + fallback PNG/ICO) -->
+    <link rel="icon"      type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon"      type="image/png" sizes="32x32"  href="/favicon-32.png" />
+    <link rel="icon"      type="image/png" sizes="16x16"  href="/favicon-16.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="icon"      type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+
+    <!-- Theme color (Pitch.me brand) -->
+    <meta name="theme-color" content="#E11D48" />
+
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // Migração forçada: invalida Service Workers e caches anteriores ao Design 1.
+      // Executa 1x por cliente (marca no localStorage) para eliminar CSS roxo cacheado.
+      (function migratePWA() {
+        try {
+          var KEY = 'pitchme_design1_migrated_v3'
+          if (localStorage.getItem(KEY) === '1') return
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              regs.forEach(function (r) { r.unregister().catch(function(){}) })
+            }).catch(function(){})
+          }
+          if ('caches' in window) {
+            caches.keys().then(function (keys) {
+              return Promise.all(keys.map(function (k) { return caches.delete(k) }))
+            }).then(function () {
+              localStorage.setItem(KEY, '1')
+              // Recarrega uma vez pra pegar CSS/JS fresco do servidor
+              if (!sessionStorage.getItem('pitchme_pwa_reloaded')) {
+                sessionStorage.setItem('pitchme_pwa_reloaded', '1')
+                window.location.reload()
+              }
+            }).catch(function(){ localStorage.setItem(KEY, '1') })
+          } else {
+            localStorage.setItem(KEY, '1')
+          }
+        } catch (e) { /* noop */ }
+      })()
+    </script>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

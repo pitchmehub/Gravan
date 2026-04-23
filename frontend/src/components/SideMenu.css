@@ -1,0 +1,264 @@
+/* ============================================================
+   SideMenu — Design 1 (minimalista, branco + preto + red REC)
+   ============================================================ */
+
+.sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  width: var(--sidebar-w);
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transition: width .2s ease;
+  z-index: 100;
+  overflow: hidden;
+}
+.sidebar.collapsed { width: var(--sidebar-collapsed); }
+
+/* ── HEADER ──────────────────────────────── */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  min-height: 64px;
+  flex-shrink: 0;
+}
+
+.sidebar-logo-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  padding: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity .15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.sidebar-logo-btn::before {
+  content: '●';
+  font-size: 10px;
+  color: var(--brand);
+}
+.sidebar-logo-btn:hover { opacity: .7; }
+
+.sidebar-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-muted);
+  padding: 4px 8px;
+  border-radius: 0;
+  transition: all .15s;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.sidebar-toggle:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+/* ── NAVEGAÇÃO ───────────────────────────── */
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all .15s;
+  text-decoration: none;
+  border: none;
+  background: none;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  font-family: inherit;
+  border-left: 2px solid transparent;
+}
+.sidebar-link:hover {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+.sidebar-link.active {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-weight: 600;
+  border-left-color: var(--brand);
+}
+.sidebar-link.active .sidebar-icon { color: var(--brand); }
+
+.sidebar-icon {
+  font-size: 15px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+.sidebar-link:hover .sidebar-icon { color: var(--text-primary); }
+
+/* ── RODAPÉ / USUÁRIO ────────────────────── */
+.sidebar-footer {
+  padding: 8px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.sidebar-user-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background .15s;
+  text-align: left;
+  font-family: inherit;
+}
+.sidebar-user-btn:hover { background: var(--surface-2); }
+
+.sidebar-avatar {
+  width: 34px; height: 34px;
+  border-radius: 0;
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  color: #fff;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; overflow: hidden;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.sidebar-user-info {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+}
+.sidebar-user-nome {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sidebar-user-role {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+
+/* Dropdown */
+.sidebar-user-dropdown {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 8px; right: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  z-index: 300;
+  animation: sDropIn .15s ease;
+}
+@keyframes sDropIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sidebar-user-item {
+  width: 100%;
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  border: none; background: transparent;
+  font-size: 13px; color: var(--text-secondary);
+  cursor: pointer; text-align: left;
+  transition: background .15s;
+  font-family: inherit;
+}
+.sidebar-user-item:hover { background: var(--surface-2); color: var(--text-primary); }
+.sidebar-user-divider { height: 1px; background: var(--border); }
+.sidebar-user-item-danger { color: var(--error); }
+.sidebar-user-item-danger:hover { background: var(--error-bg); color: var(--error); }
+
+/* ════════════════════════════════════════════
+   MOBILE — hamburger + drawer
+════════════════════════════════════════════ */
+.mobile-hamburger {
+  display: none;
+  position: fixed;
+  top: 14px; left: 14px;
+  z-index: 200;
+  width: 44px; height: 44px;
+  border-radius: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  padding: 10px;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  transition: border-color .15s, box-shadow .15s;
+  box-shadow: 0 2px 8px rgba(9,9,11,.08);
+}
+.mobile-hamburger:hover { border-color: var(--ink); }
+.mobile-hamburger span {
+  width: 20px; height: 2px;
+  background: var(--text-primary);
+  border-radius: 0;
+}
+
+.mobile-drawer-backdrop { display: none; }
+
+@media (max-width: 767px) {
+  .mobile-hamburger { display: flex; }
+
+  .mobile-drawer-backdrop {
+    display: block;
+    position: fixed; inset: 0;
+    background: rgba(9,9,11,.3);
+    z-index: 150;
+    backdrop-filter: blur(2px);
+    animation: backdropIn .2s ease;
+  }
+  @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .sidebar.mobile-drawer {
+    width: 280px !important;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    z-index: 160;
+    box-shadow: 4px 0 40px rgba(9,9,11,.15);
+  }
+  .sidebar.mobile-drawer-open { transform: translateX(0); }
+}
