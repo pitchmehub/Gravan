@@ -220,6 +220,7 @@ def criar_obra():
         .replace("{{email}}",          perfil.get("email") or "")
         .replace("{{data_assinatura}}", agora_str)
         .replace("{{obra_nome}}",       nome)
+        .replace("{{obra_letra}}",      (letra or "").strip() or "—")
         .replace("{{share_autor_pct}}", f"{share_autor:.2f}".rstrip("0").rstrip("."))
         .replace("{{coautores_lista}}", coautores_str)
         .replace("{{plataforma_razao_social}}", plataforma_razao)

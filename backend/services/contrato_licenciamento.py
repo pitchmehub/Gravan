@@ -36,6 +36,12 @@ O presente contrato tem por objeto a autorização para fixação da obra musica
 
 Título da Obra: {{obra_nome}}
 
+LETRA COMPLETA DA OBRA, conforme cadastrada pelo(s) AUTOR(ES) na plataforma PITCH.ME, parte integrante e indissociável deste Contrato:
+
+— INÍCIO DA LETRA —
+{{obra_letra}}
+— FIM DA LETRA —
+
 CLÁUSULA 2 — CESSÃO DE DIREITOS
 
 O(s) AUTOR(ES) autoriza(m), de forma irrevogável e irretratável, o LICENCIADO a:
@@ -232,6 +238,7 @@ def gerar_contrato_licenciamento(transacao_id: str, ip_remote: str | None = None
         .replace("{{interprete_endereco}}",    _endereco(buyer))
         .replace("{{interprete_cidade_uf}}",   _cidade_uf(buyer))
         .replace("{{obra_nome}}",              obra.get("nome","—"))
+        .replace("{{obra_letra}}",             (obra.get("letra") or "").strip() or "—")
         .replace("{{valor_buyout_extenso}}",   _moeda(tx["valor_cents"]))
         .replace("{{autores_nomes_artisticos}}", ", ".join(autores_nomes_artisticos))
         .replace("{{isrc}}",                   obra.get("isrc") or "a definir após lançamento")
@@ -301,8 +308,7 @@ def gerar_contrato_licenciamento(transacao_id: str, ip_remote: str | None = None
     return contract
 
 
-TEMPLATE_TRILATERAL = """CONTRATO TRILATERAL DE LICENCIAMENTO DE OBRA MUSICAL
-EDITADA POR TERCEIRA EDITORA
+TEMPLATE_TRILATERAL = """CONTRATO DE AUTORIZAÇÃO PARA GRAVAÇÃO E EXPLORAÇÃO DE OBRA MUSICAL COM INTERMEDIAÇÃO
 
 Pelo presente instrumento particular, são partes:
 
@@ -343,6 +349,13 @@ O presente contrato tem por objeto a autorização para fixação da obra em
 fonograma e sua exploração comercial pelo LICENCIADO, com a participação
 da EDITORA TERCEIRA na qualidade de detentora dos direitos editoriais e
 da PITCH.ME como plataforma intermediária.
+
+LETRA COMPLETA DA OBRA, conforme cadastrada pelo(s) AUTOR(ES) na plataforma
+PITCH.ME, parte integrante e indissociável deste Contrato:
+
+— INÍCIO DA LETRA —
+{{obra_letra}}
+— FIM DA LETRA —
 
 CLÁUSULA 3 — VALOR E ESCROW
 
@@ -459,6 +472,7 @@ def gerar_contrato_trilateral(oferta_id: str) -> dict | None:
         .replace("{{interprete_endereco}}",    _endereco(buyer))
         .replace("{{interprete_cidade_uf}}",   _cidade_uf(buyer))
         .replace("{{obra_nome}}",              obra.get("nome", "—"))
+        .replace("{{obra_letra}}",             (obra.get("letra") or "").strip() or "—")
         .replace("{{valor_buyout_extenso}}",   _moeda(of["valor_cents"]))
         .replace("{{split_lista}}",            "\n".join(split_lista))
         .replace("{{data_emissao}}",           datetime.utcnow().strftime("%d/%m/%Y às %H:%M UTC"))
