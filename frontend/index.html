@@ -42,7 +42,7 @@
       // Executa 1x por cliente (marca no localStorage) para eliminar CSS roxo cacheado.
       (function migratePWA() {
         try {
-          var KEY = 'gravan_design1_migrated_v3'
+          var KEY = 'gravan_design1_migrated_v4'
           if (localStorage.getItem(KEY) === '1') return
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function (regs) {

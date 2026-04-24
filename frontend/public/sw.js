@@ -3,7 +3,7 @@
  * CSS/JS/fonts usam networkFirst para sempre refletir updates do server.
  */
 
-const VERSION       = 'gravan-v3-design1-20260421'
+const VERSION       = 'gravan-v4-design1-20260424'
 const STATIC_CACHE  = `static-${VERSION}`
 const IMG_CACHE     = `img-${VERSION}`
 const RUNTIME_CACHE = `runtime-${VERSION}`
