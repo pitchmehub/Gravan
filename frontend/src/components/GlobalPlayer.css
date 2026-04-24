@@ -320,7 +320,119 @@
   background: rgba(255,255,255,.1);
   padding: 4px 8px; border-radius: 99px;
   font-variant-numeric: tabular-nums;
+  min-width: 44px; text-align: center;
 }
+
+/* ── TABS TOCANDO / FILA ─────────────── */
+.gp-view-tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(255,255,255,.08);
+  border-radius: 99px;
+  padding: 3px;
+}
+.gp-view-tab {
+  background: none; border: none;
+  color: rgba(255,255,255,.55);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .8px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.gp-view-tab.active {
+  background: rgba(255,255,255,.18);
+  color: #fff;
+}
+
+/* ── LISTA DA FILA ───────────────────── */
+.gp-queue-list {
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+  padding: 4px 0 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.gp-q-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 10px;
+  margin: 0 8px 2px;
+  transition: background .1s;
+  user-select: none;
+}
+.gp-q-item:hover { background: rgba(255,255,255,.07); }
+.gp-q-item-active {
+  background: rgba(255,255,255,.12) !important;
+}
+.gp-q-item-dragging { opacity: .4; }
+.gp-q-item-over {
+  border-top: 2px solid rgba(255,255,255,.5);
+}
+
+.gp-q-grip {
+  color: rgba(255,255,255,.3);
+  font-size: 16px;
+  cursor: grab;
+  touch-action: none;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 4px 2px;
+}
+.gp-q-grip:active { cursor: grabbing; color: rgba(255,255,255,.6); }
+
+.gp-q-mini-cover {
+  width: 38px; height: 38px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,.7);
+  flex-shrink: 0;
+}
+.gp-q-playing-dot {
+  font-size: 10px;
+  color: #fff;
+  animation: gp-spin 0s linear infinite;
+}
+
+.gp-q-info { flex: 1; min-width: 0; }
+.gp-q-nome {
+  font-size: 13px; font-weight: 600; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.gp-q-autor {
+  font-size: 11px; color: rgba(255,255,255,.5);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.gp-q-now-badge {
+  font-size: 10px; font-weight: 700;
+  color: #09090B;
+  background: #fff;
+  padding: 2px 7px; border-radius: 99px;
+  letter-spacing: .5px;
+  flex-shrink: 0;
+}
+
+.gp-q-remove {
+  background: none; border: none;
+  color: rgba(255,255,255,.3);
+  font-size: 18px;
+  cursor: pointer;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color .15s, background .15s;
+}
+.gp-q-remove:hover { color: #fff; background: rgba(255,255,255,.12); }
 
 /* ── BOTÃO LER LETRA ─────────────────── */
 .gp-ler-letra-btn {

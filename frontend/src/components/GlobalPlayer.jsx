@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect, useCallback } from 'react'
 import { usePlayer } from '../contexts/PlayerContext'
 import { supabase } from '../lib/supabase'
 import './GlobalPlayer.css'
@@ -22,36 +22,50 @@ function obraGrad(obra) {
   if (!obra) return GRADIENTS[0]
   return GRADIENTS[(obra.id?.charCodeAt(0) ?? 0) % GRADIENTS.length]
 }
+function miniColor(obra) {
+  if (!obra) return '#3F3F46'
+  return ['#083257','#0F6E56','#854F0B','#185FA5','#993556','#3F3F46'][(obra.id?.charCodeAt(0) ?? 0) % 6]
+}
 
 export default function GlobalPlayer() {
   const {
     obra, queue, index, playing, minimized, expanded, visible,
     currentTime, duration, loading, volume,
-    togglePlay, seek, nextTrack, prevTrack,
+    togglePlay, seek, nextTrack, prevTrack, goToIndex, reorderQueue, removeFromQueue,
     close, setMinimized, setExpanded, expandPlayer, setVolume,
   } = usePlayer()
 
-  const [dragging, setDragging]       = useState(false)
-  const [letraOpen, setLetraOpen]     = useState(false)
-  const [letra, setLetra]             = useState(null)
+  const [showQueue,  setShowQueue]  = useState(false)
+  const [letraOpen,  setLetraOpen]  = useState(false)
+  const [letra,      setLetra]      = useState(null)
   const [letraLoading, setLetraLoading] = useState(false)
 
-  const barRef         = useRef(null)
-  const touchStart     = useRef(null)
-  const letraTouchY    = useRef(null)
+  // Drag-to-reorder state
+  const [dragIdx,     setDragIdx]     = useState(null)
+  const [dragOverIdx, setDragOverIdx] = useState(null)
+  const touchDragRef  = useRef({ idx: null, startY: 0 })
+  const queueListRef  = useRef(null)
+  const barRef        = useRef(null)
+  const touchStart    = useRef(null)
+  const letraTouchY   = useRef(null)
 
-  // Limpa a letra ao trocar de obra
+  // Reset letra on obra change
   useEffect(() => {
     setLetra(null)
     setLetraOpen(false)
   }, [obra?.id])
+
+  // Close queue view when player collapses
+  useEffect(() => {
+    if (!expanded) setShowQueue(false)
+  }, [expanded])
 
   if (!visible || !obra) return null
 
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0
   const iniciais = obra.titular_nome?.charAt(0).toUpperCase() ?? '♪'
 
-  // ── Barra de progresso ────────────────────────────────────
+  // ── Seek ─────────────────────────────────────────────────
   function seekFromEvent(e) {
     if (!barRef.current || !duration) return
     const rect = barRef.current.getBoundingClientRect()
@@ -61,21 +75,15 @@ export default function GlobalPlayer() {
   }
   function handleBarMouseDown(e) {
     seekFromEvent(e)
-    setDragging(true)
     const onMove = ev => seekFromEvent(ev)
-    const onUp = () => {
-      setDragging(false)
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
+    const onUp   = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
   }
 
-  // ── Swipe no player expandido ─────────────────────────────
+  // ── Swipe geral no expanded ───────────────────────────────
   function handleExpandedTouchStart(e) {
-    // Ignora toque na área da letra
-    if (e.target.closest('.gp-letra-sheet')) return
+    if (e.target.closest('.gp-letra-sheet') || e.target.closest('.gp-q-grip') || e.target.closest('.gp-queue-list')) return
     touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
   }
   function handleExpandedTouchEnd(e) {
@@ -84,41 +92,68 @@ export default function GlobalPlayer() {
     const dy = e.changedTouches[0].clientY - touchStart.current.y
     touchStart.current = null
     if (dy > 80 && Math.abs(dy) > Math.abs(dx) * 1.5) { setExpanded(false); return }
-    if (dx < -60 && Math.abs(dx) > Math.abs(dy) * 1.5) { nextTrack(); return }
-    if (dx > 60  && Math.abs(dx) > Math.abs(dy) * 1.5) { prevTrack() }
+    if (!showQueue) {
+      if (dx < -60 && Math.abs(dx) > Math.abs(dy) * 1.5) { nextTrack(); return }
+      if (dx > 60  && Math.abs(dx) > Math.abs(dy) * 1.5) { prevTrack() }
+    }
   }
 
-  // ── Swipe para baixo fecha a janela de letra ──────────────
-  function handleLetraTouchStart(e) {
-    e.stopPropagation()
-    letraTouchY.current = e.touches[0].clientY
-  }
+  // ── Letra ─────────────────────────────────────────────────
+  function handleLetraTouchStart(e) { e.stopPropagation(); letraTouchY.current = e.touches[0].clientY }
   function handleLetraTouchEnd(e) {
     e.stopPropagation()
-    if (letraTouchY.current === null) return
+    if (!letraTouchY.current) return
     const dy = e.changedTouches[0].clientY - letraTouchY.current
     letraTouchY.current = null
     if (dy > 60) setLetraOpen(false)
   }
-
-  // ── Busca a letra ─────────────────────────────────────────
   async function abrirLetra() {
     setLetraOpen(true)
     if (letra !== null) return
     setLetraLoading(true)
     try {
-      const { data } = await supabase
-        .from('obras').select('letra').eq('id', obra.id).maybeSingle()
+      const { data } = await supabase.from('obras').select('letra').eq('id', obra.id).maybeSingle()
       setLetra(data?.letra || '')
-    } catch (_) {
-      setLetra('')
-    } finally {
-      setLetraLoading(false)
-    }
+    } catch (_) { setLetra('') }
+    finally { setLetraLoading(false) }
   }
 
+  // ── Drag-to-reorder (touch) ───────────────────────────────
+  function handleGripTouchStart(e, idx) {
+    e.stopPropagation()
+    touchDragRef.current = { idx, startY: e.touches[0].clientY }
+    setDragIdx(idx)
+  }
+  function handleQueueTouchMove(e) {
+    if (touchDragRef.current.idx === null) return
+    const el = queueListRef.current
+    if (!el) return
+    const items = [...el.querySelectorAll('.gp-q-item')]
+    const y = e.touches[0].clientY
+    let over = null
+    items.forEach((item, i) => {
+      const r = item.getBoundingClientRect()
+      if (y >= r.top && y <= r.bottom) over = i
+    })
+    if (over !== null) setDragOverIdx(over)
+  }
+  function handleQueueTouchEnd() {
+    if (dragIdx !== null && dragOverIdx !== null && dragIdx !== dragOverIdx) {
+      reorderQueue(dragIdx, dragOverIdx)
+    }
+    setDragIdx(null)
+    setDragOverIdx(null)
+    touchDragRef.current = { idx: null, startY: 0 }
+  }
+
+  // ── Drag-to-reorder (mouse/desktop) ──────────────────────
+  function handleDragStart(e, idx) { e.dataTransfer.effectAllowed = 'move'; setDragIdx(idx) }
+  function handleDragOver(e, idx)  { e.preventDefault(); setDragOverIdx(idx) }
+  function handleDrop(e, idx)      { e.preventDefault(); if (dragIdx !== null && dragIdx !== idx) reorderQueue(dragIdx, idx); setDragIdx(null); setDragOverIdx(null) }
+  function handleDragEnd()         { setDragIdx(null); setDragOverIdx(null) }
+
   // ════════════════════════════════════════════════════════
-  // PLAYER EXPANDIDO (tela cheia)
+  // PLAYER EXPANDIDO
   // ════════════════════════════════════════════════════════
   if (expanded) {
     return (
@@ -128,32 +163,106 @@ export default function GlobalPlayer() {
         onTouchStart={handleExpandedTouchStart}
         onTouchEnd={handleExpandedTouchEnd}
       >
-        {/* Topo */}
+        {/* Header */}
         <div className="gp-exp-header">
-          <button className="gp-exp-btn" onClick={() => setExpanded(false)}>
-            <ChevronDownIcon />
-          </button>
-          <span className="gp-exp-title">{obra.genero || 'Reproduzindo'}</span>
-          {queue.length > 1
+          <button className="gp-exp-btn" onClick={() => setExpanded(false)}><ChevronDownIcon /></button>
+
+          {/* Tabs TOCANDO | FILA */}
+          <div className="gp-view-tabs">
+            <button
+              className={`gp-view-tab ${!showQueue ? 'active' : ''}`}
+              onClick={() => setShowQueue(false)}
+            >TOCANDO</button>
+            <button
+              className={`gp-view-tab ${showQueue ? 'active' : ''}`}
+              onClick={() => setShowQueue(true)}
+            >FILA {queue.length > 1 ? `· ${queue.length}` : ''}</button>
+          </div>
+
+          {queue.length > 1 && !showQueue
             ? <span className="gp-exp-queue-badge">{index + 1}/{queue.length}</span>
-            : <div style={{ width: 40 }} />
+            : <div style={{ width: 44 }} />
           }
         </div>
 
-        {/* Capa grande */}
-        <div className="gp-exp-cover-wrap">
-          <div className="gp-exp-cover">
-            <span className="gp-exp-cover-iniciais">{iniciais}</span>
+        {/* ── VIEW: TOCANDO ── */}
+        {!showQueue && (
+          <>
+            <div className="gp-exp-cover-wrap">
+              <div className="gp-exp-cover">
+                <span className="gp-exp-cover-iniciais">{iniciais}</span>
+              </div>
+            </div>
+            <div className="gp-exp-info">
+              <div className="gp-exp-nome">{obra.nome}</div>
+              <div className="gp-exp-autor">{obra.titular_nome}</div>
+            </div>
+          </>
+        )}
+
+        {/* ── VIEW: FILA ── */}
+        {showQueue && (
+          <div
+            className="gp-queue-list"
+            ref={queueListRef}
+            onTouchMove={handleQueueTouchMove}
+            onTouchEnd={handleQueueTouchEnd}
+          >
+            {queue.map((item, i) => (
+              <div
+                key={item.id + i}
+                className={[
+                  'gp-q-item',
+                  i === index      ? 'gp-q-item-active'  : '',
+                  i === dragIdx    ? 'gp-q-item-dragging' : '',
+                  i === dragOverIdx && i !== dragIdx ? 'gp-q-item-over' : '',
+                ].join(' ')}
+                draggable
+                onDragStart={e => handleDragStart(e, i)}
+                onDragOver={e => handleDragOver(e, i)}
+                onDrop={e => handleDrop(e, i)}
+                onDragEnd={handleDragEnd}
+                onClick={() => { if (dragIdx === null) goToIndex(i) }}
+              >
+                {/* Grip handle */}
+                <span
+                  className="gp-q-grip"
+                  onTouchStart={e => handleGripTouchStart(e, i)}
+                >⠿</span>
+
+                {/* Mini cover */}
+                <div className="gp-q-mini-cover" style={{ background: miniColor(item) }}>
+                  {i === index && playing
+                    ? <span className="gp-q-playing-dot">▶</span>
+                    : <span style={{ fontSize: 11 }}>♪</span>
+                  }
+                </div>
+
+                {/* Info */}
+                <div className="gp-q-info">
+                  <div className="gp-q-nome">{item.nome}</div>
+                  <div className="gp-q-autor">{item.titular_nome}</div>
+                </div>
+
+                {/* Badge agora tocando */}
+                {i === index && (
+                  <span className="gp-q-now-badge">agora</span>
+                )}
+
+                {/* Remove */}
+                {queue.length > 1 && (
+                  <button
+                    className="gp-q-remove"
+                    onClick={e => { e.stopPropagation(); removeFromQueue(i) }}
+                    title="Remover da fila"
+                  >×</button>
+                )}
+              </div>
+            ))}
           </div>
-        </div>
+        )}
 
-        {/* Info */}
-        <div className="gp-exp-info">
-          <div className="gp-exp-nome">{obra.nome}</div>
-          <div className="gp-exp-autor">{obra.titular_nome}</div>
-        </div>
-
-        {/* Progresso */}
+        {/* Barra de progresso — sempre visível */}
         <div className="gp-exp-progress-wrap">
           <div
             className="gp-exp-progress-bar"
@@ -172,25 +281,21 @@ export default function GlobalPlayer() {
           </div>
         </div>
 
-        {/* Controles — botões SEMPRE ativos */}
+        {/* Controles — sempre visíveis */}
         <div className="gp-exp-controls">
-          <button className="gp-exp-ctrl-btn" onClick={prevTrack}>
-            <PrevIcon size={28} />
-          </button>
+          <button className="gp-exp-ctrl-btn" onClick={prevTrack}><PrevIcon size={28} /></button>
           <button className="gp-exp-play-btn" onClick={togglePlay}>
             {loading ? <Spinner size={32} /> : playing ? <PauseIcon size={32} /> : <PlayIcon size={32} />}
           </button>
-          <button className="gp-exp-ctrl-btn" onClick={nextTrack}>
-            <NextIcon size={28} />
-          </button>
+          <button className="gp-exp-ctrl-btn" onClick={nextTrack}><NextIcon size={28} /></button>
         </div>
 
-        {/* Botão LER LETRA */}
-        <button className="gp-ler-letra-btn" onClick={abrirLetra}>
-          📖 LER LETRA
-        </button>
+        {/* LER LETRA — só na view Tocando */}
+        {!showQueue && (
+          <button className="gp-ler-letra-btn" onClick={abrirLetra}>📖 LER LETRA</button>
+        )}
 
-        {/* Janela de letra (slide-up, minimizável) */}
+        {/* Janela de letra */}
         {letraOpen && (
           <div
             className="gp-letra-sheet"
@@ -227,21 +332,13 @@ export default function GlobalPlayer() {
           <span className="gp-mini-nome">{obra.nome}</span>
           <span className="gp-mini-autor">{obra.titular_nome}</span>
         </div>
-        <button className="gp-icon-btn" onClick={e => { e.stopPropagation(); prevTrack() }}>
-          <PrevIcon />
-        </button>
+        <button className="gp-icon-btn" onClick={e => { e.stopPropagation(); prevTrack() }}><PrevIcon /></button>
         <button className="gp-icon-btn" onClick={e => { e.stopPropagation(); togglePlay() }}>
           {loading ? <Spinner /> : playing ? <PauseIcon /> : <PlayIcon />}
         </button>
-        <button className="gp-icon-btn" onClick={e => { e.stopPropagation(); nextTrack() }}>
-          <NextIcon />
-        </button>
-        <button className="gp-icon-btn gp-close-btn" onClick={e => { e.stopPropagation(); close() }}>
-          <CloseIcon />
-        </button>
-        <div className="gp-mini-bar">
-          <div className="gp-mini-bar-fill" style={{ width: `${pct}%` }} />
-        </div>
+        <button className="gp-icon-btn" onClick={e => { e.stopPropagation(); nextTrack() }}><NextIcon /></button>
+        <button className="gp-icon-btn gp-close-btn" onClick={e => { e.stopPropagation(); close() }}><CloseIcon /></button>
+        <div className="gp-mini-bar"><div className="gp-mini-bar-fill" style={{ width: `${pct}%` }} /></div>
       </div>
     )
   }
@@ -254,7 +351,6 @@ export default function GlobalPlayer() {
       <div className="gp-top-bar" ref={barRef} onMouseDown={e => { e.stopPropagation(); handleBarMouseDown(e) }}>
         <div className="gp-top-bar-fill" style={{ width: `${pct}%` }} />
       </div>
-
       <div className="gp-body">
         <div className="gp-track-info">
           <div className="gp-cover"><span>{iniciais}</span></div>
@@ -263,26 +359,19 @@ export default function GlobalPlayer() {
             <div className="gp-autor">{obra.titular_nome}</div>
           </div>
         </div>
-
         <div className="gp-controls" onClick={e => e.stopPropagation()}>
-          <button className="gp-icon-btn" onClick={prevTrack} title="Anterior">
-            <PrevIcon />
-          </button>
+          <button className="gp-icon-btn" onClick={prevTrack}><PrevIcon /></button>
           <button className="gp-play-btn" onClick={togglePlay}>
             {loading ? <Spinner size={22} /> : playing ? <PauseIcon size={22} /> : <PlayIcon size={22} />}
           </button>
-          <button className="gp-icon-btn" onClick={nextTrack} title="Próxima">
-            <NextIcon />
-          </button>
+          <button className="gp-icon-btn" onClick={nextTrack}><NextIcon /></button>
         </div>
-
         <div className="gp-right" onClick={e => e.stopPropagation()}>
           <span className="gp-time">{fmt(currentTime)} / {fmt(duration)}</span>
           <div className="gp-volume">
             <VolumeIcon />
-            <input type="range" min="0" max="1" step="0.05"
-              value={volume} onChange={e => setVolume(Number(e.target.value))}
-              className="gp-vol-slider" />
+            <input type="range" min="0" max="1" step="0.05" value={volume}
+              onChange={e => setVolume(Number(e.target.value))} className="gp-vol-slider" />
           </div>
           {queue.length > 1 && <span className="gp-queue-info">{index + 1}/{queue.length}</span>}
           <button className="gp-icon-btn" onClick={() => setMinimized(true)}><MinimizeIcon /></button>
@@ -293,7 +382,7 @@ export default function GlobalPlayer() {
   )
 }
 
-// ── Ícones SVG ────────────────────────────────────────────────
+// ── Ícones ────────────────────────────────────────────────
 function PlayIcon({ size = 16 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21" /></svg>
 }
