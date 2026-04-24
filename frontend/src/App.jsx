@@ -59,6 +59,23 @@ function GlobalRedirect() {
   return null
 }
 
+/**
+ * Salva a rota visitada no localStorage para que, em caso de reload na raiz
+ * (ex.: o reload do iframe da preview Replit volta para "/"), o usuário
+ * autenticado seja levado de volta exatamente para onde estava.
+ */
+function RouteTracker() {
+  const location = useLocation()
+  useEffect(() => {
+    const path = location.pathname + location.search
+    // Não persiste rotas públicas/efêmeras
+    const ignorar = ['/', '/login', '/perfil/tipo']
+    if (ignorar.includes(location.pathname)) return
+    try { localStorage.setItem('pitchme_last_route', path) } catch {}
+  }, [location.pathname, location.search])
+  return null
+}
+
 function PrivateRoute({ children, roles }) {
   const { user, perfil, loading } = useAuth()
   const path = typeof window !== 'undefined' ? window.location.pathname : ''
@@ -109,6 +126,8 @@ function AppShell({ children }) {
 
 function AppRoutes() {
   return (
+    <>
+    <RouteTracker />
     <Routes>
       <Route path="/"              element={<Landing />} />
       <Route path="/login"         element={<Login />} />
@@ -161,6 +180,7 @@ function AppRoutes() {
 
       <Route path="*"              element={<Navigate to="/descoberta" replace />} />
     </Routes>
+    </>
   )
 }
 

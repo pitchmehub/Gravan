@@ -9,8 +9,20 @@ export default function Landing() {
   const [showContato, setShowContato] = useState(false)
   const [stats, setStats] = useState(null)
   const [content, setContent] = useState(DEFAULT_CONTENT)
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const navigate = useNavigate()
+
+  // Se já está logado, restaura a última rota visitada (ou /descoberta).
+  // Evita ver a Landing por um instante quando o usuário recarrega o site.
+  useEffect(() => {
+    if (loading || !user) return
+    let destino = '/descoberta'
+    try {
+      const ultima = localStorage.getItem('pitchme_last_route')
+      if (ultima && ultima !== '/' && ultima !== '/login') destino = ultima
+    } catch { /* noop */ }
+    navigate(destino, { replace: true })
+  }, [user, loading, navigate])
 
   // Carrega conteúdo editável da Landing (fallback para defaults)
   useEffect(() => {
@@ -60,7 +72,7 @@ export default function Landing() {
 
   const handleCTA = () => {
     if (user) {
-      navigate('/dashboard')
+      navigate('/descoberta')
     } else {
       navigate('/login')
     }
@@ -102,7 +114,7 @@ export default function Landing() {
             {user ? (
               <button
                 className="btn-accent"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/descoberta')}
                 data-testid="nav-btn-dashboard"
               >
                 {content.nav.ctaLogado}

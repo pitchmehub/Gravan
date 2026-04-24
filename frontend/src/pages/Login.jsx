@@ -19,7 +19,7 @@ import React, { useEffect, useState } from 'react'
     const [enviando, setEnviando]= useState(false)
 
     useEffect(() => {
-      if (!loading && user) navigate('/dashboard')
+      if (!loading && user) navigate('/descoberta', { replace: true })
     }, [user, loading, navigate])
 
     function handleChange(e) {

@@ -19,7 +19,7 @@ export default function AdminLanding() {
 
   useEffect(() => {
     if (perfil && perfil.role !== 'administrador') {
-      navigate('/dashboard')
+      navigate('/descoberta')
       return
     }
     api.get('/landing/content').then(data => {

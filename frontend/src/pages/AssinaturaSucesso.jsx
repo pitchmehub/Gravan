@@ -27,7 +27,7 @@ export default function AssinaturaSucesso() {
         if (s?.plano === 'PRO' && s?.status_assinatura !== 'inativa') {
           setStatus('ok')
           await refreshPerfil()
-          setTimeout(() => navigate('/dashboard'), 2500)
+          setTimeout(() => navigate('/descoberta'), 2500)
           return
         }
       } catch (_) { /* noop */ }
