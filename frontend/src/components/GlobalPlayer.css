@@ -178,10 +178,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 12px);
   animation: gpExpandIn .3s cubic-bezier(0.32,0.72,0,1);
   touch-action: pan-y;
   user-select: none;
+  color: #fff;
 }
 
 .gp-exp-header {
@@ -189,21 +190,29 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px 8px;
+  padding: 14px 18px 6px;
+  gap: 8px;
 }
 .gp-exp-btn {
-  width: 40px; height: 40px;
-  background: rgba(255,255,255,.15);
+  width: 38px; height: 38px;
+  background: transparent;
   border: none; border-radius: 50%;
   color: #fff; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: background .15s;
+  flex-shrink: 0;
 }
-.gp-exp-btn:hover { background: rgba(255,255,255,.25); }
-.gp-exp-title {
-  font-size: 12px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 1.5px;
-  color: rgba(255,255,255,.7);
+.gp-exp-btn:hover { background: rgba(255,255,255,.12); }
+.gp-exp-title-center {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 8px;
 }
 
 .gp-exp-cover-wrap {
@@ -211,55 +220,72 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 40px;
+  padding: 8px 24px;
   width: 100%;
 }
 .gp-exp-cover {
-  width: min(300px, 70vw);
+  width: min(360px, 78vw);
   aspect-ratio: 1;
-  background: rgba(255,255,255,.12);
+  background: rgba(255,255,255,.10);
   backdrop-filter: blur(8px);
-  border-radius: 8px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 24px 64px rgba(0,0,0,.4);
+  box-shadow: 0 30px 64px rgba(0,0,0,.45);
+  overflow: hidden;
 }
 .gp-exp-cover-iniciais {
-  font-size: 72px;
+  font-size: 84px;
   font-weight: 900;
-  color: rgba(255,255,255,.9);
+  color: rgba(255,255,255,.92);
   font-family: 'Space Grotesk', sans-serif;
   letter-spacing: -2px;
 }
 
-.gp-exp-info {
+/* Linha mini-thumb + nome/autor + check */
+.gp-exp-track-row {
   width: 100%;
-  padding: 0 32px 16px;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 24px 6px;
 }
+.gp-exp-track-thumb {
+  width: 40px; height: 40px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
+}
+.gp-exp-track-meta { flex: 1; min-width: 0; }
 .gp-exp-nome {
-  font-size: 22px; font-weight: 800;
-  color: #fff; letter-spacing: -.4px;
+  font-size: 19px; font-weight: 800;
+  color: #fff; letter-spacing: -.3px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  margin-bottom: 4px;
 }
 .gp-exp-autor {
-  font-size: 14px; color: rgba(255,255,255,.65);
+  font-size: 13px; color: rgba(255,255,255,.65);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.gp-exp-track-check {
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
 }
 
 .gp-exp-progress-wrap {
   width: 100%;
-  padding: 0 32px 8px;
+  padding: 6px 24px 4px;
 }
 .gp-exp-progress-bar {
   height: 4px;
-  background: rgba(255,255,255,.25);
+  background: rgba(255,255,255,.22);
   border-radius: 2px;
   cursor: pointer;
   position: relative;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   touch-action: none;
 }
 .gp-exp-progress-bar:hover { height: 6px; margin-top: -1px; }
@@ -274,46 +300,83 @@
   position: absolute;
   right: -6px; top: 50%;
   transform: translateY(-50%);
-  width: 14px; height: 14px;
+  width: 12px; height: 12px;
   background: #fff; border-radius: 50%;
   box-shadow: 0 2px 8px rgba(0,0,0,.3);
-  opacity: 0;
-  transition: opacity .15s;
 }
-.gp-exp-progress-bar:hover .gp-exp-progress-thumb { opacity: 1; }
 .gp-exp-times {
   display: flex; justify-content: space-between;
-  font-size: 11px; color: rgba(255,255,255,.5);
+  font-size: 11px; color: rgba(255,255,255,.55);
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 .gp-exp-controls {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 32px;
-  padding: 16px 32px 8px;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 28px 8px;
   width: 100%;
 }
 .gp-exp-ctrl-btn {
   background: none; border: none;
-  color: rgba(255,255,255,.85);
+  color: #fff;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   padding: 8px; border-radius: 50%;
-  transition: color .15s, background .15s;
+  transition: color .15s, background .15s, transform .1s;
+  flex-shrink: 0;
 }
-.gp-exp-ctrl-btn:hover { color: #fff; background: rgba(255,255,255,.1); }
+.gp-exp-ctrl-btn:hover  { background: rgba(255,255,255,.12); }
+.gp-exp-ctrl-btn:active { transform: scale(.92); }
 .gp-exp-ctrl-btn:disabled { opacity: .3; cursor: default; }
+.gp-exp-ctrl-side { color: rgba(255,255,255,.7); }
 .gp-exp-play-btn {
-  width: 72px; height: 72px; border-radius: 50%;
+  width: 76px; height: 76px; border-radius: 50%;
   background: #fff; color: #09090B;
   border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: transform .1s, background .15s;
-  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  box-shadow: 0 10px 28px rgba(0,0,0,.35);
+  flex-shrink: 0;
 }
 .gp-exp-play-btn:active { transform: scale(.94); }
+
+/* Barra de ações inferior */
+.gp-exp-actions {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 24px 10px;
+}
+.gp-exp-action-btn {
+  position: relative;
+  background: none; border: none;
+  color: rgba(255,255,255,.85);
+  cursor: pointer;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s, transform .1s;
+}
+.gp-exp-action-btn:hover  { color: #fff; background: rgba(255,255,255,.12); }
+.gp-exp-action-btn:active { transform: scale(.93); }
+.gp-exp-action-badge {
+  position: absolute;
+  top: 4px; right: 2px;
+  background: #fff;
+  color: #09090B;
+  font-size: 9px;
+  font-weight: 800;
+  min-width: 16px;
+  height: 14px;
+  padding: 0 4px;
+  border-radius: 99px;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
 
 .gp-exp-queue-badge {
   font-size: 11px; color: rgba(255,255,255,.5);

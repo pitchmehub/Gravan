@@ -163,44 +163,23 @@ export default function GlobalPlayer() {
         onTouchStart={handleExpandedTouchStart}
         onTouchEnd={handleExpandedTouchEnd}
       >
-        {/* Header */}
+        {/* ─── HEADER ─── */}
         <div className="gp-exp-header">
-          <button className="gp-exp-btn" onClick={() => setExpanded(false)}><ChevronDownIcon /></button>
-
-          {/* Tabs TOCANDO | FILA */}
-          <div className="gp-view-tabs">
-            <button
-              className={`gp-view-tab ${!showQueue ? 'active' : ''}`}
-              onClick={() => setShowQueue(false)}
-            >TOCANDO</button>
-            <button
-              className={`gp-view-tab ${showQueue ? 'active' : ''}`}
-              onClick={() => setShowQueue(true)}
-            >FILA {queue.length > 1 ? `· ${queue.length}` : ''}</button>
+          <button className="gp-exp-btn" onClick={() => setExpanded(false)} aria-label="Fechar player">
+            <ChevronDownIcon />
+          </button>
+          <div className="gp-exp-title-center">
+            {obra.titular_nome || 'Tocando agora'}
           </div>
-
-          {queue.length > 1 && !showQueue
-            ? <span className="gp-exp-queue-badge">{index + 1}/{queue.length}</span>
-            : <div style={{ width: 44 }} />
-          }
-        </div>
-
-        {/* Card "Ler letra" — fica no topo do player maximizado */}
-        {!showQueue && (
-          <div
-            className="gp-letra-card"
-            onClick={abrirLetra}
-            role="button"
-            tabIndex={0}
+          <button
+            className="gp-exp-btn"
+            onClick={() => setShowQueue(q => !q)}
+            aria-label={showQueue ? 'Voltar' : 'Abrir fila'}
+            title={showQueue ? 'Tocando' : 'Fila'}
           >
-            <div className="gp-letra-card-icon">📖</div>
-            <div className="gp-letra-card-text">
-              <div className="gp-letra-card-title">LER LETRA</div>
-              <div className="gp-letra-card-sub">Abrir letra · player continua tocando</div>
-            </div>
-            <div className="gp-letra-card-arrow">›</div>
-          </div>
-        )}
+            {showQueue ? <CloseIcon /> : <DotsIcon />}
+          </button>
+        </div>
 
         {/* ── VIEW: TOCANDO ── */}
         {!showQueue && (
@@ -210,9 +189,19 @@ export default function GlobalPlayer() {
                 <span className="gp-exp-cover-iniciais">{iniciais}</span>
               </div>
             </div>
-            <div className="gp-exp-info">
-              <div className="gp-exp-nome">{obra.nome}</div>
-              <div className="gp-exp-autor">{obra.titular_nome}</div>
+
+            {/* Linha: mini thumb + nome + autor + check (curtir) */}
+            <div className="gp-exp-track-row">
+              <div className="gp-exp-track-thumb" style={{ background: miniColor(obra) }}>
+                <span style={{ fontSize: 14, color: 'rgba(255,255,255,.85)' }}>♪</span>
+              </div>
+              <div className="gp-exp-track-meta">
+                <div className="gp-exp-nome">{obra.nome}</div>
+                <div className="gp-exp-autor">{obra.titular_nome}</div>
+              </div>
+              <div className="gp-exp-track-check">
+                <CheckIcon />
+              </div>
             </div>
           </>
         )}
@@ -241,32 +230,18 @@ export default function GlobalPlayer() {
                 onDragEnd={handleDragEnd}
                 onClick={() => { if (dragIdx === null) goToIndex(i) }}
               >
-                {/* Grip handle */}
-                <span
-                  className="gp-q-grip"
-                  onTouchStart={e => handleGripTouchStart(e, i)}
-                >⠿</span>
-
-                {/* Mini cover */}
+                <span className="gp-q-grip" onTouchStart={e => handleGripTouchStart(e, i)}>⠿</span>
                 <div className="gp-q-mini-cover" style={{ background: miniColor(item) }}>
                   {i === index && playing
                     ? <span className="gp-q-playing-dot">▶</span>
                     : <span style={{ fontSize: 11 }}>♪</span>
                   }
                 </div>
-
-                {/* Info */}
                 <div className="gp-q-info">
                   <div className="gp-q-nome">{item.nome}</div>
                   <div className="gp-q-autor">{item.titular_nome}</div>
                 </div>
-
-                {/* Badge agora tocando */}
-                {i === index && (
-                  <span className="gp-q-now-badge">agora</span>
-                )}
-
-                {/* Remove */}
+                {i === index && <span className="gp-q-now-badge">agora</span>}
                 {queue.length > 1 && (
                   <button
                     className="gp-q-remove"
@@ -279,7 +254,7 @@ export default function GlobalPlayer() {
           </div>
         )}
 
-        {/* Barra de progresso — sempre visível */}
+        {/* ── Barra de progresso ── */}
         <div className="gp-exp-progress-wrap">
           <div
             className="gp-exp-progress-bar"
@@ -298,13 +273,40 @@ export default function GlobalPlayer() {
           </div>
         </div>
 
-        {/* Controles — sempre visíveis */}
+        {/* ── Controles principais ── */}
         <div className="gp-exp-controls">
-          <button className="gp-exp-ctrl-btn" onClick={prevTrack}><PrevIcon size={28} /></button>
-          <button className="gp-exp-play-btn" onClick={togglePlay}>
-            {loading ? <Spinner size={32} /> : playing ? <PauseIcon size={32} /> : <PlayIcon size={32} />}
+          <button className="gp-exp-ctrl-btn gp-exp-ctrl-side" aria-label="Embaralhar"><ShuffleIcon /></button>
+          <button className="gp-exp-ctrl-btn" onClick={prevTrack} aria-label="Anterior"><PrevIcon size={30} /></button>
+          <button className="gp-exp-play-btn" onClick={togglePlay} aria-label={playing ? 'Pausar' : 'Tocar'}>
+            {loading ? <Spinner size={32} /> : playing ? <PauseIcon size={34} /> : <PlayIcon size={34} />}
           </button>
-          <button className="gp-exp-ctrl-btn" onClick={nextTrack}><NextIcon size={28} /></button>
+          <button className="gp-exp-ctrl-btn" onClick={nextTrack} aria-label="Próxima"><NextIcon size={30} /></button>
+          <button className="gp-exp-ctrl-btn gp-exp-ctrl-side" aria-label="Repetir"><RepeatIcon /></button>
+        </div>
+
+        {/* ── Barra de ações inferior ── */}
+        <div className="gp-exp-actions">
+          <button className="gp-exp-action-btn" onClick={abrirLetra} aria-label="Ler letra" title="Ler letra">
+            <BookIcon />
+          </button>
+          <div style={{ flex: 1 }} />
+          <button
+            className="gp-exp-action-btn"
+            onClick={() => setShowQueue(q => !q)}
+            aria-label="Fila"
+            title="Fila"
+          >
+            <QueueIcon />
+            {queue.length > 1 && <span className="gp-exp-action-badge">{queue.length}</span>}
+          </button>
+          <button
+            className="gp-exp-action-btn"
+            onClick={close}
+            aria-label="Encerrar"
+            title="Encerrar player"
+          >
+            <CloseIcon />
+          </button>
         </div>
 
         {/* Janela de letra */}
@@ -418,6 +420,29 @@ function ChevronDownIcon() {
 }
 function VolumeIcon() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>
+}
+function DotsIcon() {
+  return <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+}
+function CheckIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="11" fill="#22C55E"/>
+      <path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+function ShuffleIcon() {
+  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+}
+function RepeatIcon() {
+  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+}
+function BookIcon() {
+  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+}
+function QueueIcon() {
+  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
 }
 function Spinner({ size = 16 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeOpacity=".25"/><path d="M12 2 a10 10 0 0 1 10 10" strokeLinecap="round" style={{ animation: 'gp-spin .8s linear infinite' }}/></svg>
