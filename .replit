@@ -1,4 +1,4 @@
-modules = ["python-3.11", "nodejs-20"]
+modules = ["nodejs-20", "python-3.12", "web"]
 [agent]
 expertMode = true
 stack = "BEST_EFFORT_FALLBACK"
@@ -58,3 +58,12 @@ externalPort = 8000
 deploymentTarget = "autoscale"
 run = ["bash", "-c", "cd backend && gunicorn --bind=127.0.0.1:8000 'app:create_app()' --workers 2 & cd frontend && npm run preview -- --port 5000 --host 0.0.0.0"]
 build = ["bash", "-c", "cd frontend && npm install && npm run build"]
+
+[userenv]
+
+[userenv.shared]
+FLASK_SECRET_KEY = "f6f9e954ce438fc718b4e8333fc0c68784aee8e2faf2e026bd8473dee7e77901"
+PII_ENCRYPTION_KEY = "RL8flgxD1qcK8eIIBvuoCYKP11I9nQ5F2GtXJonGLG8"
+FLASK_ENV = "development"
+ALLOWED_ORIGINS = "http://localhost:5000"
+FRONTEND_URL = "http://localhost:5000"
