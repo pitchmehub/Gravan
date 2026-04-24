@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react'
 import { usePlayer } from '../contexts/PlayerContext'
 import { supabase } from '../lib/supabase'
 import BotaoCurtir from './BotaoCurtir'
+import FichaTecnica from './FichaTecnica'
 import './GlobalPlayer.css'
 
 function fmt(s) {
@@ -42,6 +43,7 @@ export default function GlobalPlayer() {
   const [letraOpen,  setLetraOpen]  = useState(false)
   const [letra,      setLetra]      = useState(null)
   const [letraLoading, setLetraLoading] = useState(false)
+  const [fichaOpen,  setFichaOpen]  = useState(false)
 
   // Drag-to-reorder state
   const [dragIdx,     setDragIdx]     = useState(null)
@@ -52,11 +54,21 @@ export default function GlobalPlayer() {
   const touchStart    = useRef(null)
   const letraTouchY   = useRef(null)
 
-  // Reset letra on obra change
+  // Reset letra/ficha on obra change
   useEffect(() => {
     setLetra(null)
     setLetraOpen(false)
+    setFichaOpen(false)
   }, [obra?.id])
+
+  // Quando colapsa do expandido no mobile, manter o mini player visível
+  // (acima do botão Descoberta) em vez de cair na barra de fundo.
+  function colapsarParaMini() {
+    setExpanded(false)
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setMinimized(true)
+    }
+  }
 
   // Close queue view when player collapses
   useEffect(() => {
@@ -94,7 +106,7 @@ export default function GlobalPlayer() {
     const dx = e.changedTouches[0].clientX - touchStart.current.x
     const dy = e.changedTouches[0].clientY - touchStart.current.y
     touchStart.current = null
-    if (dy > 80 && Math.abs(dy) > Math.abs(dx) * 1.5) { setExpanded(false); return }
+    if (dy > 80 && Math.abs(dy) > Math.abs(dx) * 1.5) { colapsarParaMini(); return }
     if (!showQueue) {
       if (dx < -60 && Math.abs(dx) > Math.abs(dy) * 1.5) { nextTrack(); return }
       if (dx > 60  && Math.abs(dx) > Math.abs(dy) * 1.5) { prevTrack() }
@@ -168,7 +180,7 @@ export default function GlobalPlayer() {
       >
         {/* ─── HEADER ─── */}
         <div className="gp-exp-header">
-          <button className="gp-exp-btn" onClick={() => setExpanded(false)} aria-label="Fechar player">
+          <button className="gp-exp-btn" onClick={colapsarParaMini} aria-label="Fechar player">
             <ChevronDownIcon />
           </button>
           <div className="gp-exp-title-center">
@@ -176,9 +188,12 @@ export default function GlobalPlayer() {
           </div>
           <button
             className="gp-exp-btn"
-            onClick={() => setShowQueue(q => !q)}
-            aria-label={showQueue ? 'Voltar' : 'Abrir fila'}
-            title={showQueue ? 'Tocando' : 'Fila'}
+            onClick={() => {
+              if (showQueue) setShowQueue(false)
+              else setFichaOpen(true)
+            }}
+            aria-label={showQueue ? 'Voltar' : 'Ficha técnica'}
+            title={showQueue ? 'Tocando' : 'Ficha técnica'}
           >
             {showQueue ? <CloseIcon /> : <DotsIcon />}
           </button>
@@ -326,6 +341,17 @@ export default function GlobalPlayer() {
             <CloseIcon />
           </button>
         </div>
+
+        {/* Ficha técnica */}
+        {fichaOpen && (
+          <FichaTecnica
+            obra={obra}
+            onClose={() => setFichaOpen(false)}
+            onPlay={() => togglePlay()}
+            isPlaying={playing}
+            isActive
+          />
+        )}
 
         {/* Janela de letra */}
         {letraOpen && (

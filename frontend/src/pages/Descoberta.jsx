@@ -8,6 +8,7 @@ import { api } from '../lib/api'
 import './Descoberta.css'
 import NotificationBell from '../components/NotificationBell'
 import ArtistaHero, { ObrasLista } from '../components/ArtistaHero'
+import FichaTecnica from '../components/FichaTecnica'
 
 function fmt(cents) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents ?? 0) / 100)
@@ -121,182 +122,6 @@ function EditoraCard({ editora, isAdmin, navigate }) {
           </button>
         </div>
       )}
-    </div>
-  )
-}
-
-function FichaTecnica({ obra, onClose, onPlay, isPlaying, isActive }) {
-  const navigate = useNavigate()
-  const [coautores, setCoautores] = useState([])
-  const [letraOpen, setLetraOpen] = useState(false)
-  const [letra, setLetra] = useState(null)
-  const [loadingLetra, setLoadingLetra] = useState(false)
-
-  useEffect(() => {
-    function onKey(e) {
-      if (e.key === 'Escape') {
-        if (letraOpen) setLetraOpen(false)
-        else onClose()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose, letraOpen])
-
-  useEffect(() => {
-    async function load() {
-      const { data } = await supabase
-        .from('coautorias')
-        .select('share_pct, is_titular, perfis(id, nome, nome_artistico, avatar_url, nivel)')
-        .eq('obra_id', obra.id)
-      setCoautores(data ?? [])
-    }
-    load()
-  }, [obra.id])
-
-  async function abrirLetra() {
-    setLetraOpen(true)
-    if (letra !== null) return
-    setLoadingLetra(true)
-    try {
-      const { data } = await supabase
-        .from('obras')
-        .select('letra')
-        .eq('id', obra.id)
-        .maybeSingle()
-      setLetra(data?.letra || '')
-    } catch (_) {
-      setLetra('')
-    } finally {
-      setLoadingLetra(false)
-    }
-  }
-
-  return (
-    <div className="dc-modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="dc-modal">
-        <button className="dc-modal-close" onClick={onClose}>×</button>
-
-        <div className="dc-modal-header" style={{ background: ObrgGrad(obra.id) }}>
-          <div className="dc-modal-cover">♪</div>
-          <div>
-            <div className="dc-modal-genre">{obra.genero || 'Composição'}</div>
-            <div className="dc-modal-nome">{obra.nome}</div>
-            <div className="dc-modal-autor">{obra.titular_nome}</div>
-          </div>
-        </div>
-
-        {obra.audio_path && (
-          <div className="dc-modal-actions">
-            <button className="dc-modal-play-btn" onClick={() => onPlay(obra)}>
-              {isPlaying ? '⏸' : '▶'}
-            </button>
-            <span className="dc-modal-action-label">
-              {isActive && isPlaying ? 'Reproduzindo…' : 'Ouvir preview'}
-            </span>
-          </div>
-        )}
-
-        <div className="dc-modal-actions" style={{ borderTop: 0, paddingTop: 0 }}>
-          <button
-            type="button"
-            onClick={abrirLetra}
-            style={{
-              width: '100%', padding: '12px 16px',
-              background: '#09090B', color: '#fff',
-              border: 'none', borderRadius: 8,
-              fontSize: 13, fontWeight: 700, letterSpacing: 0.4,
-              cursor: 'pointer', display: 'flex',
-              alignItems: 'center', justifyContent: 'center', gap: 8,
-            }}>
-            <span style={{ fontSize: 15 }}>📖</span> Ler letra
-          </button>
-        </div>
-
-        {letraOpen && (
-          <div
-            className="dc-modal-overlay"
-            onClick={e => { if (e.target === e.currentTarget) setLetraOpen(false) }}
-            style={{ zIndex: 9999 }}>
-            <div className="dc-modal" style={{ maxWidth: 640, display: 'flex', flexDirection: 'column', maxHeight: '85vh' }}>
-              <button className="dc-modal-close" onClick={() => setLetraOpen(false)}>×</button>
-              <div className="dc-modal-header" style={{ background: ObrgGrad(obra.id) }}>
-                <div className="dc-modal-cover">📖</div>
-                <div>
-                  <div className="dc-modal-genre">Letra completa</div>
-                  <div className="dc-modal-nome">{obra.nome}</div>
-                  <div className="dc-modal-autor">{obra.titular_nome || obra.compositor_nome || ''}</div>
-                </div>
-              </div>
-              <div
-                style={{
-                  padding: '20px 24px',
-                  overflowY: 'auto',
-                  flex: 1,
-                  whiteSpace: 'pre-wrap',
-                  fontSize: 15,
-                  lineHeight: 1.7,
-                  color: '#1F2937',
-                  fontFamily: 'Georgia, "Times New Roman", serif',
-                }}>
-                {loadingLetra
-                  ? <div style={{ color: '#6B7280', textAlign: 'center', padding: 24 }}>Carregando letra…</div>
-                  : (letra && letra.trim())
-                    ? letra
-                    : <div style={{ color: '#6B7280', textAlign: 'center', padding: 24 }}>
-                        Esta obra ainda não tem letra cadastrada.
-                      </div>
-                }
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="dc-modal-section">
-          <h3 className="dc-modal-section-title">Compositores</h3>
-          <div className="dc-modal-comp-list">
-            {coautores.map((c, i) => {
-              const perfilId = c.perfis?.id
-              const irParaPerfil = () => {
-                if (!perfilId) return
-                onClose()
-                navigate(`/perfil/${perfilId}`)
-              }
-              return (
-                <div key={i} className="dc-modal-comp-row"
-                     onClick={irParaPerfil}
-                     style={{ cursor: perfilId ? 'pointer' : 'default' }}
-                     title={perfilId ? 'Ver perfil' : ''}>
-                  <div className="dc-modal-comp-avatar">
-                    {c.perfis?.avatar_url
-                      ? <img src={c.perfis.avatar_url} alt={c.perfis.nome} />
-                      : c.perfis?.nome?.charAt(0).toUpperCase()
-                    }
-                  </div>
-                  <div className="dc-modal-comp-info">
-                    <div className="dc-modal-comp-nome"
-                         style={perfilId ? { color: '#0C447C', textDecoration: 'underline' } : undefined}>
-                      {c.perfis?.nome_artistico || c.perfis?.nome}
-                      {c.is_titular && <span className="dc-titular-badge">Titular</span>}
-                    </div>
-                    <div className="dc-modal-comp-nivel">{c.perfis?.nivel}</div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        <div className="dc-modal-buy-bar" style={{ justifyContent: 'center' }}>
-          <button
-            className="dc-modal-buy-btn"
-            style={{ width: '100%' }}
-            onClick={() => { onClose(); navigate(`/comprar/${obra.id}`) }}
-          >
-            Licenciar composição
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
@@ -419,11 +244,13 @@ export default function Descoberta() {
     navigate(`/perfil/${comp.id}`)
   }
 
-  // Monta fila com todas as obras visíveis que têm áudio,
-  // embaralhada aleatoriamente — a obra clicada toca primeiro.
-  function buildQueue(clickedObra) {
+  // Monta fila com todas as obras visíveis que têm áudio.
+  // O embaralhamento agora é feito centralmente no PlayerContext via opts.shuffle.
+  function buildQueue(clickedObra, listaCustom = null) {
     let lista
-    if (busca && resultados.obras.length > 0) {
+    if (listaCustom) {
+      lista = listaCustom.filter(o => o.audio_path)
+    } else if (busca && resultados.obras.length > 0) {
       lista = resultados.obras.filter(o => o.audio_path)
     } else if (aba === 'biblioteca') {
       lista = biblioteca.filter(o => o.audio_path)
@@ -431,25 +258,18 @@ export default function Descoberta() {
       lista = catalogo.filter(o => o.audio_path)
     }
     if (lista.length === 0) lista = [clickedObra]
-
-    // Fisher-Yates nas demais obras; clicada vai para o índice 0.
-    const restantes = lista.filter(o => o.id !== clickedObra.id)
-    for (let i = restantes.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[restantes[i], restantes[j]] = [restantes[j], restantes[i]]
-    }
-    const clicada = lista.find(o => o.id === clickedObra.id) || clickedObra
-    const filaFinal = [clicada, ...restantes]
-    return { lista: filaFinal, idx: 0 }
+    const idx = lista.findIndex(o => o.id === clickedObra.id)
+    return { lista, idx: idx >= 0 ? idx : 0 }
   }
 
-  function handlePlay(obra) {
+  function handlePlay(obra, listaCustom = null) {
     if (obraAtual?.id === obra.id) { togglePlay(); setMinimized(true); return }
     if (obra.audio_path) {
       api.post(`/analytics/play/${obra.id}`, {}).catch(() => {})
     }
-    const { lista, idx } = buildQueue(obra)
-    playObra(lista, idx)
+    addHistorico(obra.id)
+    const { lista, idx } = buildQueue(obra, listaCustom)
+    playObra(lista, idx, { shuffle: true })
     setMinimized(true)
   }
 
@@ -460,7 +280,7 @@ export default function Descoberta() {
     if (obraAtual?.id !== obra.id) {
       addHistorico(obra.id)
       const { lista, idx } = buildQueue(obra)
-      playObra(lista, idx)
+      playObra(lista, idx, { shuffle: true })
     }
     expandPlayer()
   }
@@ -582,7 +402,10 @@ export default function Descoberta() {
             <ObrasLista
               obras={obrasDoCom}
               getGrad={ObrgGrad}
-              onSelect={o => navigate(`/comprar/${o.id}`)}
+              currentObraId={obraAtual?.id}
+              isPlaying={playing}
+              onPlay={o => handlePlay(o, obrasDoCom)}
+              onShowFicha={setFichaObra}
             />
           </div>
         </div>

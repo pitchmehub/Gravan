@@ -144,9 +144,26 @@ export default function ArtistaHero({
 }
 
 /**
- * Lista vertical de obras estilo Spotify, com numeração + thumbnail + botão.
+ * Lista vertical de obras estilo Spotify.
+ *
+ * Modos de uso:
+ *   1) Modo player (preferido): passar onPlay + onShowFicha.
+ *      - 1º clique numa linha: começa a tocar (modo minimizado).
+ *      - 2º clique na mesma obra: abre a ficha técnica.
+ *      - O botão da direita vira ▶/⏸ na obra ativa.
+ *   2) Modo legado: passar onSelect + ctaLabel.
+ *      - Clique na linha ou no botão chama onSelect(obra).
  */
-export function ObrasLista({ obras, onSelect, getGrad, ctaLabel = 'Licenciar' }) {
+export function ObrasLista({
+  obras,
+  getGrad,
+  onSelect,
+  ctaLabel = 'Licenciar',
+  onPlay,
+  onShowFicha,
+  currentObraId = null,
+  isPlaying = false,
+}) {
   if (!obras || obras.length === 0) {
     return (
       <div style={{
@@ -156,58 +173,94 @@ export function ObrasLista({ obras, onSelect, getGrad, ctaLabel = 'Licenciar' })
       </div>
     )
   }
+
+  const modoPlayer = typeof onPlay === 'function'
+
+  function handleRowClick(o) {
+    if (modoPlayer) {
+      const isActive = currentObraId === o.id
+      if (isActive) onShowFicha?.(o)
+      else onPlay(o)
+      return
+    }
+    onSelect?.(o)
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {obras.map((o, i) => (
-        <div
-          key={o.id}
-          onClick={() => onSelect?.(o)}
-          onMouseEnter={e => e.currentTarget.style.background = '#FAFAFA'}
-          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '32px 56px 1fr auto',
-            alignItems: 'center', gap: 16,
-            padding: '10px 12px',
-            borderRadius: 8,
-            cursor: 'pointer',
-            transition: 'background 0.15s',
-          }}>
-          <div style={{ color: '#71717A', fontSize: 14, fontWeight: 600, textAlign: 'center' }}>
-            {i + 1}
-          </div>
-          <div style={{
-            width: 56, height: 56, borderRadius: 6,
-            background: getGrad ? getGrad(o.id) : '#09090B',
-            color: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 22, flexShrink: 0,
-          }}>
-            ♪
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{
-              fontSize: 15, fontWeight: 600, color: '#09090B',
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            }}>
-              {o.nome}
-            </div>
-            <div style={{ fontSize: 12, color: '#71717A', marginTop: 2 }}>
-              {o.genero || '—'}
-            </div>
-          </div>
-          <button
-            onClick={e => { e.stopPropagation(); onSelect?.(o) }}
+      {obras.map((o, i) => {
+        const isActive = modoPlayer && currentObraId === o.id
+        return (
+          <div
+            key={o.id}
+            onClick={() => handleRowClick(o)}
+            onMouseEnter={e => e.currentTarget.style.background = isActive ? '#F4F4F5' : '#FAFAFA'}
+            onMouseLeave={e => e.currentTarget.style.background = isActive ? '#FAFAFA' : 'transparent'}
             style={{
-              background: '#09090B', color: '#fff',
-              border: 'none', borderRadius: 99,
-              padding: '8px 16px', fontSize: 12, fontWeight: 700,
-              cursor: 'pointer', whiteSpace: 'nowrap',
+              display: 'grid',
+              gridTemplateColumns: '32px 56px 1fr auto',
+              alignItems: 'center', gap: 16,
+              padding: '10px 12px',
+              borderRadius: 8,
+              cursor: 'pointer',
+              transition: 'background 0.15s',
+              background: isActive ? '#FAFAFA' : 'transparent',
             }}>
-            {ctaLabel}
-          </button>
-        </div>
-      ))}
+            <div style={{
+              color: isActive ? '#E11D48' : '#71717A',
+              fontSize: 14, fontWeight: 600, textAlign: 'center',
+            }}>
+              {isActive && isPlaying ? '♪' : i + 1}
+            </div>
+            <div style={{
+              width: 56, height: 56, borderRadius: 6,
+              background: getGrad ? getGrad(o.id) : '#09090B',
+              color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 22, flexShrink: 0,
+            }}>
+              ♪
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{
+                fontSize: 15, fontWeight: 600,
+                color: isActive ? '#E11D48' : '#09090B',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>
+                {o.nome}
+              </div>
+              <div style={{ fontSize: 12, color: '#71717A', marginTop: 2 }}>
+                {o.genero || '—'}
+              </div>
+            </div>
+            {modoPlayer ? (
+              <button
+                onClick={e => { e.stopPropagation(); onPlay(o) }}
+                aria-label={isActive && isPlaying ? 'Pausar' : 'Tocar'}
+                style={{
+                  background: isActive ? '#E11D48' : '#09090B', color: '#fff',
+                  border: 'none', borderRadius: '50%',
+                  width: 36, height: 36, fontSize: 14,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                }}>
+                {isActive && isPlaying ? '⏸' : '▶'}
+              </button>
+            ) : (
+              <button
+                onClick={e => { e.stopPropagation(); onSelect?.(o) }}
+                style={{
+                  background: '#09090B', color: '#fff',
+                  border: 'none', borderRadius: 99,
+                  padding: '8px 16px', fontSize: 12, fontWeight: 700,
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                }}>
+                {ctaLabel}
+              </button>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

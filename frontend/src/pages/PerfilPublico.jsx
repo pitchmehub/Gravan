@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { usePlayer } from '../contexts/PlayerContext'
 import { supabase } from '../lib/supabase'
 import { api } from '../lib/api'
 import ArtistaHero, { ObrasLista } from '../components/ArtistaHero'
+import FichaTecnica from '../components/FichaTecnica'
 
 function fmt(cents) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -26,11 +28,37 @@ export default function PerfilPublico() {
   const { perfil: meuPerfil } = useAuth()
   const isAdmin = meuPerfil?.role === 'administrador'
 
+  // Player global
+  const {
+    obra: obraAtual, playing,
+    playObra, togglePlay, setMinimized,
+  } = usePlayer()
+  const [fichaObra, setFichaObra] = useState(null)
+
   const [perfil, setPerfil] = useState(null)
   const [obras, setObras] = useState([])
   const [erro, setErro] = useState('')
   const [loading, setLoading] = useState(true)
   const [atualizadoEm, setAtualizadoEm] = useState(null)
+
+  function handlePlayObra(o) {
+    if (obraAtual?.id === o.id) {
+      togglePlay()
+      setMinimized(true)
+      return
+    }
+    if (o.audio_path) {
+      api.post(`/analytics/play/${o.id}`, {}).catch(() => {})
+    }
+    const fila = obras.filter(x => x.audio_path)
+    const idx  = fila.findIndex(x => x.id === o.id)
+    if (idx < 0) {
+      playObra([o], 0)
+    } else {
+      playObra(fila, idx, { shuffle: true })
+    }
+    setMinimized(true)
+  }
 
   // Modal "Visualizar como administrador"
   const [adminOpen, setAdminOpen] = useState(false)
@@ -170,9 +198,22 @@ export default function PerfilPublico() {
         <ObrasLista
           obras={obras}
           getGrad={grad}
-          onSelect={o => navigate(`/comprar/${o.id}`)}
+          currentObraId={obraAtual?.id}
+          isPlaying={playing}
+          onPlay={handlePlayObra}
+          onShowFicha={setFichaObra}
         />
       </div>
+
+      {fichaObra && (
+        <FichaTecnica
+          obra={fichaObra}
+          onClose={() => setFichaObra(null)}
+          onPlay={() => handlePlayObra(fichaObra)}
+          isPlaying={obraAtual?.id === fichaObra.id && playing}
+          isActive={obraAtual?.id === fichaObra.id}
+        />
+      )}
 
       {adminOpen && (
         <div onClick={e => { if (e.target === e.currentTarget) setAdminOpen(false) }}

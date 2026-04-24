@@ -104,10 +104,22 @@ export function PlayerProvider({ children }) {
     setLoading(false)
   }
 
-  const playObra = useCallback(async (obraOuLista, idx = 0) => {
+  const playObra = useCallback(async (obraOuLista, idx = 0, opts = {}) => {
     const lista = Array.isArray(obraOuLista) ? obraOuLista : [obraOuLista]
-    setQueue(lista)
-    setIndex(idx)
+    let fila = lista
+    let inicio = idx
+    if (opts.shuffle && lista.length > 1) {
+      const start = lista[idx]
+      const restantes = lista.filter((_, i) => i !== idx)
+      for (let i = restantes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[restantes[i], restantes[j]] = [restantes[j], restantes[i]]
+      }
+      fila = [start, ...restantes]
+      inicio = 0
+    }
+    setQueue(fila)
+    setIndex(inicio)
     setVisible(true)
     // No mobile, abrir já no modo minimizado (acima da bottom nav).
     // No desktop continua na barra inferior padrão.
