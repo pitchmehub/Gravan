@@ -667,11 +667,16 @@
   .gp-time    { display: none; }
   .gp-queue-info { display: none; }
 
-  /* Minimizado: full width na parte de baixo, acima do botão Descoberta */
+  /* Minimizado: full width colado à barra de menu inferior */
   .gp-mini {
-    bottom: calc(96px + env(safe-area-inset-bottom, 0px));
-    left: 12px; right: 12px;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    left: 0; right: 0;
     max-width: none; min-width: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    box-shadow: none;
   }
 
   /* Expanded: capa um pouco menor */
