@@ -105,9 +105,20 @@ function PrivateRoute({ children, roles }) {
   return children
 }
 
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768)
+  useEffect(() => {
+    const h = () => setMobile(window.innerWidth < 768)
+    window.addEventListener('resize', h)
+    return () => window.removeEventListener('resize', h)
+  }, [])
+  return mobile
+}
+
 function AppShell({ children }) {
   const [collapsed, setCollapsed] = useState(false)
-  const sideW = collapsed ? 64 : 240
+  const isMobile = useIsMobile()
+  const sideW = isMobile ? 0 : (collapsed ? 64 : 240)
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#FFFFFF' }}>
       <SideMenu onCollapse={setCollapsed} />
@@ -115,6 +126,7 @@ function AppShell({ children }) {
         marginLeft: sideW, flex: 1,
         transition: 'margin-left .2s ease',
         minWidth: 0, background: '#FFFFFF',
+        paddingBottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom, 0px))' : 0,
       }}>
         {children}
       </main>
