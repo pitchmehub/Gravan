@@ -24,7 +24,7 @@ const GRADIENTS = [
 ]
 const ObrgGrad = id => GRADIENTS[(id?.charCodeAt(0) ?? 0) % GRADIENTS.length]
 
-function ObraCard({ obra, onPlay, onShowFicha, isPlaying, isActive, onAddHistorico }) {
+function ObraCard({ obra, onPlay, onShowFicha, onExpand, isPlaying, isActive, onAddHistorico }) {
   const lastClick = useRef(0)
 
   function handleClick(e) {
@@ -32,14 +32,18 @@ function ObraCard({ obra, onPlay, onShowFicha, isPlaying, isActive, onAddHistori
     const now = Date.now()
     if (now - lastClick.current < 400) {
       lastClick.current = 0
-      onShowFicha(obra)
+      // Duplo clique: abre player maximizado se tiver áudio
+      if (obra.audio_path) {
+        onExpand(obra)
+      } else {
+        onShowFicha(obra)
+      }
     } else {
       lastClick.current = now
       if (obra.audio_path) {
         onAddHistorico(obra.id)
         onPlay(obra)
       } else {
-        // Sem áudio? Já abre a ficha técnica
         onShowFicha(obra)
       }
     }
@@ -317,7 +321,22 @@ export default function Descoberta() {
 
   const { perfil } = useAuth()
   const navigate = useNavigate()
-  const { playObra, obra: obraAtual, playing, togglePlay } = usePlayer()
+  const { playObra, expandPlayer, obra: obraAtual, playing, togglePlay, nextTrack, prevTrack } = usePlayer()
+
+  // Swipe esquerda/direita na tela → próxima/anterior
+  const swipeStart = useRef(null)
+  function handleRootTouchStart(e) {
+    swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+  }
+  function handleRootTouchEnd(e) {
+    if (!swipeStart.current || !obraAtual) return
+    const dx = e.changedTouches[0].clientX - swipeStart.current.x
+    const dy = e.changedTouches[0].clientY - swipeStart.current.y
+    swipeStart.current = null
+    if (Math.abs(dx) < 80 || Math.abs(dx) < Math.abs(dy) * 1.5) return
+    if (dx < 0) nextTrack()
+    else prevTrack()
+  }
 
   const [aba, setAba] = useState('catalogo')
   const [generoFiltro, setGeneroFiltro] = useState('Todos')
@@ -425,8 +444,22 @@ export default function Descoberta() {
 
   const cadastroIncompleto = perfil && !perfil.cadastro_completo
 
+  function handleExpand(obra) {
+    if (!obra.audio_path) return
+    // Se essa obra não está tocando ainda, toca e expande
+    if (obraAtual?.id !== obra.id) {
+      addHistorico(obra.id)
+      playObra(obra)
+    }
+    expandPlayer()
+  }
+
   return (
-    <div className="dc-root">
+    <div
+      className="dc-root"
+      onTouchStart={handleRootTouchStart}
+      onTouchEnd={handleRootTouchEnd}
+    >
       {cadastroIncompleto && (
         <div style={{
           padding: '14px 28px',
@@ -454,24 +487,26 @@ export default function Descoberta() {
         </div>
       )}
       <div className="dc-topbar">
-        <div className="dc-tabs">
-          <button className={`dc-tab ${aba === 'catalogo' ? 'dc-tab-active' : ''}`}
-            onClick={() => { setAba('catalogo'); setCompositor(null); setBusca('') }}>
-            <span className="dc-tab-icon">⊞</span> Catálogo
-          </button>
-          <button className={`dc-tab ${aba === 'biblioteca' ? 'dc-tab-active' : ''}`}
-            onClick={() => { setAba('biblioteca'); setCompositor(null); setBusca('') }}>
-            <span className="dc-tab-icon">♫</span> Biblioteca
-          </button>
+        <div className="dc-topbar-row1">
+          <div className="dc-tabs">
+            <button className={`dc-tab ${aba === 'catalogo' ? 'dc-tab-active' : ''}`}
+              onClick={() => { setAba('catalogo'); setCompositor(null); setBusca('') }}>
+              <span className="dc-tab-icon">⊞</span> Catálogo
+            </button>
+            <button className={`dc-tab ${aba === 'biblioteca' ? 'dc-tab-active' : ''}`}
+              onClick={() => { setAba('biblioteca'); setCompositor(null); setBusca('') }}>
+              <span className="dc-tab-icon">♫</span> Biblioteca
+            </button>
+          </div>
+          <div className="dc-topbar-bell">
+            <NotificationBell />
+          </div>
         </div>
         <div className="dc-search-wrap">
           <span className="dc-search-icon">⌕</span>
           <input className="dc-search" placeholder="Buscar obras, compositores ou editoras…"
             value={busca} onChange={e => setBusca(e.target.value)} />
           {busca && <button className="dc-search-clear" onClick={() => { setBusca(''); setResultados({ obras: [], compositores: [], editoras: [] }) }}>×</button>}
-        </div>
-        <div style={{ marginLeft: 'auto' }}>
-          <NotificationBell />
         </div>
       </div>
 
@@ -509,6 +544,7 @@ export default function Descoberta() {
                     isPlaying={obraAtual?.id === o.id && playing}
                     onPlay={handlePlay}
                     onShowFicha={setFichaObra}
+                    onExpand={handleExpand}
                     onAddHistorico={addHistorico} />
                 ))}
               </div>
@@ -563,6 +599,7 @@ export default function Descoberta() {
                       isPlaying={obraAtual?.id === o.id && playing}
                       onPlay={handlePlay}
                       onShowFicha={setFichaObra}
+                      onExpand={handleExpand}
                       onAddHistorico={addHistorico} />
                   ))}
                 </div>
@@ -587,6 +624,7 @@ export default function Descoberta() {
                       isPlaying={obraAtual?.id === o.id && playing}
                       onPlay={handlePlay}
                       onShowFicha={setFichaObra}
+                      onExpand={handleExpand}
                       onAddHistorico={addHistorico} />
                   ))}
                 </div>

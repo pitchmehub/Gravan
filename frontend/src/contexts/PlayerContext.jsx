@@ -4,22 +4,21 @@ import { getAudioUrl } from '../lib/audioUrl'
 const PlayerContext = createContext(null)
 
 export function PlayerProvider({ children }) {
-  // Fila de obras
-  const [queue,      setQueue]      = useState([])   // [{id, nome, titular_nome, audio_path}]
-  const [index,      setIndex]      = useState(0)
-  const [playing,    setPlaying]    = useState(false)
-  const [minimized,  setMinimized]  = useState(false)
-  const [visible,    setVisible]    = useState(false)
+  const [queue,       setQueue]      = useState([])
+  const [index,       setIndex]      = useState(0)
+  const [playing,     setPlaying]    = useState(false)
+  const [minimized,   setMinimized]  = useState(false)
+  const [expanded,    setExpanded]   = useState(false)
+  const [visible,     setVisible]    = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
-  const [duration,   setDuration]   = useState(0)
-  const [loading,    setLoading]    = useState(false)
-  const [volume,     setVolume]     = useState(1)
+  const [duration,    setDuration]   = useState(0)
+  const [loading,     setLoading]    = useState(false)
+  const [volume,      setVolume]     = useState(1)
 
   const audioRef = useRef(new Audio())
 
   const obra = queue[index] ?? null
 
-  // Sincroniza eventos do elemento Audio
   useEffect(() => {
     const el = audioRef.current
 
@@ -31,13 +30,13 @@ export function PlayerProvider({ children }) {
     const onPlay     = () => setPlaying(true)
     const onPause    = () => setPlaying(false)
 
-    el.addEventListener('timeupdate',      onTime)
-    el.addEventListener('loadedmetadata',  onDuration)
-    el.addEventListener('ended',           onEnded)
-    el.addEventListener('waiting',         onWaiting)
-    el.addEventListener('canplay',         onCanPlay)
-    el.addEventListener('play',            onPlay)
-    el.addEventListener('pause',           onPause)
+    el.addEventListener('timeupdate',     onTime)
+    el.addEventListener('loadedmetadata', onDuration)
+    el.addEventListener('ended',          onEnded)
+    el.addEventListener('waiting',        onWaiting)
+    el.addEventListener('canplay',        onCanPlay)
+    el.addEventListener('play',           onPlay)
+    el.addEventListener('pause',          onPause)
 
     return () => {
       el.removeEventListener('timeupdate',     onTime)
@@ -50,13 +49,11 @@ export function PlayerProvider({ children }) {
     }
   }, [])
 
-  // Carrega nova faixa quando o índice muda
   useEffect(() => {
     if (!obra) return
     loadTrack(obra)
   }, [index, obra?.id])
 
-  // Volume
   useEffect(() => {
     audioRef.current.volume = volume
   }, [volume])
@@ -79,12 +76,17 @@ export function PlayerProvider({ children }) {
     setLoading(false)
   }
 
-  // API pública
   const playObra = useCallback(async (obraOuLista, idx = 0) => {
     const lista = Array.isArray(obraOuLista) ? obraOuLista : [obraOuLista]
     setQueue(lista)
     setIndex(idx)
     setVisible(true)
+    setMinimized(false)
+    setExpanded(false)
+  }, [])
+
+  const expandPlayer = useCallback(() => {
+    setExpanded(true)
     setMinimized(false)
   }, [])
 
@@ -108,7 +110,6 @@ export function PlayerProvider({ children }) {
 
   const prevTrack = useCallback(() => {
     const el = audioRef.current
-    // Se passou mais de 3s, volta ao início da faixa atual
     if (el.currentTime > 3) { seek(0); return }
     setIndex(i => (i - 1 + queue.length) % queue.length)
   }, [queue.length, seek])
@@ -120,14 +121,15 @@ export function PlayerProvider({ children }) {
     setPlaying(false)
     setQueue([])
     setIndex(0)
+    setExpanded(false)
   }, [])
 
   return (
     <PlayerContext.Provider value={{
-      obra, queue, index, playing, minimized, visible,
+      obra, queue, index, playing, minimized, expanded, visible,
       currentTime, duration, loading, volume,
-      playObra, togglePlay, seek, nextTrack, prevTrack,
-      close, setMinimized, setVolume,
+      playObra, expandPlayer, togglePlay, seek, nextTrack, prevTrack,
+      close, setMinimized, setExpanded, setVolume,
     }}>
       {children}
     </PlayerContext.Provider>
