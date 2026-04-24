@@ -430,26 +430,40 @@ export default function Descoberta() {
     navigate(`/perfil/${comp.id}`)
   }
 
+  // Monta fila com todas as obras visíveis que têm áudio
+  function buildQueue(clickedObra) {
+    let lista
+    if (busca && resultados.obras.length > 0) {
+      lista = resultados.obras.filter(o => o.audio_path)
+    } else if (aba === 'biblioteca') {
+      lista = biblioteca.filter(o => o.audio_path)
+    } else {
+      lista = catalogo.filter(o => o.audio_path)
+    }
+    if (lista.length === 0) lista = [clickedObra]
+    const idx = lista.findIndex(o => o.id === clickedObra.id)
+    return { lista, idx: idx >= 0 ? idx : 0 }
+  }
+
   function handlePlay(obra) {
     if (!obra.audio_path) {
-      // Sem áudio: abre a ficha técnica
       setFichaObra(obra)
       return
     }
     if (obraAtual?.id === obra.id) { togglePlay(); return }
-    // Registra play para analytics (fire-and-forget — não bloqueia o UX)
     api.post(`/analytics/play/${obra.id}`, {}).catch(() => {})
-    playObra(obra)
+    const { lista, idx } = buildQueue(obra)
+    playObra(lista, idx)
   }
 
   const cadastroIncompleto = perfil && !perfil.cadastro_completo
 
   function handleExpand(obra) {
     if (!obra.audio_path) return
-    // Se essa obra não está tocando ainda, toca e expande
     if (obraAtual?.id !== obra.id) {
       addHistorico(obra.id)
-      playObra(obra)
+      const { lista, idx } = buildQueue(obra)
+      playObra(lista, idx)
     }
     expandPlayer()
   }

@@ -405,22 +405,48 @@
   .dc-section        { padding: 0 12px 12px; }
   .dc-section-title  { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
 
-  /* Grid de cards — 2 colunas compactas, preenche a tela */
+  /* Grid de cards — lista horizontal compacta estilo playlist */
   .dc-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
   }
-  .dc-card        { padding: 8px; }
-  .dc-card-cover  { margin-bottom: 6px; border-radius: 4px; }
-  .dc-card-note   { font-size: 24px; }
-  .dc-card-play   {
-    width: 30px; height: 30px; font-size: 11px;
-    bottom: 5px; right: 5px;
+  .dc-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  .dc-card:last-child { border-bottom: none; }
+  .dc-card-active { border-left: 3px solid var(--brand) !important; padding-left: 9px; }
+
+  .dc-card-cover {
+    width: 52px; height: 52px;
+    aspect-ratio: 1;
+    margin-bottom: 0;
+    border-radius: 4px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .dc-card-note { font-size: 18px; }
+  .dc-card-play {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 24px; height: 24px;
+    font-size: 9px;
     opacity: 1; transform: none;
+    border-radius: 50%;
   }
-  .dc-card-nome   { font-size: 12px; margin-bottom: 2px; }
-  .dc-card-autor  { font-size: 11px; margin-bottom: 3px; }
+  /* Info no modo lista */
+  .dc-card-info { flex: 1; min-width: 0; }
+  .dc-card-nome   { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .dc-card-autor  { font-size: 11px; margin-bottom: 0; }
   .dc-card-preco  { font-size: 11px; font-weight: 700; }
 
   /* Compositores — lista compacta estilo Spotify */

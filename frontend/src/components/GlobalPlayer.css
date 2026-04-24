@@ -315,14 +315,98 @@
 }
 .gp-exp-play-btn:active { transform: scale(.94); }
 
-.gp-exp-queue-info {
-  font-size: 12px; color: rgba(255,255,255,.45);
-  margin-bottom: 8px;
+.gp-exp-queue-badge {
+  font-size: 11px; color: rgba(255,255,255,.5);
+  background: rgba(255,255,255,.1);
+  padding: 4px 8px; border-radius: 99px;
+  font-variant-numeric: tabular-nums;
 }
-.gp-exp-swipe-hint {
-  font-size: 11px; color: rgba(255,255,255,.3);
-  margin-bottom: 16px;
-  letter-spacing: .5px;
+
+/* ── BOTÃO LER LETRA ─────────────────── */
+.gp-ler-letra-btn {
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.85);
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 10px 28px;
+  border-radius: 99px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background .15s;
+  font-family: inherit;
+}
+.gp-ler-letra-btn:hover { background: rgba(255,255,255,.2); }
+.gp-ler-letra-btn:active { transform: scale(.97); }
+
+/* ── JANELA DE LETRA (slide-up sheet) ── */
+@keyframes gpLetraUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.gp-letra-sheet {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 62%;
+  background: rgba(10,10,12,.96);
+  backdrop-filter: blur(20px);
+  border-radius: 20px 20px 0 0;
+  display: flex; flex-direction: column;
+  animation: gpLetraUp .3s cubic-bezier(0.32,0.72,0,1);
+  z-index: 10;
+  touch-action: pan-y;
+}
+
+.gp-letra-handle-bar {
+  width: 40px; height: 4px;
+  background: rgba(255,255,255,.25);
+  border-radius: 2px;
+  margin: 12px auto 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.gp-letra-handle-bar:hover { background: rgba(255,255,255,.4); }
+
+.gp-letra-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  flex-shrink: 0;
+}
+.gp-letra-titulo {
+  font-size: 14px; font-weight: 700; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 1; margin-right: 12px;
+}
+.gp-letra-close {
+  background: rgba(255,255,255,.1); border: none;
+  color: rgba(255,255,255,.7);
+  width: 28px; height: 28px; border-radius: 50%;
+  font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; line-height: 1;
+  transition: background .15s;
+}
+.gp-letra-close:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+.gp-letra-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px 32px;
+  -webkit-overflow-scrolling: touch;
+}
+.gp-letra-text {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 15px; line-height: 1.8;
+  color: rgba(255,255,255,.85);
+  white-space: pre-wrap; word-break: break-word;
+  margin: 0;
+}
+.gp-letra-empty {
+  color: rgba(255,255,255,.4);
+  font-size: 14px; text-align: center;
+  padding: 32px 0;
 }
 
 /* ── RESPONSIVO ──────────────────────── */
