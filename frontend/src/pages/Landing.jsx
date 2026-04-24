@@ -104,7 +104,7 @@ export default function Landing() {
       <nav className="nav-minimal" data-testid="landing-nav">
         <div className="nav-container">
           <a href="#" className="logo" data-testid="logo" aria-label={content.brand.logoText}>
-            <GravanLogo height={36} />
+            <GravanLogo height={52} />
           </a>
           <div className="nav-center">
             <a href="#como-funciona" data-testid="nav-como-funciona">{content.nav.link1}</a>
