@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
   import { useNavigate, useSearchParams } from 'react-router-dom'
   import { useAuth } from '../contexts/AuthContext'
   import { supabase } from '../lib/supabase'
+  import GravanLogo from '../components/GravanLogo'
 
   import './Login.css'
 
@@ -68,7 +69,7 @@ import React, { useEffect, useState } from 'react'
       <div className="login-root">
         <div className="login-card">
           <div className="login-logo">
-            <img src="/gravan-logo.png" alt="Gravan" className="login-logo-img" />
+            <GravanLogo height={56} />
           </div>
           <p className="login-tagline">Plataforma de composições musicais</p>
 

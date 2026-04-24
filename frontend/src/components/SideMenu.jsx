@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import GravanLogo from './GravanLogo'
 import './SideMenu.css'
 
 const NAV_ITEMS = {
@@ -194,7 +195,7 @@ export default function SideMenu({ onCollapse }) {
         <aside className={`sidebar mobile-drawer ${mobileOpen ? 'mobile-drawer-open' : ''}`}>
           <div className="sidebar-header">
             <button className="sidebar-logo-btn" onClick={() => { navigate('/descoberta'); setMobileOpen(false) }}>
-              <img src="/gravan-logo.png" alt="Gravan" className="sidebar-logo-img" />
+              <GravanLogo height={28} />
             </button>
             <button
               className="sidebar-toggle"
@@ -249,7 +250,7 @@ export default function SideMenu({ onCollapse }) {
       <div className="sidebar-header">
         {!collapsed && (
           <button className="sidebar-logo-btn" onClick={() => navigate('/descoberta')}>
-            <img src="/gravan-logo.png" alt="Gravan" className="sidebar-logo-img" />
+            <GravanLogo height={28} />
           </button>
         )}
         <button className="sidebar-toggle" onClick={() => setCollapsed(c => !c)}>

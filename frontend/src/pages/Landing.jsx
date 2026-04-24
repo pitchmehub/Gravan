@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import DEFAULT_CONTENT from '../config/landing.default.json'
+import GravanLogo from '../components/GravanLogo'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -102,8 +103,8 @@ export default function Landing() {
       {/* Navigation */}
       <nav className="nav-minimal" data-testid="landing-nav">
         <div className="nav-container">
-          <a href="#" className="logo" data-testid="logo">
-            <img src="/gravan-logo.png" alt={content.brand.logoText} className="logo-img" />
+          <a href="#" className="logo" data-testid="logo" aria-label={content.brand.logoText}>
+            <GravanLogo height={36} />
           </a>
           <div className="nav-center">
             <a href="#como-funciona" data-testid="nav-como-funciona">{content.nav.link1}</a>
