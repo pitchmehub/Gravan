@@ -60,6 +60,15 @@ def create_app() -> Flask:
     # ═══════════════════════════════════════════════════════════
     _env_origins = os.getenv("ALLOWED_ORIGINS", "").strip()
     allowed = [o.strip() for o in _env_origins.split(",") if o.strip()]
+
+    # Support Replit dynamic domains
+    replit_dev_domain = os.getenv("REPLIT_DEV_DOMAIN", "")
+    if replit_dev_domain:
+        for scheme in ("https://", "http://"):
+            origin = f"{scheme}{replit_dev_domain}"
+            if origin not in allowed:
+                allowed.append(origin)
+
     if not allowed:
         allowed = ["http://localhost:3000"] if os.getenv("FLASK_ENV") != "production" else []
     CORS(
