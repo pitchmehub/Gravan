@@ -2,13 +2,16 @@ import React, { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import ImageCropper from '../components/ImageCropper'
 
 const MAX_AVATAR = 2 * 1024 * 1024 // 2 MB
+const MAX_CAPA = 5 * 1024 * 1024 // 5 MB
 
 export default function EditarPerfil() {
   const { perfil, refreshPerfil } = useAuth()
   const navigate = useNavigate()
-  const fileRef  = useRef(null)
+  const avatarFileRef = useRef(null)
+  const capaFileRef = useRef(null)
 
   const [form, setForm] = useState({
     nome:           perfil?.nome           ?? '',
@@ -16,54 +19,91 @@ export default function EditarPerfil() {
     telefone:       perfil?.telefone       ?? '',
     bio:            perfil?.bio            ?? '',
   })
+
   const [avatarPreview, setAvatarPreview] = useState(perfil?.avatar_url ?? null)
-  const [avatarFile,    setAvatarFile]    = useState(null)
+  const [avatarBlob,    setAvatarBlob]    = useState(null)
   const [avatarErro,    setAvatarErro]    = useState('')
-  const [salvando,      setSalvando]      = useState(false)
-  const [erro,          setErro]          = useState('')
-  const [sucesso,       setSucesso]       = useState('')
+
+  const [capaPreview, setCapaPreview] = useState(perfil?.capa_url ?? null)
+  const [capaBlob,    setCapaBlob]    = useState(null)
+  const [capaErro,    setCapaErro]    = useState('')
+
+  // Cropper state
+  const [cropSrc, setCropSrc]     = useState(null)
+  const [cropMode, setCropMode]   = useState(null) // 'avatar' | 'capa'
+
+  const [salvando, setSalvando] = useState(false)
+  const [erro,     setErro]     = useState('')
+  const [sucesso,  setSucesso]  = useState('')
 
   function handleChange(e) {
     setForm(p => ({ ...p, [e.target.name]: e.target.value }))
   }
 
-  function handleAvatar(e) {
-    setAvatarErro('')
+  function abrirArquivo(e, tipo) {
+    const setErr = tipo === 'avatar' ? setAvatarErro : setCapaErro
+    setErr('')
     const file = e.target.files?.[0]
+    e.target.value = ''
     if (!file) return
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      setAvatarErro('Apenas JPG, PNG ou WebP são aceitos.')
+      setErr('Apenas JPG, PNG ou WebP são aceitos.')
       return
     }
-    if (file.size > MAX_AVATAR) {
-      setAvatarErro('Imagem excede 2 MB.')
+    const max = tipo === 'avatar' ? MAX_AVATAR : MAX_CAPA
+    if (file.size > max) {
+      setErr(`Imagem excede ${max / (1024 * 1024)} MB.`)
       return
     }
-    setAvatarFile(file)
-    setAvatarPreview(URL.createObjectURL(file))
+    setCropSrc(URL.createObjectURL(file))
+    setCropMode(tipo)
+  }
+
+  function aplicarCrop(blob) {
+    const url = URL.createObjectURL(blob)
+    if (cropMode === 'avatar') {
+      setAvatarBlob(blob)
+      setAvatarPreview(url)
+    } else if (cropMode === 'capa') {
+      setCapaBlob(blob)
+      setCapaPreview(url)
+    }
+    setCropSrc(null)
+    setCropMode(null)
+  }
+
+  async function uploadImagem(bucket, blob) {
+    const path = `${perfil.id}/${bucket}.jpg`
+    const { error: upErr } = await supabase.storage
+      .from(bucket)
+      .upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
+    if (upErr) throw upErr
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path)
+    return data.publicUrl + '?t=' + Date.now()
   }
 
   async function salvar(e) {
     e.preventDefault()
-    setErro(''); setSucesso(''); setSalvando(true)
+    setErro(''); setSucesso('')
 
+    // Validações obrigatórias
+    if (!avatarPreview) {
+      setErro('Adicione uma foto de perfil para continuar.')
+      return
+    }
+    if (!capaPreview) {
+      setErro('Adicione uma foto de capa para continuar.')
+      return
+    }
+
+    setSalvando(true)
     try {
       let avatar_url = perfil?.avatar_url ?? null
+      let capa_url   = perfil?.capa_url ?? null
 
-      // 1. Upload do avatar se houver novo arquivo
-      if (avatarFile) {
-        const ext  = avatarFile.name.split('.').pop()
-        const path = `${perfil.id}/avatar.${ext}`
-        const { error: upErr } = await supabase.storage
-          .from('avatares')
-          .upload(path, avatarFile, { upsert: true, contentType: avatarFile.type })
-        if (upErr) throw upErr
+      if (avatarBlob) avatar_url = await uploadImagem('avatares', avatarBlob)
+      if (capaBlob)   capa_url   = await uploadImagem('capas', capaBlob)
 
-        const { data } = supabase.storage.from('avatares').getPublicUrl(path)
-        avatar_url = data.publicUrl + '?t=' + Date.now() // cache-bust
-      }
-
-      // 2. Atualizar perfil no banco
       const { error: dbErr } = await supabase
         .from('perfis')
         .update({
@@ -72,14 +112,15 @@ export default function EditarPerfil() {
           telefone:       form.telefone.trim() || null,
           bio:            form.bio.trim() || null,
           avatar_url,
+          capa_url,
         })
         .eq('id', perfil.id)
       if (dbErr) throw dbErr
 
-      // 3. Atualizar contexto
       await refreshPerfil()
       setSucesso('Perfil atualizado com sucesso!')
-      setAvatarFile(null)
+      setAvatarBlob(null)
+      setCapaBlob(null)
     } catch (err) {
       setErro(err.message ?? 'Erro ao salvar perfil.')
     } finally {
@@ -90,7 +131,7 @@ export default function EditarPerfil() {
   const iniciais = form.nome?.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase() || '?'
 
   return (
-    <div style={{ maxWidth: 560 }}>
+    <div style={{ maxWidth: 720 }}>
       <div style={{ marginBottom: 28 }}>
         <button
           onClick={() => navigate(-1)}
@@ -103,30 +144,94 @@ export default function EditarPerfil() {
       </div>
 
       <form onSubmit={salvar}>
-        {/* Avatar */}
-        <div className="card" style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 20 }}>
+        {/* Capa + Avatar (estilo Spotify) */}
+        <div className="card" style={{ marginBottom: 20, padding: 0, overflow: 'hidden' }}>
           <div
+            onClick={() => capaFileRef.current?.click()}
             style={{
-              width: 80, height: 80, borderRadius: '50%',
-              background: avatarPreview ? 'transparent' : 'var(--brand-light)',
-              overflow: 'hidden', flexShrink: 0, cursor: 'pointer',
-              border: '3px solid var(--brand-light)',
+              position: 'relative',
+              height: 180,
+              background: capaPreview
+                ? `url(${capaPreview}) center/cover no-repeat`
+                : 'linear-gradient(135deg, #BE123C, #09090B)',
+              cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
-            onClick={() => fileRef.current?.click()}
           >
-            {avatarPreview
-              ? <img src={avatarPreview} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, fontWeight: 700, color: 'var(--brand)' }}>{iniciais}</div>
-            }
+            {!capaPreview && (
+              <div style={{ color: '#fff', textAlign: 'center', padding: 20 }}>
+                <div style={{ fontSize: 28 }}>🖼️</div>
+                <div style={{ fontSize: 13, fontWeight: 700, marginTop: 4 }}>Adicionar foto de capa *</div>
+                <div style={{ fontSize: 11, opacity: 0.8 }}>Recomendado: 1500×500 px · JPG, PNG ou WebP · Máx. 5 MB</div>
+              </div>
+            )}
+            {capaPreview && (
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); capaFileRef.current?.click() }}
+                style={{
+                  position: 'absolute', bottom: 12, right: 12,
+                  background: 'rgba(0,0,0,.6)', color: '#fff',
+                  border: 'none', borderRadius: 99, padding: '6px 14px',
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                📷 Trocar capa
+              </button>
+            )}
+            <input
+              ref={capaFileRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              style={{ display: 'none' }}
+              onChange={e => abrirArquivo(e, 'capa')}
+            />
           </div>
-          <div>
-            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleAvatar} />
-            <button type="button" className="btn btn-secondary btn-sm" onClick={() => fileRef.current?.click()}>
-              📷 Trocar foto
-            </button>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>JPG, PNG ou WebP · Máx. 2 MB</p>
-            {avatarErro && <p style={{ fontSize: 12, color: 'var(--error)', marginTop: 4 }}>{avatarErro}</p>}
+
+          <div style={{ padding: 20, display: 'flex', alignItems: 'center', gap: 16, marginTop: -50 }}>
+            <div
+              onClick={() => avatarFileRef.current?.click()}
+              style={{
+                width: 100, height: 100, borderRadius: '50%',
+                background: avatarPreview ? '#fff' : 'var(--brand-light, #FCE7E7)',
+                overflow: 'hidden', flexShrink: 0, cursor: 'pointer',
+                border: '4px solid #fff',
+                boxShadow: '0 4px 12px rgba(0,0,0,.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              {avatarPreview
+                ? <img src={avatarPreview} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--brand, #E11D48)' }}>{iniciais}</div>
+              }
+            </div>
+            <div style={{ flex: 1 }}>
+              <input
+                ref={avatarFileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                style={{ display: 'none' }}
+                onChange={e => abrirArquivo(e, 'avatar')}
+              />
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => avatarFileRef.current?.click()}
+              >
+                📷 {avatarPreview ? 'Trocar foto' : 'Adicionar foto de perfil *'}
+              </button>
+              <p style={{ fontSize: 12, color: 'var(--text-muted, #71717A)', marginTop: 6 }}>
+                JPG, PNG ou WebP · Máx. 2 MB · Você poderá ajustar o enquadramento
+              </p>
+            </div>
           </div>
+
+          {(avatarErro || capaErro) && (
+            <div style={{ padding: '0 20px 14px' }}>
+              {avatarErro && <p style={{ fontSize: 12, color: 'var(--error, #c0392b)', margin: 0 }}>Foto de perfil: {avatarErro}</p>}
+              {capaErro && <p style={{ fontSize: 12, color: 'var(--error, #c0392b)', margin: '4px 0 0' }}>Capa: {capaErro}</p>}
+            </div>
+          )}
         </div>
 
         {/* Dados */}
@@ -204,6 +309,18 @@ export default function EditarPerfil() {
           <button type="button" className="btn btn-ghost" onClick={() => navigate(-1)}>Cancelar</button>
         </div>
       </form>
+
+      {cropSrc && (
+        <ImageCropper
+          src={cropSrc}
+          aspect={cropMode === 'avatar' ? 1 : 3}
+          shape={cropMode === 'avatar' ? 'circle' : 'rect'}
+          outputWidth={cropMode === 'avatar' ? 600 : 1500}
+          title={cropMode === 'avatar' ? 'Ajustar foto de perfil' : 'Ajustar foto de capa'}
+          onCancel={() => { setCropSrc(null); setCropMode(null) }}
+          onConfirm={aplicarCrop}
+        />
+      )}
     </div>
   )
 }

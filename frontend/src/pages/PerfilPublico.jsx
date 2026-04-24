@@ -51,7 +51,7 @@ export default function PerfilPublico() {
     try {
       const { data: p, error: ePerfil } = await supabase
         .from('perfis')
-        .select('id, nome, nome_artistico, avatar_url, nivel, role, bio')
+        .select('id, nome, nome_artistico, avatar_url, capa_url, nivel, role, bio')
         .eq('id', perfilId)
         .maybeSingle()
       if (ePerfil) throw new Error(ePerfil.message)
@@ -121,91 +121,157 @@ export default function PerfilPublico() {
   if (erro)    return <div style={{ padding: 32, color: '#c0392b' }}>⚠ {erro}</div>
   if (!perfil) return null
 
-  const iniciais = (perfil.nome || '?').split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase()
+  const nomeExibicao = perfil.nome_artistico || perfil.nome
 
   return (
-    <div style={{ padding: '32px 20px', maxWidth: 1100, margin: '0 auto' }}>
-      <button onClick={() => navigate(-1)}
-              style={{ background: 'none', border: 'none', color: 'var(--brand, #E11D48)', cursor: 'pointer', fontSize: 13, marginBottom: 16 }}>
-        ← Voltar
-      </button>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24, flexWrap: 'wrap' }}>
+    <div style={{ margin: '0 auto', maxWidth: 1100, background: '#fff', minHeight: '100vh' }}>
+      {/* Cover header estilo Spotify */}
+      <div style={{
+        position: 'relative',
+        height: 340,
+        background: perfil.capa_url
+          ? `url(${perfil.capa_url}) center/cover no-repeat`
+          : grad(perfil.id),
+      }}>
         <div style={{
-          width: 96, height: 96, borderRadius: '50%',
-          background: grad(perfil.id), color: '#fff',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 32, fontWeight: 700, overflow: 'hidden',
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.55) 70%, rgba(0,0,0,.85) 100%)',
+        }} />
+
+        <button onClick={() => navigate(-1)}
+                style={{
+                  position: 'absolute', top: 16, left: 16, zIndex: 2,
+                  background: 'rgba(0,0,0,.5)', color: '#fff',
+                  border: 'none', borderRadius: 99, padding: '6px 14px',
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                }}>
+          ← Voltar
+        </button>
+
+        <div style={{
+          position: 'absolute', bottom: 24, left: 32, right: 32, zIndex: 2,
+          color: '#fff',
         }}>
-          {perfil.avatar_url
-            ? <img src={perfil.avatar_url} alt={perfil.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            : iniciais}
-        </div>
-        <div style={{ flex: 1, minWidth: 220 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>
-            {perfil.nome_artistico || perfil.nome}
+          <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.85, textTransform: 'uppercase', letterSpacing: 1 }}>
+            {perfil.role === 'publisher' ? 'Editora' : perfil.role === 'compositor' ? 'Artista' : perfil.role}
+          </div>
+          <h1 style={{
+            fontSize: 'clamp(40px, 8vw, 84px)',
+            fontWeight: 900, margin: '4px 0 0',
+            lineHeight: 1, letterSpacing: -2,
+            textShadow: '0 2px 8px rgba(0,0,0,.4)',
+          }}>
+            {nomeExibicao}
           </h1>
           {perfil.nome_artistico && perfil.nome_artistico !== perfil.nome && (
-            <div style={{ fontSize: 13, color: 'var(--text-muted, #71717A)', marginTop: 2 }}>{perfil.nome}</div>
+            <div style={{ fontSize: 13, opacity: 0.85, marginTop: 6 }}>{perfil.nome}</div>
           )}
-          <div style={{ fontSize: 12, color: 'var(--text-muted, #71717A)', marginTop: 6 }}>
-            {perfil.role === 'publisher' ? 'Editora' : perfil.role === 'compositor' ? 'Artista' : perfil.role}
-            {perfil.nivel && ` · ${perfil.nivel}`}
+          <div style={{ fontSize: 13, opacity: 0.9, marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            {perfil.nivel && <span>{perfil.nivel}</span>}
+            <span>·</span>
+            <span>{obras.length} obra{obras.length !== 1 ? 's' : ''}</span>
           </div>
-          {perfil.bio && <p style={{ fontSize: 13, color: '#3F3F46', marginTop: 10, maxWidth: 560 }}>{perfil.bio}</p>}
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
-          {isAdmin && (
-            <button onClick={abrirVisaoAdmin}
-                    data-testid="btn-visualizar-como-admin"
-                    style={{
-                      padding: '10px 18px', fontSize: 13, fontWeight: 700,
-                      background: '#09090B', color: '#fff',
-                      border: '1px solid #09090B', borderRadius: 10, cursor: 'pointer',
-                    }}>
-              👑 Visualizar como administrador
-            </button>
+          {perfil.bio && (
+            <p style={{ fontSize: 13, opacity: 0.9, marginTop: 12, maxWidth: 640, lineHeight: 1.5 }}>
+              {perfil.bio}
+            </p>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#71717A' }}>
-            {atualizadoEm && <span>Atualizado às {atualizadoEm.toLocaleTimeString('pt-BR')}</span>}
-            <button onClick={() => carregarPerfil({ silencioso: true })}
-                    title="Atualizar dados"
-                    style={{
-                      background: 'transparent', border: '1px solid #E5E7EB', borderRadius: 6,
-                      padding: '4px 8px', cursor: 'pointer', fontSize: 11, color: '#71717A',
-                    }}>
-              ↻ Atualizar
-            </button>
-          </div>
         </div>
       </div>
 
-      <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
-        Obras publicadas ({obras.length})
-      </h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
-        {obras.map(o => (
-          <div key={o.id}
-               onClick={() => navigate(`/comprar/${o.id}`)}
-               style={{
-                 border: '1px solid var(--border, #E5E7EB)', borderRadius: 12,
-                 overflow: 'hidden', cursor: 'pointer', background: '#fff',
-               }}>
-            <div style={{ height: 120, background: grad(o.id), color: '#fff',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>♪</div>
-            <div style={{ padding: 12 }}>
-              <div style={{ fontSize: 14, fontWeight: 700 }}>{o.nome}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted, #71717A)' }}>{o.genero || '—'}</div>
-              <div style={{ fontSize: 13, fontWeight: 700, marginTop: 6, color: '#E11D48' }}>{fmt(o.preco_cents)}</div>
-            </div>
-          </div>
-        ))}
+      {/* Faixa de ações */}
+      <div style={{
+        background: 'linear-gradient(180deg, rgba(190,18,60,.18), transparent)',
+        padding: '20px 32px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: 12,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#71717A' }}>
+          {atualizadoEm && <span>Atualizado às {atualizadoEm.toLocaleTimeString('pt-BR')}</span>}
+          <button onClick={() => carregarPerfil({ silencioso: true })}
+                  title="Atualizar dados"
+                  style={{
+                    background: 'transparent', border: '1px solid #E5E7EB', borderRadius: 6,
+                    padding: '4px 8px', cursor: 'pointer', fontSize: 11, color: '#71717A',
+                  }}>
+            ↻ Atualizar
+          </button>
+        </div>
+        {isAdmin && (
+          <button onClick={abrirVisaoAdmin}
+                  data-testid="btn-visualizar-como-admin"
+                  style={{
+                    padding: '10px 18px', fontSize: 13, fontWeight: 700,
+                    background: '#09090B', color: '#fff',
+                    border: '1px solid #09090B', borderRadius: 10, cursor: 'pointer',
+                  }}>
+            👑 Visualizar como administrador
+          </button>
+        )}
+      </div>
+
+      {/* Lista vertical de obras estilo Spotify */}
+      <div style={{ padding: '0 32px 40px' }}>
+        <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 16 }}>
+          Composições
+        </h2>
+
         {obras.length === 0 && (
-          <div style={{ gridColumn: '1 / -1', padding: 24, color: 'var(--text-muted, #71717A)', fontSize: 13 }}>
+          <div style={{ padding: 32, color: 'var(--text-muted, #71717A)', fontSize: 14, textAlign: 'center' }}>
             Nenhuma obra publicada ainda.
           </div>
         )}
+
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {obras.map((o, i) => (
+            <div key={o.id}
+                 onClick={() => navigate(`/comprar/${o.id}`)}
+                 onMouseEnter={e => e.currentTarget.style.background = '#FAFAFA'}
+                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                 style={{
+                   display: 'grid',
+                   gridTemplateColumns: '32px 56px 1fr auto',
+                   alignItems: 'center', gap: 16,
+                   padding: '8px 12px',
+                   borderRadius: 8,
+                   cursor: 'pointer',
+                   transition: 'background 0.15s',
+                 }}>
+              <div style={{ color: '#71717A', fontSize: 14, fontWeight: 600, textAlign: 'center' }}>
+                {i + 1}
+              </div>
+              <div style={{
+                width: 56, height: 56, borderRadius: 6,
+                background: grad(o.id), color: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 22, flexShrink: 0,
+              }}>
+                ♪
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{
+                  fontSize: 15, fontWeight: 600, color: '#09090B',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
+                  {o.nome}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted, #71717A)', marginTop: 2 }}>
+                  {o.genero || '—'}
+                </div>
+              </div>
+              <button
+                onClick={e => { e.stopPropagation(); navigate(`/comprar/${o.id}`) }}
+                style={{
+                  background: '#09090B', color: '#fff',
+                  border: 'none', borderRadius: 99,
+                  padding: '8px 16px', fontSize: 12, fontWeight: 700,
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                }}>
+                Licenciar
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {adminOpen && (
