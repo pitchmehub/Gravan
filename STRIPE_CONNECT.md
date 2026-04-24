@@ -1,4 +1,4 @@
-# Stripe Connect — Pitch.me
+# Stripe Connect — Gravan
 
 Guia completo de configuração de Stripe Connect (Express) para a plataforma.
 Funciona em modo **TESTE** primeiro; depois você troca apenas as chaves para LIVE.
@@ -39,7 +39,7 @@ Funciona em modo **TESTE** primeiro; depois você troca apenas as chaves para LI
 ### 1. Habilitar Stripe Connect no painel
 1. Entre em https://dashboard.stripe.com/test/settings/connect
 2. Clique em **Enable Connect**
-3. Em **Platform settings** → defina nome "Pitch.me", logo, suporte
+3. Em **Platform settings** → defina nome "Gravan", logo, suporte
 4. Em **Settings → Connect → Payout schedule**: deixe **Monthly** (item 10)
 5. Em **Settings → Connect → Branding**: cor `#BE123C`, logo
 
@@ -94,7 +94,7 @@ Saída esperada:
 ### 5. Testar fluxo completo
 
 #### a) Criar uma conta de teste como autor
-1. Faça login no Pitch.me como compositor
+1. Faça login no Gravan como compositor
 2. Vá em `/connect` → clique **Conectar minha conta Stripe**
 3. Você é redirecionado pra Stripe. Use:
    - País: **Brasil**
@@ -164,7 +164,7 @@ Quando estiver pronto pra publicar:
 ```
 STRIPE_SECRET_KEY=sk_live_xxxxx       ← chave LIVE
 STRIPE_WEBHOOK_SECRET=whsec_xxxxx     ← do endpoint LIVE
-FRONTEND_URL=https://pitchme.com.br
+FRONTEND_URL=https://gravan.com.br
 FLASK_ENV=production
 ```
 
@@ -176,7 +176,7 @@ VITE_API_URL=https://seu-backend.onrender.com
 
 ### 4. Verificar conta Stripe da plataforma
 - Em **Settings → Account details**, certifique-se que o CNPJ **64.342.514/0001-08** está ativo e validado
-- Em **Settings → Bank accounts and scheduling**, confirme a conta bancária da Pitch.me pra payouts
+- Em **Settings → Bank accounts and scheduling**, confirme a conta bancária da Gravan pra payouts
 
 ### 5. Smoke test em produção
 Mesma sequência do passo 5 acima, mas com cartão real (pode usar R$ 1,00 e estornar depois).

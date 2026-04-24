@@ -1,5 +1,5 @@
 """
-Pitch.me — Entry point for both ASGI and WSGI.
+Gravan — Entry point for both ASGI and WSGI.
 """
 import os
 import sys

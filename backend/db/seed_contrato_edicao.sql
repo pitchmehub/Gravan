@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Seed do template do "Contrato de Edição Musical"
+-- Gravan — Seed do template do "Contrato de Edição Musical"
 --
 -- COMO EXECUTAR:
 --   1. Ajuste as variáveis abaixo (CNPJ, razão social, endereço da EDITORA)
@@ -31,7 +31,7 @@ on conflict (id) do update set valor = excluded.valor;
 
 -- 2. DADOS DA EDITORA (ajuste conforme seu CNPJ real)
 insert into public.landing_content (id, valor) values
-  ('contrato_edicao_editora_dados', 'PITCH.ME EDITORA MUSICAL LTDA., inscrita no CNPJ/MF sob o nº 64.342.514/0001-08, com sede na Cidade do Rio de Janeiro, Estado do Rio de Janeiro')
+  ('contrato_edicao_editora_dados', 'GRAVAN EDITORA MUSICAL LTDA., inscrita no CNPJ/MF sob o nº 64.342.514/0001-08, com sede na Cidade do Rio de Janeiro, Estado do Rio de Janeiro')
 on conflict (id) do update set valor = excluded.valor;
 
 -- 3. FORO
@@ -114,7 +114,7 @@ CLÁUSULA SÉTIMA — DISPOSIÇÕES GERAIS
 
 7.7 As PARTES elegem o foro da Comarca da Capital da Cidade do Rio de Janeiro, Estado do Rio de Janeiro, como único competente para dirimir eventuais controvérsias oriundas deste Contrato, com expressa renúncia a qualquer outro, por mais privilegiado que seja.
 
-7.8 As PARTES declaram aceitar e reconhecer como válida, autêntica e verdadeira a comprovação da autoria e integridade deste documento realizada por meio eletrônico, nos termos da MP nº 2.200-2/2001, Lei nº 14.063/2020 e legislação correlata. A aceitação eletrônica do presente Contrato no ato do cadastro da OBRA na plataforma Pitch.me, com registro de data, hora, IP e hash SHA-256 do conteúdo, é considerada ASSINATURA VÁLIDA E VINCULANTE para todos os efeitos legais.
+7.8 As PARTES declaram aceitar e reconhecer como válida, autêntica e verdadeira a comprovação da autoria e integridade deste documento realizada por meio eletrônico, nos termos da MP nº 2.200-2/2001, Lei nº 14.063/2020 e legislação correlata. A aceitação eletrônica do presente Contrato no ato do cadastro da OBRA na plataforma Gravan, com registro de data, hora, IP e hash SHA-256 do conteúdo, é considerada ASSINATURA VÁLIDA E VINCULANTE para todos os efeitos legais.
 
 E, por estarem justas e acordadas, as PARTES firmam este instrumento eletronicamente na data abaixo:
 

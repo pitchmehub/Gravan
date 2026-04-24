@@ -82,7 +82,7 @@ export default function MinhasObras() {
         }}>
           <div style={{ fontSize: 48, opacity: .3, marginBottom: 12 }}>♪</div>
           <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Você ainda não cadastrou obras</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 16 }}>Comece a publicar suas composições no Pitch.me.</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 16 }}>Comece a publicar suas composições no Gravan.</p>
           <button className="btn btn-primary" onClick={() => navigate('/obras/nova')}>Cadastrar primeira obra</button>
         </div>
       ) : (
@@ -103,7 +103,7 @@ export default function MinhasObras() {
                     onClick={e => { e.stopPropagation(); playObra(obra) }}
                     style={{
                       width: 44, height: 44, borderRadius: 8,
-                      background: 'linear-gradient(135deg,#BE123C,#09090B)',
+                      background: 'linear-gradient(135deg,#083257,#09090B)',
                       color: '#fff', border: 'none', cursor: 'pointer',
                       fontSize: 14, flexShrink: 0,
                     }}>

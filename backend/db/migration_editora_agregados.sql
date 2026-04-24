@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Migração: EDITORA + AGREGADOS + AUDITORIA + CONTRATOS
+-- Gravan — Migração: EDITORA + AGREGADOS + AUDITORIA + CONTRATOS
 --
 -- Adiciona:
 --   • Role 'publisher' (editora) em perfis
@@ -10,7 +10,7 @@
 --   • Coluna obras.letra (obrigatória) e obras.managed_by_publisher
 --   • Tabela audit_logs (auditoria global)
 --   • Tabela contracts_edicao (contrato de edição com fee)
---   • Seed: dados bancários PITCH.ME e template editora em landing_content
+--   • Seed: dados bancários GRAVAN e template editora em landing_content
 --   • RLS para tudo
 --
 -- Idempotente — seguro rodar múltiplas vezes.
@@ -179,15 +179,15 @@ do $$
 begin
   if exists (select 1 from information_schema.tables where table_schema='public' and table_name='landing_content') then
 
-    -- Dados bancários da PITCH.ME (editáveis via /admin/landing)
+    -- Dados bancários da GRAVAN (editáveis via /admin/landing)
     insert into public.landing_content (key, value)
-    values ('pitchme_dados_bancarios', jsonb_build_object(
-      'razao_social', 'PITCH.ME',
+    values ('gravan_dados_bancarios', jsonb_build_object(
+      'razao_social', 'GRAVAN',
       'cnpj',         '[PREENCHER]',
       'banco',        '[PREENCHER]',
       'agencia',      '[PREENCHER]',
       'conta',        '[PREENCHER]',
-      'titular',      'PITCH.ME'
+      'titular',      'GRAVAN'
     ))
     on conflict (key) do nothing;
 
@@ -210,12 +210,12 @@ AUTOR e EDITORA, em conjunto "PARTES", firmam o presente Contrato de Edição de
 CONSIDERANDO QUE:
 (i) o AUTOR é titular de {{share_autor_pct}}% dos direitos autorais sobre a obra "{{obra_nome}}", doravante "OBRA";
 (ii) os demais coautores são: {{coautores_lista}};
-(iii) a OBRA será gerida pela EDITORA por meio da plataforma PITCH.ME.
+(iii) a OBRA será gerida pela EDITORA por meio da plataforma GRAVAN.
 
 CLÁUSULA PRIMEIRA — OBJETO
 1.1 O AUTOR contrata com a EDITORA a edição musical de sua parte sobre a OBRA, em regime de exclusividade, sem limitação territorial, nos termos da Lei 9.610/1998.
 
-1.2 Para todos os efeitos legais, integra o presente Contrato o CORPO DA OBRA, conforme cadastrado pelo AUTOR na plataforma PITCH.ME, transcrito a seguir:
+1.2 Para todos os efeitos legais, integra o presente Contrato o CORPO DA OBRA, conforme cadastrado pelo AUTOR na plataforma GRAVAN, transcrito a seguir:
 
 — CORPO DA OBRA "{{obra_nome}}" —
 {{obra_letra}}
@@ -235,20 +235,20 @@ CLÁUSULA QUARTA — REMUNERAÇÃO DO AUTOR
   (c) Execução pública: 75% AUTOR / 25% EDITORA, paga diretamente ao AUTOR pela sociedade de autores.
 
 CLÁUSULA QUINTA — REMUNERAÇÃO DA PLATAFORMA (FEE DE INTERMEDIAÇÃO EDITORIAL)
-5.1 Em razão da utilização da plataforma PITCH.ME e dos serviços de intermediação, gestão e disponibilização de obras musicais, a EDITORA concorda em pagar à PITCH.ME o equivalente a 5% (cinco por cento) sobre todos os valores brutos recebidos pela EDITORA decorrentes da exploração econômica das obras cadastradas na plataforma.
+5.1 Em razão da utilização da plataforma GRAVAN e dos serviços de intermediação, gestão e disponibilização de obras musicais, a EDITORA concorda em pagar à GRAVAN o equivalente a 5% (cinco por cento) sobre todos os valores brutos recebidos pela EDITORA decorrentes da exploração econômica das obras cadastradas na plataforma.
 
 Parágrafo Primeiro: O percentual incidirá sobre todas as receitas, incluindo, mas não se limitando a licenciamento, cessão de direitos, sincronização, distribuição digital e execução pública.
 
 Parágrafo Segundo: O pagamento deverá ser realizado no prazo máximo de 30 (trinta) dias corridos contados do recebimento dos valores pela EDITORA.
 
-Parágrafo Terceiro: O pagamento será feito diretamente à conta bancária da PITCH.ME:
-  Banco: {{pitchme_banco}}
-  Agência: {{pitchme_agencia}}
-  Conta: {{pitchme_conta}}
-  Titular: {{pitchme_titular}}
-  CNPJ: {{pitchme_cnpj}}
+Parágrafo Terceiro: O pagamento será feito diretamente à conta bancária da GRAVAN:
+  Banco: {{gravan_banco}}
+  Agência: {{gravan_agencia}}
+  Conta: {{gravan_conta}}
+  Titular: {{gravan_titular}}
+  CNPJ: {{gravan_cnpj}}
 
-Parágrafo Quarto: A EDITORA se compromete a manter registros financeiros e fornecer relatórios sempre que solicitado pela PITCH.ME.
+Parágrafo Quarto: A EDITORA se compromete a manter registros financeiros e fornecer relatórios sempre que solicitado pela GRAVAN.
 
 Parágrafo Quinto: O não pagamento dentro do prazo estipulado poderá resultar na suspensão da conta da EDITORA na plataforma e nas medidas legais cabíveis.
 
@@ -383,5 +383,5 @@ union all select 'obras.managed_by_publisher',  exists (select 1 from informatio
 union all select 'table obras_autores',         exists (select 1 from information_schema.tables  where table_schema='public' and table_name='obras_autores')
 union all select 'table audit_logs',            exists (select 1 from information_schema.tables  where table_schema='public' and table_name='audit_logs')
 union all select 'table contracts_edicao',      exists (select 1 from information_schema.tables  where table_schema='public' and table_name='contracts_edicao')
-union all select 'seed pitchme_dados_bancarios', exists (select 1 from public.landing_content where key='pitchme_dados_bancarios')
+union all select 'seed gravan_dados_bancarios', exists (select 1 from public.landing_content where key='gravan_dados_bancarios')
 union all select 'seed contrato_edicao_publisher_template', exists (select 1 from public.landing_content where key='contrato_edicao_publisher_template');

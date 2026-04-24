@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Migration: Storage de avatar e capa do perfil
+-- Gravan — Migration: Storage de avatar e capa do perfil
 --
 -- O QUE FAZ:
 --   1. Garante a coluna `capa_url` na tabela public.perfis

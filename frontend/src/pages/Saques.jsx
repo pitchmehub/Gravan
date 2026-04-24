@@ -126,7 +126,7 @@ export default function Saques() {
 
       <div style={{
         padding: 24, marginBottom: 16,
-        background: 'linear-gradient(135deg,#BE123C,#09090B)',
+        background: 'linear-gradient(135deg,#083257,#09090B)',
         borderRadius: 16, color: '#fff',
       }}>
         <div style={{ fontSize: 12, fontWeight: 600,

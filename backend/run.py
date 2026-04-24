@@ -1,5 +1,5 @@
 """
-Entrypoint do servidor Pitch.me.
+Entrypoint do servidor Gravan.
 Uso local:  python run.py
 Produção:   gunicorn "run:app" --workers 4 --bind 0.0.0.0:8000
 """

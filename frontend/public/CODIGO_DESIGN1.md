@@ -1,4 +1,4 @@
-# 🎨 Pitch.me — Código Completo (Design 1)
+# 🎨 Gravan — Código Completo (Design 1)
 
 Todos os arquivos relevantes do redesign Design 1 + backend + assets de PWA,
 organizados em seções. Gerado automaticamente em 2026-04-21.
@@ -56,7 +56,7 @@ organizados em seções. Gerado automaticamente em 2026-04-21.
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
 
-    <title>Pitch.me — Composições Musicais</title>
+    <title>Gravan — Composições Musicais</title>
     <meta name="description" content="Marketplace de composições musicais — conectando compositores e intérpretes." />
 
     <!-- PWA manifest -->
@@ -67,7 +67,7 @@ organizados em seções. Gerado automaticamente em 2026-04-21.
     <!-- iOS PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Pitch.me" />
+    <meta name="apple-mobile-web-app-title" content="Gravan" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 
     <!-- Favicons -->
@@ -86,7 +86,7 @@ organizados em seções. Gerado automaticamente em 2026-04-21.
       // Executa 1x por cliente (marca no localStorage) para eliminar CSS roxo cacheado.
       (function migratePWA() {
         try {
-          var KEY = 'pitchme_design1_migrated_v3'
+          var KEY = 'gravan_design1_migrated_v3'
           if (localStorage.getItem(KEY) === '1') return
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function (regs) {
@@ -99,8 +99,8 @@ organizados em seções. Gerado automaticamente em 2026-04-21.
             }).then(function () {
               localStorage.setItem(KEY, '1')
               // Recarrega uma vez pra pegar CSS/JS fresco do servidor
-              if (!sessionStorage.getItem('pitchme_pwa_reloaded')) {
-                sessionStorage.setItem('pitchme_pwa_reloaded', '1')
+              if (!sessionStorage.getItem('gravan_pwa_reloaded')) {
+                sessionStorage.setItem('gravan_pwa_reloaded', '1')
                 window.location.reload()
               }
             }).catch(function(){ localStorage.setItem(KEY, '1') })
@@ -124,7 +124,7 @@ organizados em seções. Gerado automaticamente em 2026-04-21.
 
 ```css
 /* ============================================================
-   Pitch.me — Design Tokens & Global Styles
+   Gravan — Design Tokens & Global Styles
    Tema: Minimalista · Branco + Preto + Red REC (Design 1)
    ============================================================ */
 
@@ -625,7 +625,7 @@ export default function Landing() {
       <nav className="nav-minimal" data-testid="landing-nav">
         <div className="nav-container">
           <a href="#" className="logo" data-testid="logo">
-            <span className="logo-mark">●</span> Pitch.me
+            <span className="logo-mark">●</span> Gravan
           </a>
           <div className="nav-center">
             <a href="#como-funciona" data-testid="nav-como-funciona">Como Funciona</a>
@@ -831,7 +831,7 @@ export default function Landing() {
           </blockquote>
           <div className="testimonial-author">
             <div>
-              <strong>Pitch.me</strong>
+              <strong>Gravan</strong>
               <span>Marketplace independente de composições musicais</span>
             </div>
           </div>
@@ -898,7 +898,7 @@ export default function Landing() {
             </div>
             <div>
               <h4>Contato</h4>
-              <a href="mailto:contato@pitchme.com">contato@pitchme.com</a>
+              <a href="mailto:contato@gravan.com">contato@gravan.com</a>
               <a
                 href="#"
                 onClick={(e) => {
@@ -922,9 +922,9 @@ export default function Landing() {
             </button>
           </div>
         </div>
-        <div className="footer-wordmark">PITCH.ME</div>
+        <div className="footer-wordmark">GRAVAN</div>
         <div className="footer-bottom">
-          <span>© 2025 Pitch.me — Todos os direitos reservados.</span>
+          <span>© 2025 Gravan — Todos os direitos reservados.</span>
           <span>Feito com precisão para compositores.</span>
         </div>
       </footer>
@@ -933,7 +933,7 @@ export default function Landing() {
         <div className="modal-backdrop" onClick={() => setShowContato(false)} data-testid="contato-modal">
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <h3>Fale Conosco</h3>
-            <p>Envie um e-mail para <strong>contato@pitchme.com</strong> ou responda este modal em breve.</p>
+            <p>Envie um e-mail para <strong>contato@gravan.com</strong> ou responda este modal em breve.</p>
             <button className="btn-primary" onClick={() => setShowContato(false)} data-testid="contato-fechar">
               Fechar
             </button>
@@ -1622,7 +1622,7 @@ export default function Login() {
       <div className="login-card">
         <div className="login-logo">
           <span className="login-logo-icon">♪</span>
-          <span className="login-logo-text">PITCH.ME</span>
+          <span className="login-logo-text">GRAVAN</span>
         </div>
         <p className="login-tagline">Plataforma de composições musicais</p>
 
@@ -1717,7 +1717,7 @@ function GoogleIcon() {
 
 ```css
 /* ============================================================
-   Login / Cadastro — PITCH.ME (Design 1: branco + preto + red REC)
+   Login / Cadastro — GRAVAN (Design 1: branco + preto + red REC)
    ============================================================ */
 
 .login-root {
@@ -1744,7 +1744,7 @@ function GoogleIcon() {
   pointer-events: none;
 }
 .login-root::after {
-  content: 'PITCH.ME';
+  content: 'GRAVAN';
   position: absolute;
   top: 50%; left: 21%;
   transform: translate(-50%, -50%);
@@ -2113,7 +2113,7 @@ export default function SideMenu({ onCollapse }) {
         <aside className={`sidebar mobile-drawer ${mobileOpen ? 'mobile-drawer-open' : ''}`}>
           <div className="sidebar-header">
             <button className="sidebar-logo-btn" onClick={() => { navigate('/descoberta'); setMobileOpen(false) }}>
-              PITCH.ME
+              GRAVAN
             </button>
             <button
               className="sidebar-toggle"
@@ -2162,7 +2162,7 @@ export default function SideMenu({ onCollapse }) {
       <div className="sidebar-header">
         {!collapsed && (
           <button className="sidebar-logo-btn" onClick={() => navigate('/descoberta')}>
-            PITCH.ME
+            GRAVAN
           </button>
         )}
         <button className="sidebar-toggle" onClick={() => setCollapsed(c => !c)}>
@@ -2883,7 +2883,7 @@ export default function SideMenu({ onCollapse }) {
 import React, { useState } from 'react'
 import { api } from '../lib/api'
 
-const EMAIL_SUPORTE = 'contatopitch.me@gmail.com'
+const EMAIL_SUPORTE = 'contatogravan@gmail.com'
 const MAX_MSG = 1000
 
 export default function FaleConoscoModal({ onClose }) {
@@ -3201,7 +3201,7 @@ export default function PWAInstaller() {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>♪</div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700 }}>Instalar Pitch.me</div>
+        <div style={{ fontSize: 13, fontWeight: 700 }}>Instalar Gravan</div>
         <div style={{ fontSize: 11, opacity: .9 }}>Abra direto da tela inicial</div>
       </div>
       <button
@@ -4145,11 +4145,11 @@ export const api = {
 
 ```js
 /**
- * Service Worker Pitch.me — Design 1 edition
+ * Service Worker Gravan — Design 1 edition
  * CSS/JS/fonts usam networkFirst para sempre refletir updates do server.
  */
 
-const VERSION       = 'pitchme-v3-design1-20260421'
+const VERSION       = 'gravan-v3-design1-20260421'
 const STATIC_CACHE  = `static-${VERSION}`
 const IMG_CACHE     = `img-${VERSION}`
 const RUNTIME_CACHE = `runtime-${VERSION}`
@@ -4247,8 +4247,8 @@ self.addEventListener('message', event => {
 
 ```json
 {
-  "name": "Pitch.me — Composições Musicais",
-  "short_name": "Pitch.me",
+  "name": "Gravan — Composições Musicais",
+  "short_name": "Gravan",
   "description": "Marketplace de composições musicais — conectando compositores e intérpretes.",
   "start_url": "/descoberta",
   "scope": "/",
@@ -4566,7 +4566,7 @@ def ofertas_enviadas():
 
 ```python
 """
-Pitch.me — API Flask com hardening completo de segurança.
+Gravan — API Flask com hardening completo de segurança.
 
 CORREÇÕES DE VULNERABILIDADES IMPLEMENTADAS:
 - #5 (ALTA): CSRF Protection via Flask-WTF
@@ -4609,7 +4609,7 @@ def create_app() -> Flask:
         SESSION_COOKIE_HTTPONLY=True,  # Bloqueia acesso via JavaScript
         SESSION_COOKIE_SAMESITE='Lax',  # Proteção CSRF adicional (vuln #19)
         PERMANENT_SESSION_LIFETIME=3600,  # 1 hora
-        SESSION_COOKIE_NAME='pitchme_session',
+        SESSION_COOKIE_NAME='gravan_session',
     )
 
     # ═══════════════════════════════════════════════════════════

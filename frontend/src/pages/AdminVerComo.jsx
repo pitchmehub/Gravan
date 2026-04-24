@@ -24,7 +24,7 @@ export default function AdminVerComo() {
 
   return (
     <div style={{ padding: '32px 20px', maxWidth: 1100, margin: '0 auto' }}>
-      <div style={{ background: 'rgba(225,29,72,.08)', border: '1px solid rgba(225,29,72,.3)', padding: 12, borderRadius: 8, marginBottom: 20, fontSize: 13 }}>
+      <div style={{ background: 'rgba(12,68,124,.08)', border: '1px solid rgba(12,68,124,.3)', padding: 12, borderRadius: 8, marginBottom: 20, fontSize: 13 }}>
         👑 <strong>Modo Admin:</strong> visualizando perfil de <strong>{p.nome_completo || p.nome || p.email}</strong> ({p.role}).
         <Link to="/admin" style={{ marginLeft: 12, color: 'var(--brand)' }}>← voltar ao painel</Link>
       </div>

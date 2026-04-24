@@ -92,7 +92,7 @@ export default function Admin() {
     <div style={{ padding: 32, maxWidth: 1100 }}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 26, fontWeight: 800 }}>Painel administrador</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Visão consolidada da plataforma Pitch.me</p>
+        <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Visão consolidada da plataforma Gravan</p>
       </div>
 
       <div style={{

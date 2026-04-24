@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Row Level Security (versão simplificada, 100% idempotente)
+-- Gravan — Row Level Security (versão simplificada, 100% idempotente)
 --
 -- COMO EXECUTAR:
 --   1. Acesse https://app.supabase.com/project/SEU_PROJETO/sql/new

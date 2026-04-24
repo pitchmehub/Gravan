@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════════════
--- Pitch.me — HEALTHCHECK.SQL
+-- Gravan — HEALTHCHECK.SQL
 --
 -- Cole no SQL Editor do Supabase e clique RUN.
 -- Retorna uma única tabela com o status de cada item esperado.
@@ -95,8 +95,8 @@ with checks as (
                     where oid = 'public.landing_content'::regclass), false)
 
   -- ─── 5. Seeds (landing_content) ─────────────────────────────────────
-  union all select 'seed: pitchme_dados_bancarios',
-         exists(select 1 from public.landing_content where key='pitchme_dados_bancarios')
+  union all select 'seed: gravan_dados_bancarios',
+         exists(select 1 from public.landing_content where key='gravan_dados_bancarios')
   union all select 'seed: contrato_edicao_publisher_template',
          exists(select 1 from public.landing_content where key='contrato_edicao_publisher_template')
   union all select 'seed: contrato_edicao_template (legado)',
@@ -118,7 +118,7 @@ with checks as (
   union all select 'dados bancários preenchidos (sem [PREENCHER])',
          not exists(
            select 1 from public.landing_content
-            where key='pitchme_dados_bancarios'
+            where key='gravan_dados_bancarios'
               and value::text like '%[PREENCHER]%'
          )
 )

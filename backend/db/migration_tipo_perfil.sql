@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════
-  -- Pitch.me — MIGRATION: Torna role nullable (sem default)
+  -- Gravan — MIGRATION: Torna role nullable (sem default)
   --
   -- OBJETIVO: Garantir que novos usuários tenham role = NULL
   -- até escolherem explicitamente ARTISTA ou EDITORA na tela

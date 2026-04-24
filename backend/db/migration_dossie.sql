@@ -1,6 +1,6 @@
 -- ═════════════════════════════════════════════════════════════════
 -- Migration: tabela `dossies` + bucket de storage `dossies`
--- Pitch.me — Dossiê da Obra (Master Package)
+-- Gravan — Dossiê da Obra (Master Package)
 --
 -- IMPORTANTE
 --   contrato_id referencia `contratos_edicao` (contrato assinado ao

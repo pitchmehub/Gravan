@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Migração: Saque com OTP por e-mail + janela de 24h
+-- Gravan — Migração: Saque com OTP por e-mail + janela de 24h
 --
 -- COMO EXECUTAR:
 --   Supabase → SQL Editor → cole TUDO → RUN. Idempotente.

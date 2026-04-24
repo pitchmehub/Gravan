@@ -19,7 +19,7 @@ from db.supabase_client import get_supabase
 
 PRO_PRICE_CENTS  = 2990  # R$ 29,90
 PRO_CURRENCY     = "brl"
-PRO_PRODUCT_NAME = "Pitch.me PRO"
+PRO_PRODUCT_NAME = "Gravan PRO"
 
 
 def _ensure_stripe_key():
@@ -32,18 +32,18 @@ def _ensure_stripe_key():
 def get_or_create_pro_price() -> str:
     """
     Retorna o Stripe Price ID do plano PRO. Se não existir, cria sob demanda.
-    Cacheia em env var PITCHME_PRO_PRICE_ID para requests futuros.
+    Cacheia em env var GRAVAN_PRO_PRICE_ID para requests futuros.
     """
     _ensure_stripe_key()
-    cached = os.environ.get("PITCHME_PRO_PRICE_ID")
+    cached = os.environ.get("GRAVAN_PRO_PRICE_ID")
     if cached:
         return cached
 
     # Procura um price recorrente já existente com esse nickname
-    prices = stripe.Price.list(active=True, limit=100, lookup_keys=["pitchme_pro_monthly"])
+    prices = stripe.Price.list(active=True, limit=100, lookup_keys=["gravan_pro_monthly"])
     if prices.data:
         price_id = prices.data[0].id
-        os.environ["PITCHME_PRO_PRICE_ID"] = price_id
+        os.environ["GRAVAN_PRO_PRICE_ID"] = price_id
         return price_id
 
     # Cria produto + price
@@ -53,10 +53,10 @@ def get_or_create_pro_price() -> str:
         unit_amount=PRO_PRICE_CENTS,
         currency=PRO_CURRENCY,
         recurring={"interval": "month"},
-        lookup_key="pitchme_pro_monthly",
-        nickname="Pitch.me PRO — Mensal",
+        lookup_key="gravan_pro_monthly",
+        nickname="Gravan PRO — Mensal",
     )
-    os.environ["PITCHME_PRO_PRICE_ID"] = price.id
+    os.environ["GRAVAN_PRO_PRICE_ID"] = price.id
     return price.id
 
 

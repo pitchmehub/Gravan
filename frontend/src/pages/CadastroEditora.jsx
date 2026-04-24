@@ -40,7 +40,7 @@ export default function CadastroEditora() {
   function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
 
   function preencherDepois() {
-    try { localStorage.setItem('pitchme_skip_cadastro', '1') } catch {}
+    try { localStorage.setItem('gravan_skip_cadastro', '1') } catch {}
     navigate('/descoberta', { replace: true })
   }
 

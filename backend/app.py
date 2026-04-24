@@ -1,5 +1,5 @@
 """
-Pitch.me — API Flask com hardening completo de segurança.
+Gravan — API Flask com hardening completo de segurança.
 
 CORREÇÕES DE VULNERABILIDADES IMPLEMENTADAS:
 - #5 (ALTA): CSRF Protection via Flask-WTF
@@ -52,7 +52,7 @@ def create_app() -> Flask:
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE='Lax',
         PERMANENT_SESSION_LIFETIME=3600,
-        SESSION_COOKIE_NAME='pitchme_session',
+        SESSION_COOKIE_NAME='gravan_session',
     )
 
     # ═══════════════════════════════════════════════════════════
@@ -135,7 +135,7 @@ def create_app() -> Flask:
         response.headers["Content-Security-Policy"] = "; ".join(csp_directives)
 
         response.headers.pop("Server", None)
-        response.headers["Server"] = "PitchMe"
+        response.headers["Server"] = "Gravan"
 
         return response
 

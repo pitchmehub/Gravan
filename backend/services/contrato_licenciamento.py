@@ -36,7 +36,7 @@ O presente contrato tem por objeto a autorização para fixação da obra musica
 
 Título da Obra: {{obra_nome}}
 
-CORPO DA OBRA, conforme cadastrada pelo(s) AUTOR(ES) na plataforma PITCH.ME, parte integrante e indissociável deste Contrato:
+CORPO DA OBRA, conforme cadastrada pelo(s) AUTOR(ES) na plataforma GRAVAN, parte integrante e indissociável deste Contrato:
 
 — CORPO DA OBRA —
 {{obra_letra}}
@@ -71,14 +71,14 @@ CLÁUSULA 5 — REMUNERAÇÃO
 
 5.1 — BUYOUT (VENDA DA COMPOSIÇÃO)
 
-O LICENCIADO pagará ao(s) AUTOR(ES) o valor de {{valor_buyout_extenso}} referente à aquisição da composição por meio da plataforma PITCH.ME.
+O LICENCIADO pagará ao(s) AUTOR(ES) o valor de {{valor_buyout_extenso}} referente à aquisição da composição por meio da plataforma GRAVAN.
 
 5.2 — ROYALTIES AUTORAIS (EXECUÇÃO PÚBLICA)
 
 Os rendimentos provenientes de execução pública arrecadados pelo ECAD serão distribuídos da seguinte forma:
 - 80% (oitenta por cento) para o(s) AUTOR(ES) e coautores;
 - 10% (dez por cento) para o INTÉRPRETE;
-- 10% (dez por cento) para a EDITORA PITCH.ME.
+- 10% (dez por cento) para a EDITORA GRAVAN.
 
 5.3 — ROYALTIES DE FONOGRAMA
 
@@ -107,14 +107,14 @@ CLÁUSULA 9 — DISPOSIÇÕES GERAIS
 
 I. Este contrato obriga as partes e seus sucessores;
 II. Pode ser firmado digitalmente, nos termos da MP nº 2.200-2/2001 e Lei nº 14.063/2020;
-III. Integra as regras da plataforma PITCH.ME.
+III. Integra as regras da plataforma GRAVAN.
 
 CLÁUSULA 10 — DIVISÃO DE DIREITOS ENTRE COAUTORES (SPLIT)
 
 Fica estabelecido que a divisão dos direitos autorais entre os coautores é a seguinte:
 {{split_lista}}
 
-Parágrafo Primeiro: A divisão acima foi declarada pelos próprios autores na plataforma PITCH.ME no momento do cadastro da obra.
+Parágrafo Primeiro: A divisão acima foi declarada pelos próprios autores na plataforma GRAVAN no momento do cadastro da obra.
 
 Parágrafo Segundo: Salvo acordo formal em contrário, devidamente registrado por escrito e assinado por todos os coautores, prevalecerá a divisão acima.
 
@@ -323,8 +323,8 @@ E-mail: {{editora_email}}
 Endereço: {{editora_endereco}}
 
 INTERMEDIÁRIA / PLATAFORMA:
-PITCH.ME EDITORA MUSICAL LTDA., CNPJ 64.342.514/0001-08, sediada na cidade
-do Rio de Janeiro/RJ, doravante "PITCH.ME".
+GRAVAN EDITORA MUSICAL LTDA., CNPJ 64.342.514/0001-08, sediada na cidade
+do Rio de Janeiro/RJ, doravante "GRAVAN".
 
 LICENCIADO (INTÉRPRETE/PRODUTOR):
 Nome/Razão Social: {{interprete_nome}}
@@ -348,10 +348,10 @@ CLÁUSULA 2 — OBJETO
 O presente contrato tem por objeto a autorização para fixação da obra em
 fonograma e sua exploração comercial pelo LICENCIADO, com a participação
 da EDITORA TERCEIRA na qualidade de detentora dos direitos editoriais e
-da PITCH.ME como plataforma intermediária.
+da GRAVAN como plataforma intermediária.
 
 CORPO DA OBRA, conforme cadastrada pelo(s) AUTOR(ES) na plataforma
-PITCH.ME, parte integrante e indissociável deste Contrato:
+GRAVAN, parte integrante e indissociável deste Contrato:
 
 — CORPO DA OBRA —
 {{obra_letra}}
@@ -360,7 +360,7 @@ PITCH.ME, parte integrante e indissociável deste Contrato:
 CLÁUSULA 3 — VALOR E ESCROW
 
 O LICENCIADO pagará pelo licenciamento o valor de {{valor_buyout_extenso}},
-retido em escrow pela PITCH.ME até a assinatura eletrônica de todas as partes.
+retido em escrow pela GRAVAN até a assinatura eletrônica de todas as partes.
 A liberação do valor ocorre após a assinatura final, sendo distribuído conforme
 contratos prévios entre AUTOR(ES) e EDITORA TERCEIRA.
 
@@ -404,7 +404,7 @@ Hash SHA-256 do documento: {{conteudo_hash}}
 
 def gerar_contrato_trilateral(oferta_id: str) -> dict | None:
     """
-    Gera o contrato trilateral (autor + editora terceira + Pitch.me + comprador)
+    Gera o contrato trilateral (autor + editora terceira + Gravan + comprador)
     para uma oferta cuja editora já foi cadastrada.
     Idempotente: se já existe, retorna o existente.
     """

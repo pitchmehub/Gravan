@@ -1,5 +1,5 @@
 """
-Motor Financeiro do Pitch.me.
+Motor Financeiro do Gravan.
 
 Todos os calculos sao realizados EXCLUSIVAMENTE aqui, no servidor.
 

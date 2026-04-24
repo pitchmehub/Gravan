@@ -125,7 +125,7 @@ export default function ConnectOnboarding() {
       <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 24,
         lineHeight: 1.6 }}>
         🔒 Seus dados bancários ficam apenas com a Stripe (PCI-DSS Nível 1).
-        A Pitch.me não armazena nenhuma informação sensível.
+        A Gravan não armazena nenhuma informação sensível.
         Os pagamentos serão repassados mensalmente para sua conta cadastrada.
       </p>
     </div>

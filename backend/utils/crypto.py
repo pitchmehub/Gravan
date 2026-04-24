@@ -21,7 +21,7 @@ def _get_encryption_key() -> bytes:
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
-        salt=b'pitchme_salt_2024',  # Salt fixo (em prod usar variável de ambiente)
+        salt=b'gravan_salt_2024',  # Salt fixo (em prod usar variável de ambiente)
         iterations=100000,
     )
     key = base64.urlsafe_b64encode(kdf.derive(secret))
@@ -73,5 +73,5 @@ def hash_ip(ip_address: str) -> str:
     Correção de vulnerabilidade #12 (MÉDIA): IP logging sem anonimização.
     """
     import hashlib
-    salt = os.environ.get("FLASK_SECRET_KEY", "pitchme").encode()
+    salt = os.environ.get("FLASK_SECRET_KEY", "gravan").encode()
     return hashlib.sha256(salt + ip_address.encode()).hexdigest()[:16]

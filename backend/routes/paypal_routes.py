@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 import os
 import logging
 
-logger = logging.getLogger("pitchme.paypal")
+logger = logging.getLogger("gravan.paypal")
 
 paypal_bp = Blueprint("paypal", __name__)
 

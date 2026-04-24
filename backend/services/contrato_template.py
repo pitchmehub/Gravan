@@ -1,4 +1,4 @@
-"""Template do Contrato de Edição Musical — Pitch.me.
+"""Template do Contrato de Edição Musical — Gravan.
 
 Fica em Python para que o backend possa:
   1. Seedar automaticamente a tabela `landing_content` no startup (idempotente)
@@ -32,7 +32,7 @@ CLÁUSULA PRIMEIRA — OBJETO
 
 1.2 O AUTOR desde já concorda e reconhece que a EDITORA poderá contratar com quaisquer outras editoras a administração das obras musicais e/ou lítero-musicais que integram ou venham a integrar o catálogo da EDITORA, incluindo a OBRA objeto deste Contrato, em relação ao que o AUTOR não se opõe.
 
-1.3 Para todos os efeitos legais, integra o presente Contrato a LETRA COMPLETA da OBRA, conforme cadastrada pelo AUTOR na plataforma Pitch.me, transcrita a seguir:
+1.3 Para todos os efeitos legais, integra o presente Contrato a LETRA COMPLETA da OBRA, conforme cadastrada pelo AUTOR na plataforma Gravan, transcrita a seguir:
 
 — CORPO DA OBRA "{{obra_nome}}" —
 {{obra_letra}}
@@ -87,7 +87,7 @@ CLÁUSULA SÉTIMA — DISPOSIÇÕES GERAIS
 
 7.7 As PARTES elegem o foro da Comarca da Capital da Cidade do Rio de Janeiro, Estado do Rio de Janeiro, como único competente para dirimir eventuais controvérsias oriundas deste Contrato, com expressa renúncia a qualquer outro, por mais privilegiado que seja.
 
-7.8 As PARTES declaram aceitar e reconhecer como válida, autêntica e verdadeira a comprovação da autoria e integridade deste documento realizada por meio eletrônico, nos termos da MP nº 2.200-2/2001, Lei nº 14.063/2020 e legislação correlata. A aceitação eletrônica do presente Contrato no ato do cadastro da OBRA na plataforma Pitch.me, com registro de data, hora, IP e hash SHA-256 do conteúdo, é considerada ASSINATURA VÁLIDA E VINCULANTE para todos os efeitos legais.
+7.8 As PARTES declaram aceitar e reconhecer como válida, autêntica e verdadeira a comprovação da autoria e integridade deste documento realizada por meio eletrônico, nos termos da MP nº 2.200-2/2001, Lei nº 14.063/2020 e legislação correlata. A aceitação eletrônica do presente Contrato no ato do cadastro da OBRA na plataforma Gravan, com registro de data, hora, IP e hash SHA-256 do conteúdo, é considerada ASSINATURA VÁLIDA E VINCULANTE para todos os efeitos legais.
 
 E, por estarem justas e acordadas, as PARTES firmam este instrumento eletronicamente na data abaixo:
 
@@ -107,7 +107,7 @@ CNPJ: {{plataforma_cnpj}}
 CONTRATO_VERSAO = "v2.0 - Fev/2026"
 
 CONTRATO_EDITORA_DADOS = (
-    "PITCH.ME EDITORA MUSICAL LTDA., inscrita no CNPJ/MF sob o nº 64.342.514/0001-08, "
+    "GRAVAN EDITORA MUSICAL LTDA., inscrita no CNPJ/MF sob o nº 64.342.514/0001-08, "
     "com sede na Cidade do Rio de Janeiro, Estado do Rio de Janeiro"
 )
 

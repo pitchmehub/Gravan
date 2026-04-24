@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Migração: Sistema de Assinatura (STARTER / PRO) + Favoritos + Analytics
+-- Gravan — Migração: Sistema de Assinatura (STARTER / PRO) + Favoritos + Analytics
 --
 -- COMO EXECUTAR:
 --   Cole TODO este arquivo no SQL Editor do Supabase e clique em RUN.

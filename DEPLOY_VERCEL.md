@@ -1,4 +1,4 @@
-# 🚀 Pitch.me — Guia de Deploy em Produção
+# 🚀 Gravan — Guia de Deploy em Produção
 
 **Stack:** Vercel (frontend React/Vite) + Render (backend Flask) + Supabase (Postgres/Auth/Storage)
 
@@ -58,9 +58,9 @@ Eles foram removidos. Você **precisa rotacionar** (gerar novas) as seguintes ch
    FRONTEND_URL              = https://seu-app.vercel.app
    ALLOWED_ORIGINS           = https://seu-app.vercel.app
    ```
-4. Após o deploy, anote a URL pública (ex.: `https://pitchme-api.onrender.com`).
+4. Após o deploy, anote a URL pública (ex.: `https://gravan-api.onrender.com`).
 5. Configure os webhooks:
-   - **Stripe** → Developers → Webhooks → endpoint `https://pitchme-api.onrender.com/api/stripe/webhook` (eventos: `checkout.session.completed`, `invoice.paid`, `customer.subscription.deleted`).
+   - **Stripe** → Developers → Webhooks → endpoint `https://gravan-api.onrender.com/api/stripe/webhook` (eventos: `checkout.session.completed`, `invoice.paid`, `customer.subscription.deleted`).
    - **PayPal** → Webhooks → endpoint para `/api/paypal/webhook` (se vc adicionar; hoje o fluxo PayPal usa apenas execute-payment).
 
 > 🟢 **Health check:** `GET /api/health` deve devolver `{"ok": true}`.
@@ -77,7 +77,7 @@ Eles foram removidos. Você **precisa rotacionar** (gerar novas) as seguintes ch
    ```
    VITE_SUPABASE_URL       = https://SEU-PROJETO.supabase.co
    VITE_SUPABASE_ANON_KEY  = (anon key — pode ser pública, mas controlada por RLS)
-   VITE_API_URL            = https://pitchme-api.onrender.com/api
+   VITE_API_URL            = https://gravan-api.onrender.com/api
    ```
 5. Faça o deploy.
 
@@ -89,24 +89,24 @@ Rode estes comandos contra produção:
 
 ```bash
 # 1. Health check (deve responder 200)
-curl https://pitchme-api.onrender.com/api/health
+curl https://gravan-api.onrender.com/api/health
 
 # 2. Endpoint protegido sem JWT (deve responder 401)
-curl -i https://pitchme-api.onrender.com/api/perfis/me
+curl -i https://gravan-api.onrender.com/api/perfis/me
 
 # 3. Endpoint inexistente (deve responder 404, não vazar stack trace)
-curl -i https://pitchme-api.onrender.com/api/inexistente
+curl -i https://gravan-api.onrender.com/api/inexistente
 
 # 4. CORS — origem não autorizada (deve NÃO retornar Access-Control-Allow-Origin)
-curl -i -H "Origin: https://malicioso.com" https://pitchme-api.onrender.com/api/health
+curl -i -H "Origin: https://malicioso.com" https://gravan-api.onrender.com/api/health
 
 # 5. Rate limit — disparar várias chamadas para /api/contato (deve dar 429 após 3)
 for i in 1 2 3 4; do curl -X POST -H "Content-Type: application/json" \
   -d '{"nome":"x","email":"a@b.c","mensagem":"teste 1234567890"}' \
-  https://pitchme-api.onrender.com/api/contato/; done
+  https://gravan-api.onrender.com/api/contato/; done
 
 # 6. Rota antiga de download de source (deve dar 404 — foi removida)
-curl -i https://pitchme-api.onrender.com/api/download-projeto
+curl -i https://gravan-api.onrender.com/api/download-projeto
 
 # 7. RLS — anon key tentando ler perfis (deve dar 0 linhas)
 #    Faça login como administrador e abra GET /api/security-check no painel admin

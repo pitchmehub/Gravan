@@ -1,4 +1,4 @@
-# Pitch.me
+# Gravan
 
 Marketplace for music rights/licensing built with React + Vite (frontend) and Flask (backend), backed by Supabase.
 

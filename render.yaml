@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: pitchme-api
+    name: gravan-api
     env: python
     plan: free
     rootDir: backend
@@ -43,7 +43,7 @@ services:
   # Roda a cada 10 minutos
   # ─────────────────────────────────────────────────────────────
   - type: cron
-    name: pitchme-cron-processar-pendentes
+    name: gravan-cron-processar-pendentes
     env: python
     plan: starter
     schedule: "*/10 * * * *"
@@ -64,7 +64,7 @@ services:
   # A própria função verifica se hoje é o último dia útil do mês
   # ─────────────────────────────────────────────────────────────
   - type: cron
-    name: pitchme-cron-auto-criar-mensal
+    name: gravan-cron-auto-criar-mensal
     env: python
     plan: starter
     schedule: "1 3 * * *"

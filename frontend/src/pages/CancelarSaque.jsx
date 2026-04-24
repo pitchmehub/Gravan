@@ -50,7 +50,7 @@ export default function CancelarSaque() {
       <div style={{ maxWidth: 500, width: '100%', background: '#fff',
                     padding: 32, borderRadius: 16,
                     boxShadow: '0 10px 30px rgba(0,0,0,.08)' }}>
-        <div style={{ fontWeight: 800, color: '#BE123C', marginBottom: 18 }}>Pitch.me</div>
+        <div style={{ fontWeight: 800, color: '#083257', marginBottom: 18 }}>Gravan</div>
 
         {estado === 'confirmando' && (
           <>

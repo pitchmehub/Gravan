@@ -72,7 +72,7 @@ export default function AdminBI() {
           <div className="card">
             <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 14 }}>Distribuição de Receita</h2>
             {[
-              { label: 'Plataforma (40%)', pct: 40, color: '#BE123C' },
+              { label: 'Plataforma (40%)', pct: 40, color: '#083257' },
               { label: 'Compositores (60%)', pct: 60, color: '#059669' },
             ].map(b => (
               <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>

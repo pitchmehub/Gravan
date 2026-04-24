@@ -68,8 +68,7 @@ import React, { useEffect, useState } from 'react'
       <div className="login-root">
         <div className="login-card">
           <div className="login-logo">
-            <span className="login-logo-icon">♪</span>
-            <span className="login-logo-text">PITCH.ME</span>
+            <img src="/gravan-logo.png" alt="Gravan" className="login-logo-img" />
           </div>
           <p className="login-tagline">Plataforma de composições musicais</p>
 
@@ -130,7 +129,7 @@ import React, { useEffect, useState } from 'react'
               }}>
                 <input type="checkbox" name="aceite_termos"
                        checked={form.aceite_termos} onChange={handleChange}
-                       style={{ marginTop: 3, accentColor: '#E11D48', cursor: 'pointer', flexShrink: 0 }}/>
+                       style={{ marginTop: 3, accentColor: '#0C447C', cursor: 'pointer', flexShrink: 0 }}/>
                 <span>
                   Li e concordo com os{' '}
                   <a href="/termos" target="_blank" rel="noopener" style={{ color: 'var(--brand)', fontWeight: 600 }}>Termos de Uso</a>,{' '}

@@ -1,9 +1,9 @@
 /**
- * Service Worker Pitch.me — Design 1 edition
+ * Service Worker Gravan — Design 1 edition
  * CSS/JS/fonts usam networkFirst para sempre refletir updates do server.
  */
 
-const VERSION       = 'pitchme-v3-design1-20260421'
+const VERSION       = 'gravan-v3-design1-20260421'
 const STATIC_CACHE  = `static-${VERSION}`
 const IMG_CACHE     = `img-${VERSION}`
 const RUNTIME_CACHE = `runtime-${VERSION}`

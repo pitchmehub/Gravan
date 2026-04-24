@@ -131,7 +131,7 @@ function AdminBadge({ collapsed }) {
         data-testid="modo-admin-btn"
         style={{
           width: '100%', padding: '8px 0', margin: '8px 0',
-          background: 'linear-gradient(135deg,#7C3AED,#E11D48)',
+          background: 'linear-gradient(135deg,#7C3AED,#0C447C)',
           color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: 0.4,
           border: 'none', borderRadius: 6, cursor: 'pointer',
         }}>
@@ -145,7 +145,7 @@ function AdminBadge({ collapsed }) {
       data-testid="modo-admin-btn"
       style={{
         width: '100%', padding: '10px 12px', margin: '8px 0 12px',
-        background: 'linear-gradient(135deg,#7C3AED,#E11D48)',
+        background: 'linear-gradient(135deg,#7C3AED,#0C447C)',
         color: '#fff', fontSize: 11.5, fontWeight: 800, letterSpacing: 0.6,
         border: 'none', borderRadius: 8, cursor: 'pointer',
         display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center',
@@ -194,7 +194,7 @@ export default function SideMenu({ onCollapse }) {
         <aside className={`sidebar mobile-drawer ${mobileOpen ? 'mobile-drawer-open' : ''}`}>
           <div className="sidebar-header">
             <button className="sidebar-logo-btn" onClick={() => { navigate('/descoberta'); setMobileOpen(false) }}>
-              PITCH.ME
+              <img src="/gravan-logo.png" alt="Gravan" className="sidebar-logo-img" />
             </button>
             <button
               className="sidebar-toggle"
@@ -249,7 +249,7 @@ export default function SideMenu({ onCollapse }) {
       <div className="sidebar-header">
         {!collapsed && (
           <button className="sidebar-logo-btn" onClick={() => navigate('/descoberta')}>
-            PITCH.ME
+            <img src="/gravan-logo.png" alt="Gravan" className="sidebar-logo-img" />
           </button>
         )}
         <button className="sidebar-toggle" onClick={() => setCollapsed(c => !c)}>

@@ -28,7 +28,7 @@ from services.saque_security import (
 from services.saque_calendar import janela_atual
 from db.supabase_client import get_supabase
 
-log = logging.getLogger("pitchme.saques.routes")
+log = logging.getLogger("gravan.saques.routes")
 saques_bp = Blueprint("saques", __name__, url_prefix="/api/saques")
 
 
@@ -43,7 +43,7 @@ def _frontend_origin() -> str:
         from urllib.parse import urlparse
         p = urlparse(origin)
         return f"{p.scheme}://{p.netloc}"
-    return os.environ.get("FRONTEND_URL", "https://pitch.me")
+    return os.environ.get("FRONTEND_URL", "https://gravan")
 
 
 # ──────────────────────────────────────────────────────────

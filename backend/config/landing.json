@@ -1,7 +1,7 @@
 {
   "brand": {
     "eyebrow": "MARKETPLACE DE OBRAS MUSICAIS",
-    "logoText": "Pitch.me"
+    "logoText": "Gravan"
   },
   "nav": {
     "ctaDeslogado": "Entrar",
@@ -102,7 +102,7 @@
   },
   "manifesto": {
     "authorCaption": "Marketplace independente de composições musicais",
-    "authorName": "Pitch.me",
+    "authorName": "Gravan",
     "line1": "Feito por quem respeita a obra.",
     "line2": "Pago por quem respeita o autor."
   },
@@ -150,11 +150,11 @@
     "colContactTitle": "Contato",
     "colLegalTitle": "Legal",
     "colPlatformTitle": "Plataforma",
-    "copyright": "© 2025 Pitch.me — Todos os direitos reservados.",
+    "copyright": "© 2025 Gravan — Todos os direitos reservados.",
     "ctaButton": "▶ Criar conta grátis",
     "ctaTitle": "Comece agora.",
-    "email": "contato@pitchme.com",
+    "email": "contato@gravan.com",
     "tagline": "Feito com precisão para compositores.",
-    "wordmark": "PITCH.ME"
+    "wordmark": "GRAVAN"
   }
 }

@@ -1,7 +1,7 @@
 """
 Route do projeto — REMOVIDA por motivo de segurança.
 
-A versão original servia o ZIP do código-fonte (`/app/pitch_me_projeto_completo.zip`)
+A versão original servia o ZIP do código-fonte (`/app/gravan_projeto_completo.zip`)
 publicamente, sem autenticação. Isso vazaria o source code completo da aplicação
 para qualquer atacante que descobrisse a URL `/api/download-projeto`.
 

@@ -35,7 +35,7 @@ export default function EscolherTipoPerfil() {
     try {
       await api.post('/perfis/me/tipo', { role: escolhido })
       // Garante que o cadastro detalhado será exigido em seguida
-      try { localStorage.removeItem('pitchme_skip_cadastro') } catch {}
+      try { localStorage.removeItem('gravan_skip_cadastro') } catch {}
       await refreshPerfil?.()
       if (escolhido === 'publisher') navigate('/editora/cadastro', { replace: true })
       else navigate('/perfil/completar', { replace: true })
@@ -56,7 +56,7 @@ export default function EscolherTipoPerfil() {
         borderRadius: 16, padding: 32, boxShadow: '0 6px 24px rgba(0,0,0,.04)',
       }}>
         <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 6, letterSpacing: 0.2 }}>
-          Bem-vindo ao PITCH.ME
+          Bem-vindo ao GRAVAN
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted, #71717A)', marginBottom: 24 }}>
           Como você vai usar a plataforma? Escolha um perfil para continuar.
@@ -69,9 +69,9 @@ export default function EscolherTipoPerfil() {
               data-testid={`tipo-perfil-${t.id}`}
               style={{
                 textAlign: 'left', padding: '22px 20px',
-                border: `2px solid ${escolhido === t.id ? '#E11D48' : 'var(--border, #E5E7EB)'}`,
+                border: `2px solid ${escolhido === t.id ? '#0C447C' : 'var(--border, #E5E7EB)'}`,
                 borderRadius: 14,
-                background: escolhido === t.id ? 'rgba(225,29,72,.06)' : '#fff',
+                background: escolhido === t.id ? 'rgba(12,68,124,.06)' : '#fff',
                 cursor: 'pointer', transition: 'all .15s',
                 display: 'flex', flexDirection: 'column', gap: 8,
               }}>
@@ -90,7 +90,7 @@ export default function EscolherTipoPerfil() {
           <button onClick={confirmar} disabled={!escolhido || loading}
             style={{
               padding: '12px 22px', fontSize: 14, fontWeight: 700,
-              background: escolhido ? '#E11D48' : '#E5E7EB',
+              background: escolhido ? '#0C447C' : '#E5E7EB',
               color: escolhido ? '#fff' : '#9CA3AF',
               border: 'none', borderRadius: 10,
               cursor: escolhido && !loading ? 'pointer' : 'not-allowed',

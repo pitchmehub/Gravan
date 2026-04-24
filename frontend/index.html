@@ -6,7 +6,7 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
 
-    <title>Pitch.me — Composições Musicais</title>
+    <title>Gravan — Composições Musicais</title>
     <meta name="description" content="Marketplace de composições musicais — conectando compositores e intérpretes." />
 
     <!-- PWA manifest -->
@@ -17,7 +17,7 @@
     <!-- iOS PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Pitch.me" />
+    <meta name="apple-mobile-web-app-title" content="Gravan" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <!-- Favicons (SVG moderno + fallback PNG/ICO) -->
@@ -27,8 +27,8 @@
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="icon"      type="image/png" sizes="192x192" href="/icons/icon-192.png" />
 
-    <!-- Theme color (Pitch.me brand) -->
-    <meta name="theme-color" content="#E11D48" />
+    <!-- Theme color (Gravan brand) -->
+    <meta name="theme-color" content="#0C447C" />
 
     <!-- Fontes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,7 +42,7 @@
       // Executa 1x por cliente (marca no localStorage) para eliminar CSS roxo cacheado.
       (function migratePWA() {
         try {
-          var KEY = 'pitchme_design1_migrated_v3'
+          var KEY = 'gravan_design1_migrated_v3'
           if (localStorage.getItem(KEY) === '1') return
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function (regs) {
@@ -55,8 +55,8 @@
             }).then(function () {
               localStorage.setItem(KEY, '1')
               // Recarrega uma vez pra pegar CSS/JS fresco do servidor
-              if (!sessionStorage.getItem('pitchme_pwa_reloaded')) {
-                sessionStorage.setItem('pitchme_pwa_reloaded', '1')
+              if (!sessionStorage.getItem('gravan_pwa_reloaded')) {
+                sessionStorage.setItem('gravan_pwa_reloaded', '1')
                 window.location.reload()
               }
             }).catch(function(){ localStorage.setItem(KEY, '1') })

@@ -320,7 +320,7 @@ export default function NovaObra() {
               <div>
                 <div style={{ fontWeight: 600, fontSize: 13 }}>Obra não editada</div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                  A composição está livre e posso assinar o contrato de edição com a Pitche.me
+                  A composição está livre e posso assinar o contrato de edição com a Gravan
                 </div>
               </div>
             </label>
@@ -391,7 +391,7 @@ export default function NovaObra() {
                     background: '#fff8e1', color: '#5d4037',
                     border: '1px solid #ffe082'
                   }}>
-                    ℹ️ Esta editora ainda não tem cadastro na Pitch.me. Quando alguém
+                    ℹ️ Esta editora ainda não tem cadastro na Gravan. Quando alguém
                     licenciar, ela receberá um e-mail com link único para se cadastrar
                     e assinar o contrato (prazo de 72 horas úteis).
                   </div>

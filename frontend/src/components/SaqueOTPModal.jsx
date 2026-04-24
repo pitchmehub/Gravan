@@ -108,8 +108,8 @@ export default function SaqueOTPModal({ meta, onClose, onConfirmado }) {
             style={{
               width: '100%', padding: '16px 12px', fontSize: 28, textAlign: 'center',
               letterSpacing: 12, fontFamily: 'monospace', fontWeight: 700,
-              border: '2px solid #BE123C', borderRadius: 12, marginBottom: 12,
-              color: '#BE123C',
+              border: '2px solid #083257', borderRadius: 12, marginBottom: 12,
+              color: '#083257',
             }}
           />
 

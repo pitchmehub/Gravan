@@ -11,7 +11,7 @@ Fluxo:
      de cadastro contendo o `registration_token`.
   4. Deadline = 72 horas úteis (BRT, 10–18h, dias úteis BR).
   5. Editora se cadastra → vincula `editora_terceira_id` → status `editora_cadastrada`.
-  6. Geramos contrato trilateral (autor + Pitch.me + comprador + editora terceira).
+  6. Geramos contrato trilateral (autor + Gravan + comprador + editora terceira).
   7. Quando todos assinam, capturamos o pagamento, status `concluida`.
   8. Se o deadline expirar antes da assinatura: `cancel` no PaymentIntent
      (libera o hold) → status `expirada`/`reembolsada` e e-mail ao comprador.
@@ -40,7 +40,7 @@ from services.email_service import (
     render_oferta_concluida_email,
 )
 
-log = logging.getLogger("pitchme.ofertas")
+log = logging.getLogger("gravan.ofertas")
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
@@ -233,7 +233,7 @@ def on_payment_authorized(session_id: str, payment_intent_id: str) -> Optional[d
         link=_link_aceitar_oferta(of["registration_token"]),
     )
     send_email(of["editora_terceira_email"],
-               f"Pitch.me — Pedido de licenciamento de \"{obra.get('nome','obra musical')}\"",
+               f"Gravan — Pedido de licenciamento de \"{obra.get('nome','obra musical')}\"",
                html, text)
 
     return sb.table("ofertas_licenciamento").select("*").eq("id", of["id"]).single().execute().data
@@ -328,7 +328,7 @@ def on_contrato_concluido(contract_id: str) -> Optional[dict]:
         h, t = render_oferta_concluida_email(comprador.get("nome") or "Intérprete",
                                              obra.get("nome", "—"),
                                              _moeda(of["valor_cents"]))
-        send_email(comprador["email"], "Pitch.me — Licença concluída", h, t)
+        send_email(comprador["email"], "Gravan — Licença concluída", h, t)
 
     return sb.table("ofertas_licenciamento").select("*").eq("id", of["id"]).single().execute().data
 
@@ -399,7 +399,7 @@ def _enviar_lembrete(of: dict, horas_restantes: int) -> None:
         link=_link_aceitar_oferta(of["registration_token"]),
     )
     send_email(of["editora_terceira_email"],
-               f"Pitch.me — Faltam {horas_restantes}h úteis para responder à oferta",
+               f"Gravan — Faltam {horas_restantes}h úteis para responder à oferta",
                h, t)
 
 
@@ -433,11 +433,11 @@ def _expirar_oferta(of: dict) -> None:
             _moeda(of["valor_cents"]),
         )
         send_email(comprador["email"],
-                   "Pitch.me — Oferta expirada e valor estornado", h, t)
+                   "Gravan — Oferta expirada e valor estornado", h, t)
 
     # Avisa também a editora
     h2, t2 = render_oferta_expirada_editora_email(
         of["editora_terceira_nome"], obra.get("nome", "—"),
     )
     send_email(of["editora_terceira_email"],
-               "Pitch.me — Prazo da oferta expirado", h2, t2)
+               "Gravan — Prazo da oferta expirado", h2, t2)

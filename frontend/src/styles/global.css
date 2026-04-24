@@ -1,37 +1,39 @@
 /* ============================================================
-   Pitch.me — Design Tokens & Global Styles
-   Tema: Minimalista · Branco + Preto + Red REC (Design 1)
+   Gravan — Design Tokens & Global Styles
+   Tema: Editorial · Off-white + Azul Gravan
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* ── Marca (Red REC) ── */
-  --brand:        #E11D48;
-  --brand-light:  rgba(225, 29, 72, .10);
-  --brand-dark:   #BE123C;
-  --brand-glow:   rgba(225, 29, 72, .25);
-  --brand-border: rgba(225, 29, 72, .35);
+  /* ── Marca (Azul Gravan) ── */
+  --brand:        #0C447C;
+  --brand-light:  rgba(12, 68, 124, .10);
+  --brand-dark:   #083257;
+  --brand-glow:   rgba(12, 68, 124, .25);
+  --brand-border: rgba(12, 68, 124, .35);
+  --brand-accent: #378ADD;
+  --brand-accent-light: #E6F1FB;
 
-  /* ── Fundos (brancos / acinzentados) ── */
-  --bg:           #FFFFFF;
-  --surface:      #FAFAFA;
-  --surface-2:    #F4F4F5;
-  --surface-3:    #E4E4E7;
+  /* ── Fundos (off-white / cremoso) ── */
+  --bg:           #F1EFE8;
+  --surface:      #FFFFFF;
+  --surface-2:    #F7F5EE;
+  --surface-3:    #E8E5DD;
 
-  /* ── Texto (preto e cinzas) ── */
-  --text-primary:   #09090B;
-  --text-secondary: #3F3F46;
-  --text-muted:     #71717A;
+  /* ── Texto (preto suave e cinzas) ── */
+  --text-primary:   #2C2C2A;
+  --text-secondary: #4A4A47;
+  --text-muted:     #888780;
 
   /* ── Inverso (para elementos escuros pontuais) ── */
-  --ink:          #09090B;
+  --ink:          #2C2C2A;
   --ink-invert:   #FFFFFF;
 
   /* ── Bordas (cinza claro, retas) ── */
-  --border:       #E4E4E7;
-  --border-2:     #D4D4D8;
-  --border-focus: #09090B;
+  --border:       #E0DDD3;
+  --border-2:     #C9C6BC;
+  --border-focus: #0C447C;
 
   /* ── Semânticas ── */
   --success:      #16A34A;

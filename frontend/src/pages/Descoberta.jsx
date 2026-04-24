@@ -15,7 +15,7 @@ function fmt(cents) {
 
 const GENEROS = ['Todos', 'Sertanejo', 'MPB', 'Funk', 'Samba', 'Rock', 'Pop', 'Gospel', 'Forró', 'Pagode', 'RNB']
 const GRADIENTS = [
-  'linear-gradient(135deg,#BE123C,#09090B)',
+  'linear-gradient(135deg,#083257,#09090B)',
   'linear-gradient(135deg,#0F6E56,#1D9E75)',
   'linear-gradient(135deg,#854F0B,#EF9F27)',
   'linear-gradient(135deg,#185FA5,#378ADD)',
@@ -282,7 +282,7 @@ function FichaTecnica({ obra, onClose, onPlay, isPlaying, isActive }) {
                   </div>
                   <div className="dc-modal-comp-info">
                     <div className="dc-modal-comp-nome"
-                         style={perfilId ? { color: '#E11D48', textDecoration: 'underline' } : undefined}>
+                         style={perfilId ? { color: '#0C447C', textDecoration: 'underline' } : undefined}>
                       {c.perfis?.nome_artistico || c.perfis?.nome}
                       {c.is_titular && <span className="dc-titular-badge">Titular</span>}
                     </div>
@@ -430,7 +430,7 @@ export default function Descoberta() {
       {cadastroIncompleto && (
         <div style={{
           padding: '14px 28px',
-          background: 'linear-gradient(90deg,#BE123C,#09090B)',
+          background: 'linear-gradient(90deg,#083257,#09090B)',
           color: '#fff', display: 'flex', alignItems: 'center', gap: 14,
           flexWrap: 'wrap',
         }}>

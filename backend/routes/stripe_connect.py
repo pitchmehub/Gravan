@@ -14,7 +14,7 @@ from middleware.auth import require_auth
 from db.supabase_client import get_supabase
 from app import limiter
 
-logger = logging.getLogger("pitchme.connect")
+logger = logging.getLogger("gravan.connect")
 
 connect_bp = Blueprint("connect", __name__)
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")

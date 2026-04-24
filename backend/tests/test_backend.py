@@ -1,5 +1,5 @@
 """
-Backend smoke + stats tests for Pitch.me
+Backend smoke + stats tests for Gravan
 Run: pytest /app/backend/tests/test_backend.py -v --junitxml=/app/test_reports/pytest/pytest_results.xml
 """
 import os
@@ -79,7 +79,7 @@ class TestAuthProtection:
 # ─── Static asset ─────────────────────────────────
 class TestStatic:
     def test_zip_available(self, client):
-        r = client.head(f"{BASE_URL}/pitchme_completo.zip", timeout=15, allow_redirects=True)
+        r = client.head(f"{BASE_URL}/gravan_completo.zip", timeout=15, allow_redirects=True)
         assert r.status_code == 200
 
 

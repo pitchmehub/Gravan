@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Migração: Contratos de Licenciamento + Assinatura digital
+-- Gravan — Migração: Contratos de Licenciamento + Assinatura digital
 --
 -- COMO EXECUTAR:
 --   Cole no SQL Editor do Supabase e clique em RUN.

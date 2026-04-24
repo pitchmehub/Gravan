@@ -44,7 +44,7 @@ from services.saque_calendar import (
     ultimo_dia_util_do_mes,
 )
 
-log = logging.getLogger("pitchme.saque")
+log = logging.getLogger("gravan.saque")
 
 # ────────── Configurações ──────────
 OTP_VALIDADE_MIN          = 10
@@ -256,7 +256,7 @@ def iniciar_saque(
         nome=perfil.get("nome_artistico") or perfil.get("nome") or "",
         codigo=codigo, valor_brl=_fmt_brl(valor_cents), ip=ip or "-",
     )
-    send_email(perfil["email"], "Pitch.me — Código de confirmação de saque", html, text)
+    send_email(perfil["email"], "Gravan — Código de confirmação de saque", html, text)
 
     return {
         "saque_id": saque_id,
@@ -330,7 +330,7 @@ def confirmar_otp(saque_id: str, perfil_id: str, codigo: str, frontend_origin: s
         valor_brl=_fmt_brl(saque["valor_cents"]),
         libera_em=libera_em_str, cancel_url=cancel_url,
     )
-    send_email(perfil.get("email", ""), "Pitch.me — Saque agendado (24h)", html, text)
+    send_email(perfil.get("email", ""), "Gravan — Saque agendado (24h)", html, text)
 
     return {
         "saque_id":   saque_id,
@@ -355,7 +355,7 @@ def _cancelar(sb, saque: dict, motivo: str) -> dict:
         valor_brl=_fmt_brl(saque["valor_cents"]),
         motivo=motivo or "Cancelamento solicitado pelo titular",
     )
-    send_email(perfil.get("email", ""), "Pitch.me — Saque cancelado", html, text)
+    send_email(perfil.get("email", ""), "Gravan — Saque cancelado", html, text)
     return {"ok": True, "saque_id": saque["id"], "status": "cancelado"}
 
 
@@ -474,7 +474,7 @@ def _processar_um_saque(sb, saque: dict) -> None:
         nome=perfil.get("nome_artistico") or perfil.get("nome") or "",
         valor_brl=_fmt_brl(valor_cents), transfer_id=tr.id,
     )
-    send_email(perfil.get("email", ""), "Pitch.me — Saque enviado ✓", html, text)
+    send_email(perfil.get("email", ""), "Gravan — Saque enviado ✓", html, text)
 
 
 # ────────── (5) Auto-criação no último dia útil ──────────
@@ -555,7 +555,7 @@ def auto_criar_mensal(limite: int = 100, valor_min_cents: int = VALOR_MIN_CENTS)
                     libera_em=libera_em_str,
                     cancel_url="",  # auto-saque não tem link "não fui eu"
                 )
-                send_email(perfil["email"], "Pitch.me — Saque automático agendado", html, text)
+                send_email(perfil["email"], "Gravan — Saque automático agendado", html, text)
             except Exception as e:
                 log.warning("Email de auto-saque falhou para %s: %s", perfil_id, e)
 

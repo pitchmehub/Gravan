@@ -1,5 +1,5 @@
 /* ============================================================
-   Login / Cadastro — PITCH.ME (Design 1: branco + preto + red REC)
+   Login / Cadastro — GRAVAN (Design 1: branco + preto + red REC)
    ============================================================ */
 
 .login-root {
@@ -26,7 +26,7 @@
   pointer-events: none;
 }
 .login-root::after {
-  content: 'PITCH.ME';
+  content: 'GRAVAN';
   position: absolute;
   top: 50%; left: 21%;
   transform: translate(-50%, -50%);
@@ -68,13 +68,11 @@
   display: flex; align-items: center; justify-content: flex-start;
   gap: 10px; margin-bottom: 4px;
 }
-.login-logo-icon { font-size: 10px; color: var(--brand); }
-.login-logo-text {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
+.login-logo-img {
+  height: 56px;
+  width: auto;
+  display: block;
+  object-fit: contain;
 }
 .login-tagline {
   text-align: left;

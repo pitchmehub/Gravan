@@ -58,7 +58,7 @@ export function AuthProvider({ children }) {
   async function signOut() {
     await supabase.auth.signOut()
     // Limpa a última rota salva (não queremos restaurá-la para outro usuário)
-    try { localStorage.removeItem('pitchme_last_route') } catch {}
+    try { localStorage.removeItem('gravan_last_route') } catch {}
     // Redireciona para a landing page
     if (typeof window !== 'undefined') {
       window.location.href = '/'

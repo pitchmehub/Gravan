@@ -9,7 +9,7 @@ import React from 'react'
 export default function ArtistaHero({
   perfil,
   totalObras,
-  fallbackGrad = 'linear-gradient(135deg, #BE123C, #09090B)',
+  fallbackGrad = 'linear-gradient(135deg, #083257, #09090B)',
   rightSlot = null,
   onBack = null,
 }) {

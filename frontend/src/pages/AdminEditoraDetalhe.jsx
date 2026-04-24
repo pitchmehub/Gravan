@@ -41,7 +41,7 @@ export default function AdminEditoraDetalhe() {
   return (
     <div style={{ padding: '32px 20px', maxWidth: 1100, margin: '0 auto' }}>
       <button onClick={() => navigate('/admin/editoras')}
-              style={{ background: 'none', border: 'none', color: '#E11D48', cursor: 'pointer', fontSize: 13, marginBottom: 16 }}>
+              style={{ background: 'none', border: 'none', color: '#0C447C', cursor: 'pointer', fontSize: 13, marginBottom: 16 }}>
         ← Voltar para a lista
       </button>
 
@@ -107,7 +107,7 @@ export default function AdminEditoraDetalhe() {
                 <strong>{o.titulo}</strong>
                 <span style={{ color: '#71717A' }}>{o.genero || '—'}</span>
                 <span style={{ color: '#71717A', fontSize: 11 }}>{o.publicada ? 'Publicada' : (o.status || 'rascunho')}</span>
-                <span style={{ color: '#E11D48', fontWeight: 700 }}>{fmt(o.preco_cents)}</span>
+                <span style={{ color: '#0C447C', fontWeight: 700 }}>{fmt(o.preco_cents)}</span>
               </Row>
             ))}
       </Section>

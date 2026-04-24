@@ -1,4 +1,4 @@
-# Pitch.me — Identidade Visual & Prompts para IA
+# Gravan — Identidade Visual & Prompts para IA
 
 Este documento contém **dois ativos** para reprodução da identidade visual em outras IAs
 (ChatGPT, Midjourney, DALL-E, Leonardo, Ideogram, Figma AI, etc.):
@@ -32,7 +32,7 @@ Este documento contém **dois ativos** para reprodução da identidade visual em
 ### 2.1 Prompt para IA generativa (imagem — DALL·E 3, Midjourney, Ideogram, Leonardo)
 
 ```
-Minimalist flat app icon for a music marketplace brand called "Pitch.me". Rounded-square container (corner radius 20%) filled with deep rose-red color hex #E11D48. Inside, four pure-white vertical bars arranged horizontally, each bar with slightly rounded ends. Each bar is taller than the previous one (ascending equalizer / pitch rising). Above the tallest bar, a single small white circle represents the "." (dot). Clean geometric Bauhaus style, no gradients, no shadows, no texture, perfectly centered, high contrast. Vector-style, solid colors only. White background outside the icon. 1024×1024.
+Minimalist flat app icon for a music marketplace brand called "Gravan". Rounded-square container (corner radius 20%) filled with deep rose-red color hex #E11D48. Inside, four pure-white vertical bars arranged horizontally, each bar with slightly rounded ends. Each bar is taller than the previous one (ascending equalizer / pitch rising). Above the tallest bar, a single small white circle represents the "." (dot). Clean geometric Bauhaus style, no gradients, no shadows, no texture, perfectly centered, high contrast. Vector-style, solid colors only. White background outside the icon. 1024×1024.
 ```
 
 ### 2.2 Negative prompt (se a IA aceitar — Leonardo, Stable Diffusion)
@@ -50,7 +50,7 @@ Minimalist flat app icon for a music marketplace brand called "Pitch.me". Rounde
 ### 3.1 Prompt para IA generativa
 
 ```
-Horizontal logo lockup for "Pitch.me" — on the left: a rounded-square icon with four ascending white bars and a small white dot on solid #E11D48 rose-red background. On the right: the wordmark "Pitch.me" in Inter ExtraBold sans-serif, letter-spacing tight, with "Pitch" in near-black (#0A0A0A) and ".me" in the same rose-red #E11D48 as the icon. Flat, minimalist, Swiss design, white background, professional SaaS branding. 1800×480.
+Horizontal logo lockup for "Gravan" — on the left: a rounded-square icon with four ascending white bars and a small white dot on solid #E11D48 rose-red background. On the right: the wordmark "Gravan" in Inter ExtraBold sans-serif, letter-spacing tight, with "Pitch" in near-black (#0A0A0A) and ".me" in the same rose-red #E11D48 as the icon. Flat, minimalist, Swiss design, white background, professional SaaS branding. 1800×480.
 ```
 
 ---
@@ -58,7 +58,7 @@ Horizontal logo lockup for "Pitch.me" — on the left: a rounded-square icon wit
 ## 4. Variação para fundo escuro (dark mode)
 
 ```
-Same Pitch.me logo, but on deep navy background #0A0A0A. The icon keeps #E11D48 fill with white bars/dot. The wordmark "Pitch" is in white, and ".me" in the signature #E11D48 rose-red. Crisp, modern, premium.
+Same Gravan logo, but on deep navy background #0A0A0A. The icon keeps #E11D48 fill with white bars/dot. The wordmark "Pitch" is in white, and ".me" in the signature #E11D48 rose-red. Crisp, modern, premium.
 ```
 
 ---

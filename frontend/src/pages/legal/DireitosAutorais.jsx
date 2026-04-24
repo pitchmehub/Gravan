@@ -10,13 +10,13 @@ export default function DireitosAutorais() {
       active="/direitos-autorais"
     >
       <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 40, lineHeight: 1.7 }}>
-        Esta política define como a PITCH.ME trata a propriedade intelectual das obras
+        Esta política define como a GRAVAN trata a propriedade intelectual das obras
         hospedadas na plataforma.
       </p>
 
       <Section n="1" title="Propriedade das obras">
         O envio de uma composição <strong>não transfere a propriedade intelectual</strong>
-        à PITCH.ME.
+        à GRAVAN.
       </Section>
 
       <Section n="2" title="Responsabilidade">
@@ -32,7 +32,7 @@ export default function DireitosAutorais() {
       </Section>
 
       <Section n="4" title="Intermediação">
-        A PITCH.ME apenas facilita a conexão e negociação, não sendo titular das obras.
+        A GRAVAN apenas facilita a conexão e negociação, não sendo titular das obras.
       </Section>
 
       <Section n="5" title="Remoção de conteúdo">

@@ -24,7 +24,7 @@ export default function StepperCadastro({ etapa = 1 }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
               <div style={{
                 width: 30, height: 30, borderRadius: '50%',
-                background: feito ? '#16A34A' : ativo ? '#E11D48' : '#E5E7EB',
+                background: feito ? '#16A34A' : ativo ? '#0C447C' : '#E5E7EB',
                 color: feito || ativo ? '#fff' : '#71717A',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 13, fontWeight: 800, flex: '0 0 auto',

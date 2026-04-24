@@ -11,7 +11,7 @@ function fmt(cents) {
 }
 
 const GRADIENTS = [
-  'linear-gradient(135deg,#BE123C,#09090B)',
+  'linear-gradient(135deg,#083257,#09090B)',
   'linear-gradient(135deg,#0F6E56,#1D9E75)',
   'linear-gradient(135deg,#854F0B,#EF9F27)',
   'linear-gradient(135deg,#185FA5,#378ADD)',
@@ -192,7 +192,7 @@ export default function PerfilPublico() {
                     }}>×</button>
 
             <div style={{
-              background: 'rgba(225,29,72,.08)', border: '1px solid rgba(225,29,72,.3)',
+              background: 'rgba(12,68,124,.08)', border: '1px solid rgba(12,68,124,.3)',
               padding: 12, borderRadius: 8, marginBottom: 14, fontSize: 13,
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
             }}>

@@ -13,7 +13,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
 )
-logger = logging.getLogger('pitchme')
+logger = logging.getLogger('gravan')
 
 
 def register_error_handlers(app: Flask) -> None:

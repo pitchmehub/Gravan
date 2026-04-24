@@ -19,8 +19,8 @@ const NIVEL_INFO = {
   },
   diamante: {
     label: '💎 Diamante',
-    bg: 'linear-gradient(135deg, #BE123C 0%, #09090B 100%)',
-    glow: 'rgba(225,29,72,.25)',
+    bg: 'linear-gradient(135deg, #083257 0%, #09090B 100%)',
+    glow: 'rgba(12,68,124,.25)',
     texto: 'Licenciamento de R$ 500 a R$ 10.000',
     proximoNivel: 'Você está no nível máximo! Continue publicando composições de alta qualidade.',
   },
@@ -38,8 +38,8 @@ function StatCard({ label, value, sub, accent = false }) {
   return (
     <div style={{
       padding: '18px 20px',
-      background: accent ? 'rgba(225,29,72,.18)' : 'var(--surface)',
-      border: `1px solid ${accent ? 'rgba(225,29,72,.4)' : 'var(--border)'}`,
+      background: accent ? 'rgba(12,68,124,.18)' : 'var(--surface)',
+      border: `1px solid ${accent ? 'rgba(12,68,124,.4)' : 'var(--border)'}`,
       borderRadius: 14,
     }}>
       <div style={{
@@ -312,10 +312,10 @@ export default function Dashboard() {
                       })}
                       style={{
                         width: 38, height: 38, borderRadius: 9,
-                        background: 'linear-gradient(135deg, #BE123C, #09090B)',
+                        background: 'linear-gradient(135deg, #083257, #09090B)',
                         color: '#fff', border: 'none', cursor: 'pointer',
                         fontSize: 12, flexShrink: 0, fontFamily: 'inherit',
-                        boxShadow: '0 2px 12px rgba(225,29,72,.35)',
+                        boxShadow: '0 2px 12px rgba(12,68,124,.35)',
                         transition: 'transform .1s',
                       }}
                       onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}

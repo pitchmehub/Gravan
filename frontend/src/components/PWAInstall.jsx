@@ -55,9 +55,9 @@ export default function PWAInstall() {
       position: 'fixed',
       bottom: 16, left: 16, right: 16,
       maxWidth: 420, margin: '0 auto',
-      background: 'linear-gradient(135deg,#BE123C,#09090B)',
+      background: 'linear-gradient(135deg,#083257,#09090B)',
       color: '#fff', padding: 16,
-      borderRadius: 16, boxShadow: '0 12px 40px rgba(225,29,72,.4)',
+      borderRadius: 16, boxShadow: '0 12px 40px rgba(12,68,124,.4)',
       zIndex: 2000,
       display: 'flex', alignItems: 'center', gap: 12,
     }}>
@@ -68,7 +68,7 @@ export default function PWAInstall() {
         fontSize: 22, flexShrink: 0,
       }}>♪</div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700 }}>Instalar Pitch.me</div>
+        <div style={{ fontSize: 13, fontWeight: 700 }}>Instalar Gravan</div>
         <div style={{ fontSize: 11, opacity: .9, lineHeight: 1.4 }}>
           {isIOS
             ? 'Toque em [⎋] → "Adicionar à Tela de Início"'

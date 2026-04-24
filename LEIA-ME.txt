@@ -1,5 +1,5 @@
 ═══════════════════════════════════════════════════════════════
-  PITCH.ME — Sistema de Notificações (pacote de instalação)
+  GRAVAN — Sistema de Notificações (pacote de instalação)
 ═══════════════════════════════════════════════════════════════
 
 Como instalar (siga na ordem):
@@ -12,20 +12,20 @@ Como instalar (siga na ordem):
 2) BACKEND (substituir / adicionar arquivos)
    Copie estes arquivos para dentro do seu projeto:
 
-   pitchme/backend/app.py
+   gravan/backend/app.py
        → SUBSTITUI o app.py existente
 
-   pitchme/backend/services/notificacoes.py
+   gravan/backend/services/notificacoes.py
        → ARQUIVO NOVO
 
-   pitchme/backend/routes/notificacoes.py
+   gravan/backend/routes/notificacoes.py
        → ARQUIVO NOVO
 
 3) FRONTEND (adicionar componentes)
    Copie estes arquivos:
 
-   pitchme/frontend/src/components/NotificationBell.jsx   (NOVO)
-   pitchme/frontend/src/components/NotificationBell.css   (NOVO)
+   gravan/frontend/src/components/NotificationBell.jsx   (NOVO)
+   gravan/frontend/src/components/NotificationBell.css   (NOVO)
 
 4) COLOCAR O SINO NO TOPO DA TELA
    Abra o componente que renderiza o cabeçalho da aplicação

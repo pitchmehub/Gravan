@@ -16,14 +16,14 @@ from services.finance import calcular_split
 from utils.audit import AuditLogger
 from app import limiter
 
-logger = logging.getLogger('pitchme.stripe')
+logger = logging.getLogger('gravan.stripe')
 
 stripe_bp = Blueprint("stripe", __name__)
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 FRONTEND_URL   = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
-# Métodos Pitch.me -> Stripe (PIX exige ativação no Stripe BR; usamos card por padrão)
+# Métodos Gravan -> Stripe (PIX exige ativação no Stripe BR; usamos card por padrão)
 METODO_TO_STRIPE = {
     "pix":     ["card"],   # fallback: card (PIX precisa ativação manual no painel Stripe)
     "credito": ["card"],
@@ -90,7 +90,7 @@ def criar_checkout():
         # Coluna `plano` pode não existir ainda (migração pendente). Usa defaults.
         titular = sb.table("perfis").select("nome").eq("id", obra["titular_id"]).single().execute()
         t_data = {**(titular.data or {}), "plano": "STARTER", "status_assinatura": "inativa"}
-    titular_nome  = t_data.get("nome", "Pitch.me")
+    titular_nome  = t_data.get("nome", "Gravan")
     plano_titular = t_data.get("plano", "STARTER")
     status_ass    = t_data.get("status_assinatura", "inativa")
     # PRO efetivo apenas com assinatura em dia

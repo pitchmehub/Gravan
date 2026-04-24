@@ -21,7 +21,7 @@ function renderTemplate(tpl, perfil) {
     .replace(/{{obra_nome}}/g,              '[título da obra]')
     .replace(/{{share_autor_pct}}/g,        '[seu percentual]')
     .replace(/{{coautores_lista}}/g,        '[definido conforme os coautores cadastrados]')
-    .replace(/{{plataforma_razao_social}}/g, 'PITCH.ME EDITORA MUSICAL LTDA.')
+    .replace(/{{plataforma_razao_social}}/g, 'GRAVAN EDITORA MUSICAL LTDA.')
     .replace(/{{plataforma_cnpj}}/g,         '(CNPJ conforme cadastro da plataforma)')
     .replace(/{{plataforma_endereco}}/g,     'Rio de Janeiro - RJ')
 }

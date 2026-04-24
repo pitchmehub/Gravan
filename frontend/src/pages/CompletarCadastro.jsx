@@ -58,7 +58,7 @@ export default function CompletarCadastro() {
   }
 
   function preencherDepois() {
-    try { localStorage.setItem('pitchme_skip_cadastro', '1') } catch {}
+    try { localStorage.setItem('gravan_skip_cadastro', '1') } catch {}
     navigate('/descoberta', { replace: true })
   }
 
@@ -75,7 +75,7 @@ export default function CompletarCadastro() {
       }}>
         <div style={{
           width: 80, height: 80, borderRadius: 20,
-          background: 'linear-gradient(135deg,#BE123C,#09090B)',
+          background: 'linear-gradient(135deg,#083257,#09090B)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 36, color: '#fff', marginBottom: 24,
         }}>✎</div>

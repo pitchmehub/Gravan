@@ -1,4 +1,4 @@
-# 🎵 Pitch.me — Marketplace de Composições Musicais
+# 🎵 Gravan — Marketplace de Composições Musicais
 
 Marketplace premium para compositores venderem obras musicais. **Design 1** (minimalista, branco + preto + red REC).
 
@@ -14,7 +14,7 @@ Marketplace premium para compositores venderem obras musicais. **Design 1** (min
 ## 📂 Estrutura do projeto
 
 ```
-pitchme/
+gravan/
 ├── frontend/          # App React (vai para Vercel)
 │   ├── src/
 │   ├── public/
@@ -53,8 +53,8 @@ pitchme/
 ### 1. Clone e configure o banco de dados
 
 ```bash
-git clone https://github.com/seu-usuario/pitchme.git
-cd pitchme
+git clone https://github.com/seu-usuario/gravan.git
+cd gravan
 ```
 
 No Supabase:
@@ -102,7 +102,7 @@ Resumo:
 ## 🧪 Credenciais de teste
 
 Um usuário de teste já cadastrado:
-- Email: `teste.design@pitchme.local`
+- Email: `teste.design@gravan.local`
 - Senha: `Teste@2026Design`
 - Role: compositor
 
@@ -119,4 +119,4 @@ Um usuário de teste já cadastrado:
 
 ## 📜 Licença
 
-Proprietário — todos os direitos reservados © 2025 Pitch.me.
+Proprietário — todos os direitos reservados © 2025 Gravan.

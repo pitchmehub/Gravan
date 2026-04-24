@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════
-  -- Pitch.me — PERFORMANCE IMPROVEMENTS
+  -- Gravan — PERFORMANCE IMPROVEMENTS
   --
   -- O que este script faz:
   --   1. Índices faltantes em chaves estrangeiras e colunas de filtro

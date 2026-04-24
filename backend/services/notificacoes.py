@@ -1,4 +1,4 @@
-"""Helper para criar notificações na plataforma Pitch.me."""
+"""Helper para criar notificações na plataforma Gravan."""
 from db.supabase_client import get_supabase
 
 

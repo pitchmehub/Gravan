@@ -153,7 +153,7 @@ export default function EditarPerfil() {
               height: 180,
               background: capaPreview
                 ? `url(${capaPreview}) center/cover no-repeat`
-                : 'linear-gradient(135deg, #BE123C, #09090B)',
+                : 'linear-gradient(135deg, #083257, #09090B)',
               cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
@@ -202,7 +202,7 @@ export default function EditarPerfil() {
             >
               {avatarPreview
                 ? <img src={avatarPreview} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--brand, #E11D48)' }}>{iniciais}</div>
+                : <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--brand, #0C447C)' }}>{iniciais}</div>
               }
             </div>
             <div style={{ flex: 1 }}>
@@ -257,7 +257,7 @@ export default function EditarPerfil() {
             />
             {perfil?.nome_artistico && (
               <small style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, display: 'block' }}>
-                O nome artístico é permanente. Para alterar, entre em contato com o suporte em <strong>contatopitch.me@gmail.com</strong>.
+                O nome artístico é permanente. Para alterar, entre em contato com o suporte em <strong>contatogravan@gmail.com</strong>.
               </small>
             )}
           </div>

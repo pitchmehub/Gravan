@@ -10,7 +10,7 @@ export default function Privacidade() {
       active="/privacidade"
     >
       <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 40, lineHeight: 1.7 }}>
-        A PITCH.ME respeita a sua privacidade e está comprometida com a proteção dos dados
+        A GRAVAN respeita a sua privacidade e está comprometida com a proteção dos dados
         pessoais de seus usuários, em conformidade com a <strong>Lei Geral de Proteção
         de Dados (LGPD)</strong>.
       </p>
@@ -60,7 +60,7 @@ export default function Privacidade() {
       </Section>
 
       <Section n="6" title="Contato">
-        Para dúvidas sobre privacidade: <a href="mailto:contato@pitch.me" style={{ color: 'var(--brand)' }}>contato@pitch.me</a>
+        Para dúvidas sobre privacidade: <a href="mailto:contato@gravan" style={{ color: 'var(--brand)' }}>contato@gravan</a>
       </Section>
 
       <Section n="7" title="Atualizações">

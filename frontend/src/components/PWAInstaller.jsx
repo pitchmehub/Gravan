@@ -89,9 +89,9 @@ export default function PWAInstaller() {
       bottom: 16, left: 16, right: 16,
       maxWidth: 420, margin: '0 auto',
       padding: 14,
-      background: 'linear-gradient(135deg,#BE123C,#09090B)',
+      background: 'linear-gradient(135deg,#083257,#09090B)',
       color: '#fff', borderRadius: 14,
-      boxShadow: '0 10px 30px rgba(225,29,72,.4)',
+      boxShadow: '0 10px 30px rgba(12,68,124,.4)',
       display: 'flex', alignItems: 'center', gap: 12,
       zIndex: 9999,
       animation: 'pwa-slide-up .3s ease-out',
@@ -108,7 +108,7 @@ export default function PWAInstaller() {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>♪</div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700 }}>Instalar Pitch.me</div>
+        <div style={{ fontSize: 13, fontWeight: 700 }}>Instalar Gravan</div>
         <div style={{ fontSize: 11, opacity: .9 }}>Abra direto da tela inicial</div>
       </div>
       <button

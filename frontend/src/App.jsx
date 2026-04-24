@@ -71,7 +71,7 @@ function RouteTracker() {
     // Não persiste rotas públicas/efêmeras
     const ignorar = ['/', '/login', '/perfil/tipo']
     if (ignorar.includes(location.pathname)) return
-    try { localStorage.setItem('pitchme_last_route', path) } catch {}
+    try { localStorage.setItem('gravan_last_route', path) } catch {}
   }, [location.pathname, location.search])
   return null
 }
@@ -80,7 +80,7 @@ function PrivateRoute({ children, roles }) {
   const { user, perfil, loading } = useAuth()
   const path = typeof window !== 'undefined' ? window.location.pathname : ''
   const skipCadastro = (() => {
-    try { return typeof window !== 'undefined' && localStorage.getItem('pitchme_skip_cadastro') === '1' }
+    try { return typeof window !== 'undefined' && localStorage.getItem('gravan_skip_cadastro') === '1' }
     catch { return false }
   })()
 

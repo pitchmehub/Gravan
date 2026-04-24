@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { api } from '../lib/api'
 
-const EMAIL_SUPORTE = 'contatopitch.me@gmail.com'
+const EMAIL_SUPORTE = 'contatogravan@gmail.com'
 const MAX_MSG = 1000
 
 export default function FaleConoscoModal({ onClose }) {
@@ -182,8 +182,8 @@ export default function FaleConoscoModal({ onClose }) {
 
             <button type="submit" disabled={enviando} style={{
               width: '100%', padding: '14px',
-              background: '#E11D48',
-              color: '#fff', border: '1px solid #E11D48', borderRadius: 0,
+              background: '#0C447C',
+              color: '#fff', border: '1px solid #0C447C', borderRadius: 0,
               fontSize: 13, fontWeight: 700, cursor: 'pointer',
               opacity: enviando ? .6 : 1,
               letterSpacing: '0.08em', textTransform: 'uppercase',

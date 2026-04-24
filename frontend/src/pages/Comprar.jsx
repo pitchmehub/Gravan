@@ -26,7 +26,7 @@ export default function Comprar() {
       return
     }
     if (!perfil.cadastro_completo) {
-      try { localStorage.removeItem('pitchme_skip_cadastro') } catch {}
+      try { localStorage.removeItem('gravan_skip_cadastro') } catch {}
       const destino = perfil.role === 'publisher' ? '/cadastro-editora' : '/perfil/completar'
       navigate(destino, { replace: true, state: { motivo: 'compra' } })
     }
@@ -100,7 +100,7 @@ export default function Comprar() {
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
           <div style={{
             width: 56, height: 56, borderRadius: 12,
-            background: 'linear-gradient(135deg, #BE123C, #09090B)',
+            background: 'linear-gradient(135deg, #083257, #09090B)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 24, flexShrink: 0,
           }}>♪</div>
@@ -314,11 +314,11 @@ Autorização mundial, pelo prazo integral de proteção legal (Lei 9.610/98).
 
 CLÁUSULA 5 — REMUNERAÇÃO
  5.1 Buyout: valor pago através do Stripe (apresentado acima).
- 5.2 Royalties ECAD: 80% autores / 10% intérprete / 10% PITCH.ME.
+ 5.2 Royalties ECAD: 80% autores / 10% intérprete / 10% GRAVAN.
  5.3 Royalties de fonograma: 2% para autores, via distribuidora digital.
 
 CLÁUSULA 10 — SPLIT ENTRE COAUTORES
-Divisão conforme percentuais cadastrados na obra na plataforma PITCH.ME.
+Divisão conforme percentuais cadastrados na obra na plataforma GRAVAN.
 
 CLÁUSULA 11 — FORO
 Comarca do Rio de Janeiro/RJ.

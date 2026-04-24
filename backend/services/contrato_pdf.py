@@ -44,8 +44,8 @@ def gerar_pdf_contrato(contrato: dict) -> bytes:
         buf, pagesize=A4,
         leftMargin=2.2 * cm, rightMargin=2.2 * cm,
         topMargin=2.0 * cm, bottomMargin=2.0 * cm,
-        title="Contrato de Edição Musical — Pitch.me",
-        author="Pitch.me",
+        title="Contrato de Edição Musical — Gravan",
+        author="Gravan",
     )
 
     body, h1, h2, small = _styles()
@@ -63,7 +63,7 @@ def gerar_pdf_contrato(contrato: dict) -> bytes:
     # Cabeçalho
     story.append(Paragraph("CONTRATO DE EDIÇÃO DE OBRAS MUSICAIS", h1))
     story.append(Paragraph(
-        f"Documento gerado eletronicamente pela plataforma <b>Pitch.me</b> · Versão {ver}",
+        f"Documento gerado eletronicamente pela plataforma <b>Gravan</b> · Versão {ver}",
         small,
     ))
     story.append(Spacer(1, 0.4 * cm))
@@ -118,7 +118,7 @@ def gerar_pdf_contrato(contrato: dict) -> bytes:
         canvas.setFillColor(colors.HexColor("#999999"))
         canvas.drawCentredString(
             A4[0] / 2, 1.0 * cm,
-            f"Pitch.me · Contrato de Edição · Página {d.page} · ID {cid[:8]}",
+            f"Gravan · Contrato de Edição · Página {d.page} · ID {cid[:8]}",
         )
         canvas.restoreState()
 

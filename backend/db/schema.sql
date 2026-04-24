@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — SCHEMA BASE  (versão idempotente e tolerante a banco existente)
+-- Gravan — SCHEMA BASE  (versão idempotente e tolerante a banco existente)
 --
 -- Cria/normaliza tabelas, enums, índices e views que TODAS as outras
 -- migrações (migration_editora_agregados, migration_licenciamento,

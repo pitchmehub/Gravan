@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Storage: bucket de áudio das obras
+-- Gravan — Storage: bucket de áudio das obras
 --
 -- COMO EXECUTAR:
 --   Cole no SQL Editor do Supabase e clique RUN.

@@ -102,7 +102,7 @@ export default function Catalogo() {
               <div style={{
                 height: 80,
                 background: isActive
-                  ? 'linear-gradient(135deg, #BE123C, #09090B)'
+                  ? 'linear-gradient(135deg, #083257, #09090B)'
                   : 'var(--brand-light)',
                 borderRadius: 'var(--radius-md)',
                 marginBottom: 12,

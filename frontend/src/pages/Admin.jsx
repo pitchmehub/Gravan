@@ -92,7 +92,7 @@ export default function Admin() {
     <div style={{ padding: 32, maxWidth: 1100 }}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 26, fontWeight: 800 }}>Painel administrador</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Visão consolidada da plataforma Pitch.me</p>
+        <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Visão consolidada da plataforma Gravan</p>
       </div>
 
       <div style={{
@@ -129,7 +129,7 @@ export default function Admin() {
             <StatCard label="Ofertas pendentes"       value={resumo.ofertas_pendentes} color="var(--warning)" />
           </div>
 
-          <div className="card" style={{ background: 'linear-gradient(135deg, #BE123C, #09090B)', border: 'none', color: '#fff', marginBottom: 16, boxShadow: '0 8px 32px rgba(225,29,72,.25)' }}>
+          <div className="card" style={{ background: 'linear-gradient(135deg, #083257, #09090B)', border: 'none', color: '#fff', marginBottom: 16, boxShadow: '0 8px 32px rgba(12,68,124,.25)' }}>
             <h2 style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,.7)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
               Receita total da plataforma
             </h2>
@@ -540,7 +540,7 @@ function ObrasPanel() {
                 style={{
                   width: 44, height: 44, borderRadius: 8,
                   background: o.audio_path
-                    ? 'linear-gradient(135deg,#BE123C,#09090B)'
+                    ? 'linear-gradient(135deg,#083257,#09090B)'
                     : 'var(--surface)',
                   color: o.audio_path ? '#fff' : 'var(--text-muted)',
                   border: o.audio_path ? 'none' : '1px solid var(--border)',

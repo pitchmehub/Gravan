@@ -138,7 +138,7 @@ export default function AceitarOferta() {
             <>
               <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Cadastre sua editora</h2>
               <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-                Esses dados constarão no contrato trilateral com a Pitche.me e o intérprete.
+                Esses dados constarão no contrato trilateral com a Gravan e o intérprete.
               </p>
               <fieldset style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 16, marginBottom: 12 }}>
                 <legend style={{ fontSize: 13, fontWeight: 700, padding: '0 8px' }}>Empresa</legend>

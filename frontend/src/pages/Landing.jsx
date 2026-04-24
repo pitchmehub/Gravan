@@ -18,7 +18,7 @@ export default function Landing() {
     if (loading || !user) return
     let destino = '/descoberta'
     try {
-      const ultima = localStorage.getItem('pitchme_last_route')
+      const ultima = localStorage.getItem('gravan_last_route')
       if (ultima && ultima !== '/' && ultima !== '/login') destino = ultima
     } catch { /* noop */ }
     navigate(destino, { replace: true })
@@ -103,7 +103,7 @@ export default function Landing() {
       <nav className="nav-minimal" data-testid="landing-nav">
         <div className="nav-container">
           <a href="#" className="logo" data-testid="logo">
-            <span className="logo-mark">●</span> {content.brand.logoText}
+            <img src="/gravan-logo.png" alt={content.brand.logoText} className="logo-img" />
           </a>
           <div className="nav-center">
             <a href="#como-funciona" data-testid="nav-como-funciona">{content.nav.link1}</a>
@@ -356,7 +356,7 @@ export default function Landing() {
         <div className="modal-backdrop" onClick={() => setShowContato(false)} data-testid="contato-modal">
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <h3>Fale Conosco</h3>
-            <p>Envie um e-mail para <strong>contato@pitchme.com</strong> ou responda este modal em breve.</p>
+            <p>Envie um e-mail para <strong>contato@gravan.com</strong> ou responda este modal em breve.</p>
             <button className="btn-primary" onClick={() => setShowContato(false)} data-testid="contato-fechar">
               Fechar
             </button>
@@ -368,13 +368,14 @@ export default function Landing() {
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
         :root {
-          --bg: #FFFFFF;
-          --surface: #F4F4F5;
-          --text: #09090B;
-          --muted: #71717A;
-          --accent: #E11D48;
-          --border: #E4E4E7;
-          --ink: #09090B;
+          --bg: #F1EFE8;
+          --surface: #FFFFFF;
+          --text: #2C2C2A;
+          --muted: #888780;
+          --accent: #0C447C;
+          --accent-2: #378ADD;
+          --border: #E0DDD3;
+          --ink: #2C2C2A;
         }
 
         .landing-v1 {
@@ -430,6 +431,12 @@ export default function Landing() {
         .logo-mark {
           color: var(--accent);
           font-size: 14px;
+        }
+        .logo-img {
+          height: 36px;
+          width: auto;
+          display: block;
+          object-fit: contain;
         }
         .nav-center {
           display: flex;
@@ -492,12 +499,12 @@ export default function Landing() {
           background: var(--accent);
           border-radius: 999px;
           display: inline-block;
-          box-shadow: 0 0 0 4px rgba(225,29,72,0.15);
+          box-shadow: 0 0 0 4px rgba(12,68,124,0.15);
           animation: pulse 1.6s ease-in-out infinite;
         }
         @keyframes pulse {
-          0%,100% { box-shadow: 0 0 0 4px rgba(225,29,72,0.18); }
-          50% { box-shadow: 0 0 0 8px rgba(225,29,72,0.05); }
+          0%,100% { box-shadow: 0 0 0 4px rgba(12,68,124,0.18); }
+          50% { box-shadow: 0 0 0 8px rgba(12,68,124,0.05); }
         }
         .hero-title {
           font-size: clamp(44px, 6.4vw, 92px);

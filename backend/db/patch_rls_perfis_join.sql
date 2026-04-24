@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — PATCH: ajusta RLS de `perfis` para permitir JOINs
+-- Gravan — PATCH: ajusta RLS de `perfis` para permitir JOINs
 --
 -- Rode este SQL UMA VEZ no Supabase se você executou o rls_security.sql
 -- e percebeu que os nomes de titular/coautores sumiram na Descoberta

@@ -1,5 +1,5 @@
 """
-Pitch.me — Serviço de Geração de Dossiê da Obra (Master Package)
+Gravan — Serviço de Geração de Dossiê da Obra (Master Package)
 ================================================================
 
 Gera um ZIP oficial contendo:
@@ -49,7 +49,7 @@ from utils.crypto import decrypt_pii
 # ──────────────────────────────────────────────────────────────────
 # CONSTANTES DE NEGÓCIO
 # ──────────────────────────────────────────────────────────────────
-EDITORA_NOME       = "PITCH.ME"
+EDITORA_NOME       = "GRAVAN"
 EDITORA_PERCENTUAL = 20          # informativo no metadata
 ROYALTIES_DEFAULT  = {
     "ecad":      {"interprete": 10, "editora": 10, "autores": 80},
@@ -204,7 +204,7 @@ class DossieService:
             raise ValueError(
                 "Contrato de edição não encontrado para esta obra. "
                 "O dossiê só pode ser gerado para obras cujo contrato "
-                "de edição foi registrado na plataforma Pitch.me."
+                "de edição foi registrado na plataforma Gravan."
             )
         contrato = r.data[0]
         if not contrato.get("assinado_em"):
@@ -390,7 +390,7 @@ class DossieService:
             buf, pagesize=A4,
             leftMargin=2.2 * cm, rightMargin=2.2 * cm,
             topMargin=2.0 * cm, bottomMargin=2.0 * cm,
-            title="Resumo do Dossiê — Pitch.me",
+            title="Resumo do Dossiê — Gravan",
         )
         ss = getSampleStyleSheet()
         h1 = ParagraphStyle(
@@ -433,7 +433,7 @@ class DossieService:
         story = [
             Paragraph("DOSSIÊ DA OBRA", h1),
             Paragraph(
-                "Pitch.me · Documento Oficial de Integridade Musical", sub
+                "Gravan · Documento Oficial de Integridade Musical", sub
             ),
             Paragraph("OBRA", h2),
             Table([
@@ -498,7 +498,7 @@ class DossieService:
 
             Spacer(1, 1 * cm),
             Paragraph(
-                "Documento gerado automaticamente pela plataforma Pitch.me. "
+                "Documento gerado automaticamente pela plataforma Gravan. "
                 "Validade jurídica conforme MP nº 2.200-2/2001 e Lei nº "
                 "14.063/2020.",
                 sub,

@@ -18,7 +18,7 @@ import stripe
 from db.supabase_client import get_supabase
 from services.finance import fee_rate_for_plano
 
-logger = logging.getLogger("pitchme.repasses")
+logger = logging.getLogger("gravan.repasses")
 
 
 def _ensure_key():
@@ -53,7 +53,7 @@ def _net_cents_do_charge(payment_intent_id: str) -> Optional[int]:
 def _calcular_split_sobre_net(net_cents: int, plano_titular: str, coautorias: list) -> dict:
     """
     Calcula:
-      - plataforma_cents (taxa da Pitch.me sobre o NET)
+      - plataforma_cents (taxa da Gravan sobre o NET)
       - distribuicao por coautor (com share_pct)
     """
     if net_cents <= 0:

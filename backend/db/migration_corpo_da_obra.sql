@@ -1,5 +1,5 @@
 -- ════════════════════════════════════════════════════════════════
-  -- Pitch.me — RESEED dos contratos de edição (v2.1 - Abr/2026)
+  -- Gravan — RESEED dos contratos de edição (v2.1 - Abr/2026)
   --
   -- Substitui INTEGRALMENTE o conteúdo das duas chaves de template,
   -- atualizando para a versão com bloco "CORPO DA OBRA" e demais ajustes.
@@ -54,7 +54,7 @@ CLÁUSULA PRIMEIRA — OBJETO
 
 1.2 O AUTOR desde já concorda e reconhece que a EDITORA poderá contratar com quaisquer outras editoras a administração das obras musicais e/ou lítero-musicais que integram ou venham a integrar o catálogo da EDITORA, incluindo a OBRA objeto deste Contrato, em relação ao que o AUTOR não se opõe.
 
-1.3 Para todos os efeitos legais, integra o presente Contrato a LETRA COMPLETA da OBRA, conforme cadastrada pelo AUTOR na plataforma Pitch.me, transcrita a seguir:
+1.3 Para todos os efeitos legais, integra o presente Contrato a LETRA COMPLETA da OBRA, conforme cadastrada pelo AUTOR na plataforma Gravan, transcrita a seguir:
 
 — CORPO DA OBRA "{{obra_nome}}" —
 {{obra_letra}}
@@ -109,7 +109,7 @@ CLÁUSULA SÉTIMA — DISPOSIÇÕES GERAIS
 
 7.7 As PARTES elegem o foro da Comarca da Capital da Cidade do Rio de Janeiro, Estado do Rio de Janeiro, como único competente para dirimir eventuais controvérsias oriundas deste Contrato, com expressa renúncia a qualquer outro, por mais privilegiado que seja.
 
-7.8 As PARTES declaram aceitar e reconhecer como válida, autêntica e verdadeira a comprovação da autoria e integridade deste documento realizada por meio eletrônico, nos termos da MP nº 2.200-2/2001, Lei nº 14.063/2020 e legislação correlata. A aceitação eletrônica do presente Contrato no ato do cadastro da OBRA na plataforma Pitch.me, com registro de data, hora, IP e hash SHA-256 do conteúdo, é considerada ASSINATURA VÁLIDA E VINCULANTE para todos os efeitos legais.
+7.8 As PARTES declaram aceitar e reconhecer como válida, autêntica e verdadeira a comprovação da autoria e integridade deste documento realizada por meio eletrônico, nos termos da MP nº 2.200-2/2001, Lei nº 14.063/2020 e legislação correlata. A aceitação eletrônica do presente Contrato no ato do cadastro da OBRA na plataforma Gravan, com registro de data, hora, IP e hash SHA-256 do conteúdo, é considerada ASSINATURA VÁLIDA E VINCULANTE para todos os efeitos legais.
 
 E, por estarem justas e acordadas, as PARTES firmam este instrumento eletronicamente na data abaixo:
 
@@ -147,12 +147,12 @@ AUTOR e EDITORA, em conjunto "PARTES", firmam o presente Contrato de Edição de
 CONSIDERANDO QUE:
 (i) o AUTOR é titular de {{share_autor_pct}}% dos direitos autorais sobre a obra "{{obra_nome}}", doravante "OBRA";
 (ii) os demais coautores são: {{coautores_lista}};
-(iii) a OBRA será gerida pela EDITORA por meio da plataforma PITCH.ME.
+(iii) a OBRA será gerida pela EDITORA por meio da plataforma GRAVAN.
 
 CLÁUSULA PRIMEIRA — OBJETO
 1.1 O AUTOR contrata com a EDITORA a edição musical de sua parte sobre a OBRA, em regime de exclusividade, sem limitação territorial, nos termos da Lei 9.610/1998.
 
-1.2 Para todos os efeitos legais, integra o presente Contrato o CORPO DA OBRA, conforme cadastrado pelo AUTOR na plataforma PITCH.ME, transcrito a seguir:
+1.2 Para todos os efeitos legais, integra o presente Contrato o CORPO DA OBRA, conforme cadastrado pelo AUTOR na plataforma GRAVAN, transcrito a seguir:
 
 — CORPO DA OBRA "{{obra_nome}}" —
 {{obra_letra}}
@@ -172,20 +172,20 @@ CLÁUSULA QUARTA — REMUNERAÇÃO DO AUTOR
   (c) Execução pública: 75% AUTOR / 25% EDITORA, paga diretamente ao AUTOR pela sociedade de autores.
 
 CLÁUSULA QUINTA — REMUNERAÇÃO DA PLATAFORMA (FEE DE INTERMEDIAÇÃO EDITORIAL)
-5.1 Em razão da utilização da plataforma PITCH.ME e dos serviços de intermediação, gestão e disponibilização de obras musicais, a EDITORA concorda em pagar à PITCH.ME o equivalente a 5% (cinco por cento) sobre todos os valores brutos recebidos pela EDITORA decorrentes da exploração econômica das obras cadastradas na plataforma.
+5.1 Em razão da utilização da plataforma GRAVAN e dos serviços de intermediação, gestão e disponibilização de obras musicais, a EDITORA concorda em pagar à GRAVAN o equivalente a 5% (cinco por cento) sobre todos os valores brutos recebidos pela EDITORA decorrentes da exploração econômica das obras cadastradas na plataforma.
 
 Parágrafo Primeiro: O percentual incidirá sobre todas as receitas, incluindo, mas não se limitando a licenciamento, cessão de direitos, sincronização, distribuição digital e execução pública.
 
 Parágrafo Segundo: O pagamento deverá ser realizado no prazo máximo de 30 (trinta) dias corridos contados do recebimento dos valores pela EDITORA.
 
-Parágrafo Terceiro: O pagamento será feito diretamente à conta bancária da PITCH.ME:
-  Banco: {{pitchme_banco}}
-  Agência: {{pitchme_agencia}}
-  Conta: {{pitchme_conta}}
-  Titular: {{pitchme_titular}}
-  CNPJ: {{pitchme_cnpj}}
+Parágrafo Terceiro: O pagamento será feito diretamente à conta bancária da GRAVAN:
+  Banco: {{gravan_banco}}
+  Agência: {{gravan_agencia}}
+  Conta: {{gravan_conta}}
+  Titular: {{gravan_titular}}
+  CNPJ: {{gravan_cnpj}}
 
-Parágrafo Quarto: A EDITORA se compromete a manter registros financeiros e fornecer relatórios sempre que solicitado pela PITCH.ME.
+Parágrafo Quarto: A EDITORA se compromete a manter registros financeiros e fornecer relatórios sempre que solicitado pela GRAVAN.
 
 Parágrafo Quinto: O não pagamento dentro do prazo estipulado poderá resultar na suspensão da conta da EDITORA na plataforma e nas medidas legais cabíveis.
 

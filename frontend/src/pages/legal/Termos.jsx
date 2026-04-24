@@ -10,11 +10,11 @@ export default function Termos() {
       active="/termos"
     >
       <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 40, lineHeight: 1.7 }}>
-        Ao utilizar a PITCH.ME, você concorda com os termos abaixo.
+        Ao utilizar a GRAVAN, você concorda com os termos abaixo.
       </p>
 
       <Section n="1" title="Objeto da plataforma">
-        A PITCH.ME é uma plataforma de intermediação que conecta compositores e artistas
+        A GRAVAN é uma plataforma de intermediação que conecta compositores e artistas
         para fins de licenciamento de obras musicais.
       </Section>
 
@@ -25,12 +25,12 @@ export default function Termos() {
           <Bullet>Não viola direitos de terceiros</Bullet>
         </ul>
         <p style={{ marginTop: 14 }}>
-          A PITCH.ME não se responsabiliza por disputas de autoria.
+          A GRAVAN não se responsabiliza por disputas de autoria.
         </p>
       </Section>
 
       <Section n="3" title="Intermediação">
-        A PITCH.ME atua exclusivamente como intermediadora, não sendo parte direta
+        A GRAVAN atua exclusivamente como intermediadora, não sendo parte direta
         nos contratos finais entre usuários.
       </Section>
 
@@ -48,7 +48,7 @@ export default function Termos() {
       </Section>
 
       <Section n="6" title="Limitação de responsabilidade">
-        A PITCH.ME não garante sucesso comercial das obras negociadas.
+        A GRAVAN não garante sucesso comercial das obras negociadas.
       </Section>
 
       <Section n="7" title="Encerramento de conta">

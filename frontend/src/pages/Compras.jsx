@@ -70,7 +70,7 @@ export default function Compras() {
                     })}
                     style={{
                       width: 44, height: 44, borderRadius: 8,
-                      background: 'linear-gradient(135deg,#BE123C,#09090B)',
+                      background: 'linear-gradient(135deg,#083257,#09090B)',
                       color: '#fff', border: 'none', cursor: 'pointer',
                       fontSize: 14, flexShrink: 0,
                     }}>

@@ -1,5 +1,5 @@
 -- ============================================================
--- Pitch.me — Sistema de notificações
+-- Gravan — Sistema de notificações
 -- Rodar no SQL Editor do Supabase
 -- ============================================================
 

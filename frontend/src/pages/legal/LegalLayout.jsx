@@ -35,7 +35,7 @@ export function LegalLayout({ eyebrow, title, lastUpdate, children, active }) {
             fontSize: 18, color: 'var(--text-primary)', textDecoration: 'none',
             letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: 10,
           }}>
-            <span style={{ color: 'var(--brand)', fontSize: 10 }}>●</span> Pitch.me
+            <span style={{ color: 'var(--brand)', fontSize: 10 }}>●</span> Gravan
           </Link>
           <Link to="/" className="btn btn-ghost" style={{ fontSize: 12 }}>← Voltar ao site</Link>
         </div>
@@ -86,7 +86,7 @@ export function LegalLayout({ eyebrow, title, lastUpdate, children, active }) {
           marginTop: 64, paddingTop: 24, borderTop: '1px solid var(--border)',
           fontSize: 13, color: 'var(--text-muted)',
         }}>
-          Dúvidas? Escreva para <a href="mailto:contato@pitch.me" style={{ color: 'var(--brand)' }}>contato@pitch.me</a>.
+          Dúvidas? Escreva para <a href="mailto:contato@gravan" style={{ color: 'var(--brand)' }}>contato@gravan</a>.
         </div>
       </main>
     </div>

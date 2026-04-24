@@ -1,11 +1,11 @@
--- Pitch.me — SETUP_ALL.SQL  (cole inteiro no SQL Editor do Supabase)
+-- Gravan — SETUP_ALL.SQL  (cole inteiro no SQL Editor do Supabase)
   -- Idempotente. Depois rode separadamente storage_buckets.sql.
   
   -- ╔══════════════════════════════════════════════════════════════════════╗
   -- ║  PASSO 01/08  —  SCHEMA BASE (criado pelo agente)                       ║
   -- ╚══════════════════════════════════════════════════════════════════════╝
   -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — SCHEMA BASE  (versão idempotente e tolerante a banco existente)
+-- Gravan — SCHEMA BASE  (versão idempotente e tolerante a banco existente)
 --
 -- Cria/normaliza tabelas, enums, índices e views que TODAS as outras
 -- migrações (migration_editora_agregados, migration_licenciamento,
@@ -560,7 +560,7 @@ for each row execute function public.handle_new_user();
   -- ║  PASSO 02/08  —  RLS — Row Level Security                               ║
   -- ╚══════════════════════════════════════════════════════════════════════╝
   -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Row Level Security (versão simplificada, 100% idempotente)
+-- Gravan — Row Level Security (versão simplificada, 100% idempotente)
 --
 -- COMO EXECUTAR:
 --   1. Acesse https://app.supabase.com/project/SEU_PROJETO/sql/new
@@ -1023,7 +1023,7 @@ order by tablename;
     for each row execute function public._lc_sync_legacy();
   -- ─────────────────────────────────────────────────────────────────────
   -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Migração: EDITORA + AGREGADOS + AUDITORIA + CONTRATOS
+-- Gravan — Migração: EDITORA + AGREGADOS + AUDITORIA + CONTRATOS
 --
 -- Adiciona:
 --   • Role 'publisher' (editora) em perfis
@@ -1034,7 +1034,7 @@ order by tablename;
 --   • Coluna obras.letra (obrigatória) e obras.managed_by_publisher
 --   • Tabela audit_logs (auditoria global)
 --   • Tabela contracts_edicao (contrato de edição com fee)
---   • Seed: dados bancários PITCH.ME e template editora em landing_content
+--   • Seed: dados bancários GRAVAN e template editora em landing_content
 --   • RLS para tudo
 --
 -- Idempotente — seguro rodar múltiplas vezes.
@@ -1203,15 +1203,15 @@ do $$
 begin
   if exists (select 1 from information_schema.tables where table_schema='public' and table_name='landing_content') then
 
-    -- Dados bancários da PITCH.ME (editáveis via /admin/landing)
+    -- Dados bancários da GRAVAN (editáveis via /admin/landing)
     insert into public.landing_content (key, value)
-    values ('pitchme_dados_bancarios', jsonb_build_object(
-      'razao_social', 'PITCH.ME',
+    values ('gravan_dados_bancarios', jsonb_build_object(
+      'razao_social', 'GRAVAN',
       'cnpj',         '[PREENCHER]',
       'banco',        '[PREENCHER]',
       'agencia',      '[PREENCHER]',
       'conta',        '[PREENCHER]',
-      'titular',      'PITCH.ME'
+      'titular',      'GRAVAN'
     ))
     on conflict (key) do nothing;
 
@@ -1234,12 +1234,12 @@ AUTOR e EDITORA, em conjunto "PARTES", firmam o presente Contrato de Edição de
 CONSIDERANDO QUE:
 (i) o AUTOR é titular de {{share_autor_pct}}% dos direitos autorais sobre a obra "{{obra_nome}}", doravante "OBRA";
 (ii) os demais coautores são: {{coautores_lista}};
-(iii) a OBRA será gerida pela EDITORA por meio da plataforma PITCH.ME.
+(iii) a OBRA será gerida pela EDITORA por meio da plataforma GRAVAN.
 
 CLÁUSULA PRIMEIRA — OBJETO
 1.1 O AUTOR contrata com a EDITORA a edição musical de sua parte sobre a OBRA, em regime de exclusividade, sem limitação territorial, nos termos da Lei 9.610/1998.
 
-1.2 Para todos os efeitos legais, integra o presente Contrato o CORPO DA OBRA, conforme cadastrado pelo AUTOR na plataforma PITCH.ME, transcrito a seguir:
+1.2 Para todos os efeitos legais, integra o presente Contrato o CORPO DA OBRA, conforme cadastrado pelo AUTOR na plataforma GRAVAN, transcrito a seguir:
 
 — CORPO DA OBRA "{{obra_nome}}" —
 {{obra_letra}}
@@ -1259,20 +1259,20 @@ CLÁUSULA QUARTA — REMUNERAÇÃO DO AUTOR
   (c) Execução pública: 75% AUTOR / 25% EDITORA, paga diretamente ao AUTOR pela sociedade de autores.
 
 CLÁUSULA QUINTA — REMUNERAÇÃO DA PLATAFORMA (FEE DE INTERMEDIAÇÃO EDITORIAL)
-5.1 Em razão da utilização da plataforma PITCH.ME e dos serviços de intermediação, gestão e disponibilização de obras musicais, a EDITORA concorda em pagar à PITCH.ME o equivalente a 5% (cinco por cento) sobre todos os valores brutos recebidos pela EDITORA decorrentes da exploração econômica das obras cadastradas na plataforma.
+5.1 Em razão da utilização da plataforma GRAVAN e dos serviços de intermediação, gestão e disponibilização de obras musicais, a EDITORA concorda em pagar à GRAVAN o equivalente a 5% (cinco por cento) sobre todos os valores brutos recebidos pela EDITORA decorrentes da exploração econômica das obras cadastradas na plataforma.
 
 Parágrafo Primeiro: O percentual incidirá sobre todas as receitas, incluindo, mas não se limitando a licenciamento, cessão de direitos, sincronização, distribuição digital e execução pública.
 
 Parágrafo Segundo: O pagamento deverá ser realizado no prazo máximo de 30 (trinta) dias corridos contados do recebimento dos valores pela EDITORA.
 
-Parágrafo Terceiro: O pagamento será feito diretamente à conta bancária da PITCH.ME:
-  Banco: {{pitchme_banco}}
-  Agência: {{pitchme_agencia}}
-  Conta: {{pitchme_conta}}
-  Titular: {{pitchme_titular}}
-  CNPJ: {{pitchme_cnpj}}
+Parágrafo Terceiro: O pagamento será feito diretamente à conta bancária da GRAVAN:
+  Banco: {{gravan_banco}}
+  Agência: {{gravan_agencia}}
+  Conta: {{gravan_conta}}
+  Titular: {{gravan_titular}}
+  CNPJ: {{gravan_cnpj}}
 
-Parágrafo Quarto: A EDITORA se compromete a manter registros financeiros e fornecer relatórios sempre que solicitado pela PITCH.ME.
+Parágrafo Quarto: A EDITORA se compromete a manter registros financeiros e fornecer relatórios sempre que solicitado pela GRAVAN.
 
 Parágrafo Quinto: O não pagamento dentro do prazo estipulado poderá resultar na suspensão da conta da EDITORA na plataforma e nas medidas legais cabíveis.
 
@@ -1407,7 +1407,7 @@ union all select 'obras.managed_by_publisher',  exists (select 1 from informatio
 union all select 'table obras_autores',         exists (select 1 from information_schema.tables  where table_schema='public' and table_name='obras_autores')
 union all select 'table audit_logs',            exists (select 1 from information_schema.tables  where table_schema='public' and table_name='audit_logs')
 union all select 'table contracts_edicao',      exists (select 1 from information_schema.tables  where table_schema='public' and table_name='contracts_edicao')
-union all select 'seed pitchme_dados_bancarios', exists (select 1 from public.landing_content where key='pitchme_dados_bancarios')
+union all select 'seed gravan_dados_bancarios', exists (select 1 from public.landing_content where key='gravan_dados_bancarios')
 union all select 'seed contrato_edicao_publisher_template', exists (select 1 from public.landing_content where key='contrato_edicao_publisher_template');
 
 
@@ -1415,7 +1415,7 @@ union all select 'seed contrato_edicao_publisher_template', exists (select 1 fro
   -- ║  PASSO 04/08  —  CONTRATOS DE LICENCIAMENTO                             ║
   -- ╚══════════════════════════════════════════════════════════════════════╝
   -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Migração: Contratos de Licenciamento + Assinatura digital
+-- Gravan — Migração: Contratos de Licenciamento + Assinatura digital
 --
 -- COMO EXECUTAR:
 --   Cole no SQL Editor do Supabase e clique em RUN.
@@ -1519,7 +1519,7 @@ union all select 'obras.iswc',              exists(select 1 from information_sch
   -- ║  PASSO 05/08  —  ASSINATURA / FAVORITOS / ANALYTICS                     ║
   -- ╚══════════════════════════════════════════════════════════════════════╝
   -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Migração: Sistema de Assinatura (STARTER / PRO) + Favoritos + Analytics
+-- Gravan — Migração: Sistema de Assinatura (STARTER / PRO) + Favoritos + Analytics
 --
 -- COMO EXECUTAR:
 --   Cole TODO este arquivo no SQL Editor do Supabase e clique em RUN.
@@ -1804,7 +1804,7 @@ create index if not exists idx_saques_stripe_transfer on public.saques(stripe_tr
   -- ║  PASSO 07/08  —  PATCH RLS PERFIS JOIN                                  ║
   -- ╚══════════════════════════════════════════════════════════════════════╝
   -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — PATCH: ajusta RLS de `perfis` para permitir JOINs
+-- Gravan — PATCH: ajusta RLS de `perfis` para permitir JOINs
 --
 -- Rode este SQL UMA VEZ no Supabase se você executou o rls_security.sql
 -- e percebeu que os nomes de titular/coautores sumiram na Descoberta
@@ -1854,7 +1854,7 @@ select policyname, cmd, qual
   end $$;
   -- ─────────────────────────────────────────────────────────────────────
   -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Seed do template do "Contrato de Edição Musical"
+-- Gravan — Seed do template do "Contrato de Edição Musical"
 --
 -- COMO EXECUTAR:
 --   1. Ajuste as variáveis abaixo (CNPJ, razão social, endereço da EDITORA)
@@ -1886,7 +1886,7 @@ on conflict (id) do update set valor = excluded.valor;
 
 -- 2. DADOS DA EDITORA (ajuste conforme seu CNPJ real)
 insert into public.landing_content (id, valor) values
-  ('contrato_edicao_editora_dados', 'PITCH.ME EDITORA MUSICAL LTDA., inscrita no CNPJ/MF sob o nº 64.342.514/0001-08, com sede na Cidade do Rio de Janeiro, Estado do Rio de Janeiro')
+  ('contrato_edicao_editora_dados', 'GRAVAN EDITORA MUSICAL LTDA., inscrita no CNPJ/MF sob o nº 64.342.514/0001-08, com sede na Cidade do Rio de Janeiro, Estado do Rio de Janeiro')
 on conflict (id) do update set valor = excluded.valor;
 
 -- 3. FORO
@@ -1969,7 +1969,7 @@ CLÁUSULA SÉTIMA — DISPOSIÇÕES GERAIS
 
 7.7 As PARTES elegem o foro da Comarca da Capital da Cidade do Rio de Janeiro, Estado do Rio de Janeiro, como único competente para dirimir eventuais controvérsias oriundas deste Contrato, com expressa renúncia a qualquer outro, por mais privilegiado que seja.
 
-7.8 As PARTES declaram aceitar e reconhecer como válida, autêntica e verdadeira a comprovação da autoria e integridade deste documento realizada por meio eletrônico, nos termos da MP nº 2.200-2/2001, Lei nº 14.063/2020 e legislação correlata. A aceitação eletrônica do presente Contrato no ato do cadastro da OBRA na plataforma Pitch.me, com registro de data, hora, IP e hash SHA-256 do conteúdo, é considerada ASSINATURA VÁLIDA E VINCULANTE para todos os efeitos legais.
+7.8 As PARTES declaram aceitar e reconhecer como válida, autêntica e verdadeira a comprovação da autoria e integridade deste documento realizada por meio eletrônico, nos termos da MP nº 2.200-2/2001, Lei nº 14.063/2020 e legislação correlata. A aceitação eletrônica do presente Contrato no ato do cadastro da OBRA na plataforma Gravan, com registro de data, hora, IP e hash SHA-256 do conteúdo, é considerada ASSINATURA VÁLIDA E VINCULANTE para todos os efeitos legais.
 
 E, por estarem justas e acordadas, as PARTES firmam este instrumento eletronicamente na data abaixo:
 

@@ -1,7 +1,7 @@
 """
 Geração do Contrato de Edição entre EDITORA e AUTOR.
 Disparado automaticamente quando uma obra com publisher_id é cadastrada.
-Aplica cláusula de fee 5% com dados bancários da PITCH.ME (de landing_content).
+Aplica cláusula de fee 5% com dados bancários da GRAVAN (de landing_content).
 """
 import hashlib
 import json
@@ -13,9 +13,9 @@ from utils.crypto import decrypt_pii
 
 
 FALLBACK_BANCARIOS = {
-    "razao_social": "PITCH.ME", "cnpj": "[PREENCHER]",
+    "razao_social": "GRAVAN", "cnpj": "[PREENCHER]",
     "banco": "[PREENCHER]", "agencia": "[PREENCHER]",
-    "conta": "[PREENCHER]", "titular": "PITCH.ME",
+    "conta": "[PREENCHER]", "titular": "GRAVAN",
 }
 
 
@@ -25,7 +25,7 @@ def _load_template(sb) -> str:
 
 
 def _load_bancarios(sb) -> dict:
-    r = sb.table("landing_content").select("valor").eq("id", "pitchme_dados_bancarios").maybe_single().execute()
+    r = sb.table("landing_content").select("valor").eq("id", "gravan_dados_bancarios").maybe_single().execute()
     raw = (r.data or {}).get("valor") if r and r.data else None
     if not raw:
         return FALLBACK_BANCARIOS
@@ -96,11 +96,11 @@ def gerar_contrato_edicao(obra_id: str, autor_id: str, publisher_id: str) -> dic
         "obra_nome":        obra.get("titulo") or obra.get("nome") or "",
         "obra_letra":       (obra.get("letra") or "").strip() or "—",
         "coautores_lista":  coautores_lista,
-        "pitchme_banco":    bancarios.get("banco", "[PREENCHER]"),
-        "pitchme_agencia":  bancarios.get("agencia", "[PREENCHER]"),
-        "pitchme_conta":    bancarios.get("conta", "[PREENCHER]"),
-        "pitchme_titular":  bancarios.get("titular", "PITCH.ME"),
-        "pitchme_cnpj":     bancarios.get("cnpj", "[PREENCHER]"),
+        "gravan_banco":    bancarios.get("banco", "[PREENCHER]"),
+        "gravan_agencia":  bancarios.get("agencia", "[PREENCHER]"),
+        "gravan_conta":    bancarios.get("conta", "[PREENCHER]"),
+        "gravan_titular":  bancarios.get("titular", "GRAVAN"),
+        "gravan_cnpj":     bancarios.get("cnpj", "[PREENCHER]"),
         "data_emissao":     datetime.now(timezone.utc).strftime("%d/%m/%Y"),
     }
 

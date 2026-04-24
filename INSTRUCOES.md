@@ -1,4 +1,4 @@
-# Pitch.me — Atualização do módulo de DOSSIÊ (v2)
+# Gravan — Atualização do módulo de DOSSIÊ (v2)
 
 Esta versão **muda o fluxo** do dossiê: a geração agora é feita
 exclusivamente pelo administrador, na nova aba **Obras** do painel
@@ -10,7 +10,7 @@ todos os perfis.
 ## 📦 Arquivos para sobrescrever
 
 ```
-pitchme-dossie-fix/
+gravan-dossie-fix/
 ├── INSTRUCOES.md                                ← este arquivo
 ├── backend/
 │   ├── routes/dossie.py                         ← SUBSTITUIR
@@ -34,7 +34,7 @@ escrita **"✓ Painel Obras carregado — versão atualizada (abril/2026)"**.
 
 - ✅ Tarja amarela apareceu → o `Admin.jsx` foi trocado certo
 - ❌ Não apareceu → o `Admin.jsx` antigo continua no lugar. Confere o
-  caminho exato: `pitchme/frontend/src/pages/Admin.jsx`
+  caminho exato: `gravan/frontend/src/pages/Admin.jsx`
 
 E se a aba **Obras** nem aparece na barra do admin, é porque o
 `Admin.jsx` definitivamente não foi trocado.
@@ -100,8 +100,8 @@ N+1.
 
 ### Backend
 ```
-cp pitchme-dossie-fix/backend/routes/dossie.py     pitchme/backend/routes/dossie.py
-cp pitchme-dossie-fix/backend/services/dossie.py   pitchme/backend/services/dossie.py
+cp gravan-dossie-fix/backend/routes/dossie.py     gravan/backend/routes/dossie.py
+cp gravan-dossie-fix/backend/services/dossie.py   gravan/backend/services/dossie.py
 ```
 Não precisa mexer em `app.py` — o blueprint já está registrado em
 `/api/dossies`. Reinicie o backend.
@@ -109,19 +109,19 @@ Não precisa mexer em `app.py` — o blueprint já está registrado em
 ### Banco (Supabase)
 Rode no SQL Editor o arquivo (idempotente — pode rodar de novo):
 ```
-pitchme-dossie-fix/backend/db/migration_dossie.sql
+gravan-dossie-fix/backend/db/migration_dossie.sql
 ```
 
 ### Frontend
 ```
-cp pitchme-dossie-fix/frontend/src/pages/Admin.jsx     pitchme/frontend/src/pages/Admin.jsx
-cp pitchme-dossie-fix/frontend/src/pages/NovaObra.jsx  pitchme/frontend/src/pages/NovaObra.jsx
-cp pitchme-dossie-fix/frontend/src/pages/Dossies.jsx   pitchme/frontend/src/pages/Dossies.jsx
+cp gravan-dossie-fix/frontend/src/pages/Admin.jsx     gravan/frontend/src/pages/Admin.jsx
+cp gravan-dossie-fix/frontend/src/pages/NovaObra.jsx  gravan/frontend/src/pages/NovaObra.jsx
+cp gravan-dossie-fix/frontend/src/pages/Dossies.jsx   gravan/frontend/src/pages/Dossies.jsx
 ```
 Sem mudanças no `App.jsx`, `SideMenu.jsx` ou `lib/api.js`.
 
 ```bash
-cd pitchme/frontend
+cd gravan/frontend
 npm run dev    # ou yarn dev
 ```
 

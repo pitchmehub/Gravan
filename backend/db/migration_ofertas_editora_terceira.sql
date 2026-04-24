@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Migração: Licenciamento de Obras Editadas por Terceiros
+-- Gravan — Migração: Licenciamento de Obras Editadas por Terceiros
 --
 -- Permite que obras com contrato de edição prévio (com OUTRA editora)
 -- entrem no catálogo. Quando um intérprete licencia uma dessas obras,
@@ -102,12 +102,12 @@ alter table public.contracts
   add column if not exists trilateral boolean not null default false,
   add column if not exists oferta_id  uuid references public.ofertas_licenciamento(id) on delete set null;
 
--- Atualiza constraint de roles em contract_signers para aceitar 'editora' e 'pitchme'
+-- Atualiza constraint de roles em contract_signers para aceitar 'editora' e 'gravan'
 do $$
 begin
   alter table public.contract_signers drop constraint if exists signers_role_check;
   alter table public.contract_signers add constraint signers_role_check
-    check (role in ('autor','coautor','intérprete','interprete','editora','editora_terceira','pitchme'));
+    check (role in ('autor','coautor','intérprete','interprete','editora','editora_terceira','gravan'));
 exception when others then null;
 end $$;
 

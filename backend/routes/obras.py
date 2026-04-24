@@ -128,7 +128,7 @@ def criar_obra():
 
     sb = get_supabase()
 
-    # Obra editada por terceiros: NÃO geramos contrato de edição com a Pitch.me.
+    # Obra editada por terceiros: NÃO geramos contrato de edição com a Gravan.
     if obra_editada:
         try:
             from utils.audit import log_event
@@ -150,7 +150,7 @@ def criar_obra():
                 notify(
                     perfil_id=editora_terceira_id,
                     tipo="obra_cadastrada",
-                    titulo="Obra sua foi cadastrada na Pitch.me",
+                    titulo="Obra sua foi cadastrada na Gravan",
                     mensagem=(
                         f"O compositor cadastrou a obra \"{obra.get('nome')}\" "
                         f"informando que ela já é editada pela sua editora. "
@@ -165,7 +165,7 @@ def criar_obra():
 
         return jsonify(obra), 201
 
-    # Gera e assina o contrato de edição (fluxo padrão da Pitch.me)
+    # Gera e assina o contrato de edição (fluxo padrão da Gravan)
     def _lc(key, default=""):
         try:
             r = sb.table("landing_content").select("valor").eq("id", key).single().execute()
@@ -176,10 +176,10 @@ def criar_obra():
     tpl_texto       = _lc("contrato_edicao_template", "")
     editora_dados   = _lc(
         "contrato_edicao_editora_dados",
-        "PITCH.ME EDITORA MUSICAL LTDA., inscrita no CNPJ/MF sob o nº 64.342.514/0001-08, com sede na Cidade do Rio de Janeiro, Estado do Rio de Janeiro"
+        "GRAVAN EDITORA MUSICAL LTDA., inscrita no CNPJ/MF sob o nº 64.342.514/0001-08, com sede na Cidade do Rio de Janeiro, Estado do Rio de Janeiro"
     )
     contrato_versao = _lc("contrato_edicao_versao", "v2.0")
-    plataforma_razao = editora_dados.split(",")[0].strip() if editora_dados else "PITCH.ME EDITORA MUSICAL LTDA."
+    plataforma_razao = editora_dados.split(",")[0].strip() if editora_dados else "GRAVAN EDITORA MUSICAL LTDA."
     plataforma_cnpj = "64.342.514/0001-08"
     plataforma_endereco = "Rio de Janeiro - RJ"
     import re as _re

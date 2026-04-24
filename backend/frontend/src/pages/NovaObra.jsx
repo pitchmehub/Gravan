@@ -266,7 +266,7 @@ export default function NovaObra() {
               <div>
                 <div style={{ fontWeight: 600, fontSize: 13 }}>Obra não editada</div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                  A composição está livre e posso assinar o contrato de edição com a Pitche.me
+                  A composição está livre e posso assinar o contrato de edição com a Gravan
                 </div>
               </div>
             </label>
@@ -295,7 +295,7 @@ export default function NovaObra() {
               background: 'var(--error-bg)', border: '1px solid var(--error)',
               borderRadius: 8, fontSize: 12, color: 'var(--error)',
             }}>
-              ⚠ Obras já editadas não podem ser publicadas na Pitche.me.
+              ⚠ Obras já editadas não podem ser publicadas na Gravan.
             </div>
           )}
         </div>

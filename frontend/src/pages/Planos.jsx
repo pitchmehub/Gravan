@@ -199,7 +199,7 @@ const cardStyle = (highlight) => ({
   border: highlight ? '2px solid var(--brand)' : '1px solid var(--border)',
   borderRadius: 14,
   padding: 28,
-  boxShadow: highlight ? '0 12px 40px rgba(225,29,72,0.10)' : 'none',
+  boxShadow: highlight ? '0 12px 40px rgba(12,68,124,0.10)' : 'none',
   position: 'relative',
 })
 const tagStyle = (bg, color) => ({

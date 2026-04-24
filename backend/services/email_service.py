@@ -6,7 +6,7 @@ Usa SMTP genérico configurado por variáveis de ambiente:
   SMTP_PORT       (587 STARTTLS, 465 SSL)
   SMTP_USER       (usuário/api-key)
   SMTP_PASS       (senha/api-secret)
-  SMTP_FROM       (ex.: 'Pitch.me <noreply@pitch.me>')
+  SMTP_FROM       (ex.: 'Gravan <noreply@gravan>')
   SMTP_USE_SSL    ('1' para 465, vazio/0 para STARTTLS)
 
 Fallback: se SMTP_HOST não estiver configurado, loga o e-mail e devolve True.
@@ -19,7 +19,7 @@ import logging
 from email.message import EmailMessage
 from email.utils import formataddr
 
-log = logging.getLogger("pitchme.email")
+log = logging.getLogger("gravan.email")
 
 
 def _smtp_configured() -> bool:
@@ -86,12 +86,12 @@ def _wrap_html(title: str, body_html: str) -> str:
 <html><head><meta charset="utf-8"><title>{title}</title></head>
 <body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#f6f6f7;margin:0;padding:24px;color:#111">
   <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:14px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.06)">
-    <div style="font-weight:800;font-size:18px;color:#BE123C;margin-bottom:24px">Pitch.me</div>
+    <div style="font-weight:800;font-size:18px;color:#BE123C;margin-bottom:24px">Gravan</div>
     {body_html}
     <hr style="border:none;border-top:1px solid #eee;margin:28px 0">
     <p style="font-size:11px;color:#888;line-height:1.5">
       Este é um e-mail automático. Se você não solicitou, ignore esta mensagem.<br>
-      Pitch.me &middot; Marketplace de composições musicais
+      Gravan &middot; Marketplace de composições musicais
     </p>
   </div>
 </body></html>"""
@@ -103,7 +103,7 @@ def render_otp_email(nome: str, codigo: str, valor_brl: str, ip: str) -> tuple[s
     <h2 style="margin:0 0 8px">Confirme sua solicitação de saque</h2>
     <p style="color:#444;font-size:14px">
       Olá {nome or 'compositor'}, recebemos um pedido de saque de
-      <strong>{valor_brl}</strong> da sua wallet Pitch.me.
+      <strong>{valor_brl}</strong> da sua wallet Gravan.
     </p>
     <p style="color:#444;font-size:14px">Use o código abaixo para confirmar — ele expira em <strong>10 minutos</strong>:</p>
     <div style="text-align:center;margin:24px 0;padding:18px;background:#FAFAFA;border:1px dashed #BE123C;border-radius:10px">
@@ -115,7 +115,7 @@ def render_otp_email(nome: str, codigo: str, valor_brl: str, ip: str) -> tuple[s
     </p>
     """
     text = (
-        f"Pitch.me — Confirmação de saque\n\n"
+        f"Gravan — Confirmação de saque\n\n"
         f"Valor: {valor_brl}\n"
         f"Código de confirmação (expira em 10 min): {codigo}\n\n"
         f"IP da solicitação: {ip}\n"
@@ -148,7 +148,7 @@ def render_saque_agendado_email(nome: str, valor_brl: str, libera_em: str,
     </p>
     """
     text = (
-        f"Pitch.me — Saque agendado\n\n"
+        f"Gravan — Saque agendado\n\n"
         f"Valor: {valor_brl}\n"
         f"Liberação: {libera_em}\n\n"
         f"Se NÃO foi você, cancele agora:\n{cancel_url}\n"
@@ -183,7 +183,7 @@ def render_oferta_editora_email(
       composição <strong>"{nome_obra}"</strong>, hoje sob seu contrato de edição.
     </p>
     <p style="color:#444;font-size:14px">
-      O valor está retido em escrow pela Pitch.me. Para liberar a transação,
+      O valor está retido em escrow pela Gravan. Para liberar a transação,
       vocês precisam <strong>cadastrar a editora</strong> na plataforma e assinar
       eletronicamente o contrato trilateral até:
     </p>
@@ -204,7 +204,7 @@ def render_oferta_editora_email(
     </p>
     """
     text = (
-        f"Pitch.me — Pedido de licenciamento\n\n"
+        f"Gravan — Pedido de licenciamento\n\n"
         f"Obra: {nome_obra}\nValor ofertado: {valor_brl}\nComprador: {nome_comprador}\n"
         f"Prazo: {deadline_str}\n\nResponda em: {link}\n"
     )
@@ -233,7 +233,7 @@ def render_oferta_reminder_email(
     </div>
     """
     text = (
-        f"Pitch.me — Lembrete de oferta\n\n"
+        f"Gravan — Lembrete de oferta\n\n"
         f"Obra: {nome_obra}\nValor: {valor_brl}\n"
         f"Faltam ~{horas_restantes}h úteis. Responda em: {link}\n"
     )
@@ -255,7 +255,7 @@ def render_oferta_expirada_comprador_email(
     </p>
     """
     return _wrap_html("Oferta expirada", body), \
-        f"Pitch.me — Oferta expirada\nObra: {nome_obra}\nValor estornado: {valor_brl}"
+        f"Gravan — Oferta expirada\nObra: {nome_obra}\nValor estornado: {valor_brl}"
 
 
 def render_oferta_expirada_editora_email(nome_editora: str, nome_obra: str) -> tuple[str, str]:
@@ -267,11 +267,11 @@ def render_oferta_expirada_editora_email(nome_editora: str, nome_obra: str) -> t
       foi cancelada. O valor foi estornado ao comprador.
     </p>
     <p style="color:#666;font-size:12px">
-      Se quiser receber novas ofertas pela Pitch.me, mantenha seu cadastro atualizado.
+      Se quiser receber novas ofertas pela Gravan, mantenha seu cadastro atualizado.
     </p>
     """
     return _wrap_html("Prazo expirado", body), \
-        f"Pitch.me — Prazo da oferta para \"{nome_obra}\" expirou."
+        f"Gravan — Prazo da oferta para \"{nome_obra}\" expirou."
 
 
 def render_oferta_concluida_email(nome_comprador: str, nome_obra: str, valor_brl: str) -> tuple[str, str]:
@@ -283,11 +283,11 @@ def render_oferta_concluida_email(nome_comprador: str, nome_obra: str, valor_brl
       foi capturado e a licença está formalmente ativa.
     </p>
     <p style="color:#666;font-size:12px">
-      Você pode acessar o contrato e o áudio na sua área de Compras na Pitch.me.
+      Você pode acessar o contrato e o áudio na sua área de Compras na Gravan.
     </p>
     """
     return _wrap_html("Licença concluída", body), \
-        f"Pitch.me — Licença de \"{nome_obra}\" concluída ({valor_brl})."
+        f"Gravan — Licença de \"{nome_obra}\" concluída ({valor_brl})."
 
 
 def render_saque_cancelado_email(nome: str, valor_brl: str, motivo: str) -> tuple[str, str]:

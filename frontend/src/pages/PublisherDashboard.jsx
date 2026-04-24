@@ -10,8 +10,8 @@ function StatCard({ label, value, sub, accent }) {
   return (
     <div style={{
       padding: '18px 20px',
-      background: accent ? 'rgba(225,29,72,.18)' : 'var(--surface)',
-      border: `1px solid ${accent ? 'rgba(225,29,72,.4)' : 'var(--border)'}`,
+      background: accent ? 'rgba(12,68,124,.18)' : 'var(--surface)',
+      border: `1px solid ${accent ? 'rgba(12,68,124,.4)' : 'var(--border)'}`,
       borderRadius: 14,
     }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
@@ -112,7 +112,7 @@ export default function PublisherDashboard() {
         <StatCard label="Agregados" value={data.total_agregados} />
         <StatCard label="Contratos assinados" value={data.contratos_assinados} sub={`${data.contratos_pendentes} pendentes`} />
         <StatCard label="Faturamento bruto" value={fmt(data.faturamento_cents)} accent />
-        <StatCard label="Fee devido (5%)" value={fmt(data.fee_devido_cents)} sub="Plataforma PITCH.ME" />
+        <StatCard label="Fee devido (5%)" value={fmt(data.fee_devido_cents)} sub="Plataforma GRAVAN" />
       </div>
 
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>

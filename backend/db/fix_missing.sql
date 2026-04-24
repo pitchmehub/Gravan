@@ -1,4 +1,4 @@
--- Pitch.me — FIX_MISSING.SQL
+-- Gravan — FIX_MISSING.SQL
   -- Cole inteiro no SQL Editor do Supabase. Executa exatamente os 5 itens
   -- que ainda estavam faltando no healthcheck:
   --   • tabela assinaturas
@@ -13,7 +13,7 @@
   -- ║  PASSO 01/05  —  MIGRATION LICENCIAMENTO                                ║
   -- ╚══════════════════════════════════════════════════════════════════════╝
   -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Migração: Contratos de Licenciamento + Assinatura digital
+-- Gravan — Migração: Contratos de Licenciamento + Assinatura digital
 --
 -- COMO EXECUTAR:
 --   Cole no SQL Editor do Supabase e clique em RUN.
@@ -117,7 +117,7 @@ union all select 'obras.iswc',              exists(select 1 from information_sch
   -- ║  PASSO 02/05  —  MIGRATION ASSINATURA                                   ║
   -- ╚══════════════════════════════════════════════════════════════════════╝
   -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Migração: Sistema de Assinatura (STARTER / PRO) + Favoritos + Analytics
+-- Gravan — Migração: Sistema de Assinatura (STARTER / PRO) + Favoritos + Analytics
 --
 -- COMO EXECUTAR:
 --   Cole TODO este arquivo no SQL Editor do Supabase e clique em RUN.
@@ -423,7 +423,7 @@ create index if not exists idx_saques_stripe_transfer on public.saques(stripe_tr
   -- ║  PASSO 05/05  —  STORAGE BUCKET + POLICIES (obras-audio)                ║
   -- ╚══════════════════════════════════════════════════════════════════════╝
   -- ══════════════════════════════════════════════════════════════════
--- Pitch.me — Storage: bucket de áudio das obras
+-- Gravan — Storage: bucket de áudio das obras
 --
 -- COMO EXECUTAR:
 --   Cole no SQL Editor do Supabase e clique RUN.
