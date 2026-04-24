@@ -214,6 +214,12 @@ def create_app() -> Flask:
     def ratelimit_handler(e):
         return jsonify({"error": "Muitas requisições. Aguarde um momento."}), 429
 
+    @app.route("/api/health")
+    @csrf.exempt
+    @limiter.exempt
+    def health():
+        return jsonify({"status": "ok"}), 200
+
     return app
 
 
