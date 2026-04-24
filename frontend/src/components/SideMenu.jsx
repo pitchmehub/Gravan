@@ -173,18 +173,11 @@ export default function SideMenu({ onCollapse }) {
   const items = NAV_ITEMS[role] ?? NAV_ITEMS.compositor
   const isAdmin = role === 'administrador'
 
-  // ── MOBILE: hamburger + drawer ──────────────────────
+  // ── MOBILE: barra de navegação inferior ──────────────────────
   if (isMobile) {
+    const mobileItems = items.slice(0, 5)
     return (
       <>
-        <button
-          className="mobile-hamburger"
-          onClick={() => setMobileOpen(true)}
-          aria-label="Abrir menu"
-        >
-          <span /><span /><span />
-        </button>
-
         {mobileOpen && (
           <div
             className="mobile-drawer-backdrop"
@@ -192,54 +185,71 @@ export default function SideMenu({ onCollapse }) {
           />
         )}
 
-        <aside className={`sidebar mobile-drawer ${mobileOpen ? 'mobile-drawer-open' : ''}`}>
-          <div className="sidebar-header">
-            <button className="sidebar-logo-btn" onClick={() => { navigate('/descoberta'); setMobileOpen(false) }}>
-              <GravanLogo height={28} />
-            </button>
-            <button
-              className="sidebar-toggle"
-              onClick={() => setMobileOpen(false)}
-              aria-label="Fechar menu"
-            >×</button>
-          </div>
+        {mobileOpen && (
+          <aside className="sidebar mobile-drawer mobile-drawer-open">
+            <div className="sidebar-header">
+              <button className="sidebar-logo-btn" onClick={() => { navigate('/descoberta'); setMobileOpen(false) }}>
+                <GravanLogo height={28} />
+              </button>
+              <button
+                className="sidebar-toggle"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Fechar menu"
+              >×</button>
+            </div>
 
-          <nav className="sidebar-nav">
-            {isAdmin && <AdminBadge collapsed={false} />}
-
-            {items.map(({ to, icon, label, pro, highlight }) => (
-              <NavLink key={to} to={to}
+            <nav className="sidebar-nav">
+              {isAdmin && <AdminBadge collapsed={false} />}
+              {items.map(({ to, icon, label, pro, highlight }) => (
+                <NavLink key={to} to={to}
+                  className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+                  style={highlight ? { fontWeight: 700 } : undefined}
+                  onClick={() => setMobileOpen(false)}>
+                  <span className="sidebar-icon">{icon}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {label}
+                    {pro && <span style={proTag}>PRO</span>}
+                  </span>
+                </NavLink>
+              ))}
+              <div style={{ height: 1, background: 'var(--border)', margin: '8px 4px' }} />
+              <NavLink to="/perfil/editar"
                 className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-                style={highlight ? { fontWeight: 700 } : undefined}>
-                <span className="sidebar-icon">{icon}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {label}
-                  {pro && <span style={proTag}>PRO</span>}
-                </span>
+                onClick={() => setMobileOpen(false)}>
+                <span className="sidebar-icon">✎</span>
+                <span>Editar informações</span>
               </NavLink>
-            ))}
+              <button
+                className="sidebar-link"
+                onClick={() => { setMobileOpen(false); signOut() }}
+                style={{ color: 'var(--error)' }}>
+                <span className="sidebar-icon">⏻</span>
+                <span>Sair da conta</span>
+              </button>
+            </nav>
 
-            <div style={{ height: 1, background: 'var(--border)', margin: '8px 4px' }} />
+            <div className="sidebar-footer">
+              <UserMenu perfil={perfil} collapsed={false} />
+            </div>
+          </aside>
+        )}
 
-            <NavLink to="/perfil/editar"
-              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-              <span className="sidebar-icon">✎</span>
-              <span>Editar informações</span>
+        <nav className="mobile-bottom-nav">
+          {mobileItems.map(({ to, icon, label }) => (
+            <NavLink key={to} to={to}
+              className={({ isActive }) => `mobile-bottom-item ${isActive ? 'active' : ''}`}>
+              <span className="mobile-bottom-icon">{icon}</span>
+              <span className="mobile-bottom-label">{label}</span>
             </NavLink>
-
-            <button
-              className="sidebar-link"
-              onClick={() => signOut()}
-              style={{ color: 'var(--error)' }}>
-              <span className="sidebar-icon">⏻</span>
-              <span>Sair da conta</span>
-            </button>
-          </nav>
-
-          <div className="sidebar-footer">
-            <UserMenu perfil={perfil} collapsed={false} />
-          </div>
-        </aside>
+          ))}
+          <button
+            className="mobile-bottom-item"
+            onClick={() => setMobileOpen(o => !o)}
+            aria-label="Mais opções">
+            <span className="mobile-bottom-icon">☰</span>
+            <span className="mobile-bottom-label">Mais</span>
+          </button>
+        </nav>
       </>
     )
   }

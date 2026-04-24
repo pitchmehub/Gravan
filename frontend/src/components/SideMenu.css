@@ -213,38 +213,13 @@
 .sidebar-user-item-danger:hover { background: var(--error-bg); color: var(--error); }
 
 /* ════════════════════════════════════════════
-   MOBILE — hamburger + drawer
+   MOBILE — barra de navegação inferior
 ════════════════════════════════════════════ */
-.mobile-hamburger {
-  display: none;
-  position: fixed;
-  top: 14px; left: 14px;
-  z-index: 200;
-  width: 44px; height: 44px;
-  border-radius: 0;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  padding: 10px;
-  flex-direction: column;
-  gap: 4px;
-  align-items: center;
-  justify-content: center;
-  transition: border-color .15s, box-shadow .15s;
-  box-shadow: 0 2px 8px rgba(9,9,11,.08);
-}
-.mobile-hamburger:hover { border-color: var(--ink); }
-.mobile-hamburger span {
-  width: 20px; height: 2px;
-  background: var(--text-primary);
-  border-radius: 0;
-}
+.mobile-hamburger { display: none; }
 
 .mobile-drawer-backdrop { display: none; }
 
 @media (max-width: 767px) {
-  .mobile-hamburger { display: flex; }
-
   .mobile-drawer-backdrop {
     display: block;
     position: fixed; inset: 0;
@@ -263,4 +238,64 @@
     box-shadow: 4px 0 40px rgba(9,9,11,.15);
   }
   .sidebar.mobile-drawer-open { transform: translateX(0); }
+}
+
+/* Barra inferior */
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 200;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 16px rgba(9,9,11,.08);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .mobile-bottom-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 10px 4px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 500;
+    font-family: inherit;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color .15s;
+    letter-spacing: 0.01em;
+  }
+  .mobile-bottom-item:hover,
+  .mobile-bottom-item.active {
+    color: var(--brand);
+  }
+  .mobile-bottom-item.active .mobile-bottom-icon {
+    color: var(--brand);
+  }
+
+  .mobile-bottom-icon {
+    font-size: 18px;
+    line-height: 1;
+    color: inherit;
+  }
+
+  .mobile-bottom-label {
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 56px;
+    text-align: center;
+  }
 }
