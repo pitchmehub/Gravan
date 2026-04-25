@@ -247,6 +247,16 @@ def create_app() -> Flask:
     except Exception as _e:
         app.logger.warning(f"Heartbeat não pôde ser iniciado: {_e}")
 
+    # ═══════════════════════════════════════════════════════════
+    # BACKFILL DE CAPAS — uma obra por vez, em thread daemon
+    # (só um worker do gunicorn pega o lock e executa)
+    # ═══════════════════════════════════════════════════════════
+    try:
+        from services.backfill_capas_bg import start_backfill_capas_bg
+        start_backfill_capas_bg()
+    except Exception as _e:
+        app.logger.warning(f"Backfill de capas não pôde ser iniciado: {_e}")
+
     return app
 
 
