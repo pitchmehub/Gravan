@@ -39,7 +39,6 @@ const ObrgGrad = id => GRADIENTS[(id?.charCodeAt(0) ?? 0) % GRADIENTS.length]
 
 function ObraCard({ obra, onPlay, onShowFicha, onExpand, isPlaying, isActive, onAddHistorico }) {
  function handleClick(e) {
- if (e.target.closest('.dc-card-play')) return
  if (e.target.closest('.dc-card-info-btn')) return
  // 1º clique: começa a tocar e abre o player minimizado.
  // 2º clique (mesma obra): abre a ficha técnica em vez de pausar.
@@ -65,14 +64,6 @@ function ObraCard({ obra, onPlay, onShowFicha, onExpand, isPlaying, isActive, on
  />
  ) : (
  <span className="dc-card-note"></span>
- )}
- {obra.audio_path && (
- <button
- className={`dc-card-play ${isActive ? 'dc-card-play-active' : ''}`}
- onClick={e => { e.stopPropagation(); onAddHistorico(obra.id); onPlay(obra) }}
- >
- {isPlaying ? <IconPause size={16} /> : <IconPlay size={16} />}
- </button>
  )}
  </div>
  <div className="dc-card-info">

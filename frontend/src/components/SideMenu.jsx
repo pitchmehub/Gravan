@@ -173,9 +173,41 @@ export default function SideMenu({ onCollapse }) {
  const { perfil, signOut } = useAuth()
  const navigate = useNavigate()
  const location = useLocation()
+ const drawerRef = useRef(null)
+ const dragStateRef = useRef(null)
+ const [dragOffset, setDragOffset] = useState(0)
 
  useEffect(() => { onCollapse?.(isMobile ? true : collapsed) }, [collapsed, isMobile])
  useEffect(() => { setMobileOpen(false) }, [location.pathname])
+ useEffect(() => { if (!mobileOpen) setDragOffset(0) }, [mobileOpen])
+
+ function handleDrawerTouchStart(e) {
+ const t = e.touches[0]
+ dragStateRef.current = { startX: t.clientX, startY: t.clientY, dragging: false }
+ }
+ function handleDrawerTouchMove(e) {
+ const s = dragStateRef.current
+ if (!s) return
+ const t = e.touches[0]
+ const dx = t.clientX - s.startX
+ const dy = t.clientY - s.startY
+ if (!s.dragging) {
+ if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) s.dragging = true
+ else return
+ }
+ if (dx < 0) setDragOffset(dx)
+ }
+ function handleDrawerTouchEnd() {
+ const s = dragStateRef.current
+ dragStateRef.current = null
+ if (!s) return
+ const width = drawerRef.current?.offsetWidth || 280
+ if (dragOffset < -Math.min(80, width * 0.25)) {
+ setMobileOpen(false)
+ } else {
+ setDragOffset(0)
+ }
+ }
 
  const role = perfil?.role ?? 'compositor'
  const items = NAV_ITEMS[role] ?? NAV_ITEMS.compositor
@@ -200,7 +232,18 @@ export default function SideMenu({ onCollapse }) {
  )}
 
  {mobileOpen && (
- <aside className="sidebar mobile-drawer mobile-drawer-open">
+ <aside
+ ref={drawerRef}
+ className="sidebar mobile-drawer mobile-drawer-open"
+ style={{
+ transform: dragOffset ? `translateX(${dragOffset}px)` : undefined,
+ transition: dragStateRef.current?.dragging ? 'none' : undefined,
+ }}
+ onTouchStart={handleDrawerTouchStart}
+ onTouchMove={handleDrawerTouchMove}
+ onTouchEnd={handleDrawerTouchEnd}
+ onTouchCancel={handleDrawerTouchEnd}
+ >
  <div className="sidebar-header">
  <button className="sidebar-logo-btn" onClick={() => { navigate('/descoberta'); setMobileOpen(false) }}>
  <GravanLogo height={28} />
