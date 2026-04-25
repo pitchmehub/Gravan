@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { api } from '../lib/api'
+import { IconCopy, IconCheck } from '../components/Icons'
 
 /**
  * Página de administração de Dossiês.
@@ -247,7 +248,7 @@ export default function Dossies() {
  color: copiedId === d.id ? 'var(--brand)' : 'var(--text-muted)',
  fontSize: '0.72rem', padding: '2px 4px',
  }}
- >{copiedId === d.id ? '✓ copiado' : '⎘'}</button>
+ >{copiedId === d.id ? (<><IconCheck size={11} /> copiado</>) : <IconCopy size={13} />}</button>
  </div>
 
  <div style={{

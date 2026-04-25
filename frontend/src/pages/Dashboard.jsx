@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { usePlayer } from '../contexts/PlayerContext'
 import { api } from '../lib/api'
+import { IconPlay } from '../components/Icons'
 
 function fmt(cents) {
  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents ?? 0) / 100)
@@ -320,7 +321,7 @@ export default function Dashboard() {
  }}
  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
- >▶</button>
+ ><IconPlay size={14} /></button>
  )}
 
  {/* Info */}

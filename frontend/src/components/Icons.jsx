@@ -221,3 +221,49 @@ export const IconCrown = ({ size }) => (
     <path d="M3 7l4 4 5-7 5 7 4-4-2 12H5z" />
   </svg>
 )
+
+export const IconPlay = ({ size = 20 }) => (
+  <svg {...base(size)}>
+    <polygon points="7,4 20,12 7,20" fill="currentColor" stroke="currentColor" />
+  </svg>
+)
+
+export const IconPause = ({ size = 20 }) => (
+  <svg {...base(size)}>
+    <rect x="6" y="4" width="4.5" height="16" rx="1" fill="currentColor" stroke="currentColor" />
+    <rect x="13.5" y="4" width="4.5" height="16" rx="1" fill="currentColor" stroke="currentColor" />
+  </svg>
+)
+
+export const IconCopy = ({ size }) => (
+  <svg {...base(size)}>
+    <rect x="9" y="9" width="11" height="11" rx="1.6" />
+    <path d="M5 15V5a1.6 1.6 0 0 1 1.6-1.6H15" />
+  </svg>
+)
+
+export const IconSparkles = ({ size }) => (
+  <svg {...base(size)}>
+    <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z" />
+    <path d="M19 14l.7 1.8L21.5 16l-1.8.7L19 18l-.7-1.3L17 16l1.5-.2z" />
+    <path d="M5 17l.7 1.8L7.5 19l-1.8.7L5 21l-.7-1.3L3 19l1.5-.2z" />
+  </svg>
+)
+
+export const IconHourglass = ({ size }) => (
+  <svg {...base(size)}>
+    <path d="M6 3h12M6 21h12" />
+    <path d="M7 3v3a5 5 0 0 0 5 5 5 5 0 0 1 5 5v3" />
+    <path d="M17 3v3a5 5 0 0 1-5 5 5 5 0 0 0-5 5v3" />
+  </svg>
+)
+
+export const IconShuffle = ({ size }) => (
+  <svg {...base(size)}>
+    <path d="M16 3h5v5" />
+    <path d="M4 20L21 3" />
+    <path d="M21 16v5h-5" />
+    <path d="M15 15l6 6" />
+    <path d="M4 4l5 5" />
+  </svg>
+)

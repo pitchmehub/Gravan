@@ -5,6 +5,7 @@ import { api } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import TermosModal from '../components/TermosModal'
 import ContratoEdicaoModal from '../components/ContratoEdicaoModal'
+import { IconSparkles, IconHourglass } from '../components/Icons'
 
 const MAX_BYTES = 10 * 1024 * 1024
 const MAX_AUTORES = 10
@@ -239,7 +240,9 @@ export default function NovaObra() {
  title={!audioFile ? 'Selecione o áudio primeiro' : 'Transcrever automaticamente com IA (grátis)'}
  style={{ fontSize: 12, padding: '6px 12px' }}
  >
- {transcrevendo ? '⏳ Transcrevendo…' : '✨ Transcrever com IA'}
+ {transcrevendo
+  ? (<><IconHourglass size={14} /> Transcrevendo…</>)
+  : (<><IconSparkles size={14} /> Transcrever com IA</>)}
  </button>
  </div>
  <textarea className="input" placeholder="Cole aqui a letra completa da composição…"

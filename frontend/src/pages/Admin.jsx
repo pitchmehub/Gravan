@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { api } from '../lib/api'
 import { usePlayer } from '../contexts/PlayerContext'
+import { IconPlay, IconPause, IconCopy, IconHourglass, IconCheck } from '../components/Icons'
 
 function fmt(cents) {
  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents ?? 0) / 100)
@@ -547,7 +548,7 @@ function ObrasPanel() {
  cursor: o.audio_path ? 'pointer' : 'not-allowed',
  fontSize: 14, flexShrink: 0,
  }}>
- {isPlaying ? '⏸' : '▶'}
+ {isPlaying ? <IconPause size={16} /> : <IconPlay size={16} />}
  </button>
 
  <div style={{ flex: 1, minWidth: 260 }}>
@@ -586,7 +587,7 @@ function ObrasPanel() {
  color: copiedId === o.id ? 'var(--success)' : 'var(--text-muted)',
  fontSize: 12, padding: '2px 4px',
  }}>
- {copiedId === o.id ? '✓ copiado' : '⎘'}
+ {copiedId === o.id ? (<><IconCheck size={12} /> copiado</>) : <IconCopy size={14} />}
  </button>
  </div>
 
@@ -622,8 +623,8 @@ function ObrasPanel() {
  opacity: busy[o.id] === 'gerar' ? 0.6 : 1,
  }}>
  {busy[o.id] === 'gerar'
- ? '⏳ Gerando…'
- : (o.dossie ? '↻ REGENERAR DOSSIÊ' : ' GERAR DOSSIÊ')}
+ ? (<><IconHourglass size={12} /> Gerando…</>)
+ : (o.dossie ? '↻ REGENERAR DOSSIÊ' : 'GERAR DOSSIÊ')}
  </button>
 
  <button
@@ -639,7 +640,7 @@ function ObrasPanel() {
  fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
  opacity: busy[o.id] === 'baixar' ? 0.6 : 1,
  }}>
- {busy[o.id] === 'baixar' ? '⏳ Baixando…' : ' BAIXAR DOSSIÊ'}
+ {busy[o.id] === 'baixar' ? (<><IconHourglass size={12} /> Baixando…</>) : 'BAIXAR DOSSIÊ'}
  </button>
  </div>
  </div>

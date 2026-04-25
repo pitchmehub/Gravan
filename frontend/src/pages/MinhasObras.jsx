@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { usePlayer } from '../contexts/PlayerContext'
 import { supabase } from '../lib/supabase'
 import { api } from '../lib/api'
+import { IconPlay, IconPause, IconSparkles, IconHourglass } from '../components/Icons'
 
 function fmt(cents) {
  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents ?? 0) / 100)
@@ -143,7 +144,7 @@ export default function MinhasObras() {
  fontSize: 14, display: 'flex',
  alignItems: 'center', justifyContent: 'center',
  }}>
- {isPlaying ? '⏸' : '▶'}
+ {isPlaying ? <IconPause size={18} /> : <IconPlay size={18} />}
  </button>
  </div>
  <div style={{ flex: 1, minWidth: 0 }}>
@@ -179,7 +180,11 @@ export default function MinhasObras() {
  disabled={regerandoCapa === obra.id}
  title="Gerar nova capa com IA (Pollinations.ai, grátis)"
  style={{ marginRight: 'auto' }}>
- {regerandoCapa === obra.id ? '⏳ Gerando…' : '✨ Regerar capa'}
+ {regerandoCapa === obra.id ? (
+  <><IconHourglass size={14} /> Gerando…</>
+ ) : (
+  <><IconSparkles size={14} /> Regerar capa</>
+ )}
  </button>
  <button
  className="btn btn-danger btn-sm"

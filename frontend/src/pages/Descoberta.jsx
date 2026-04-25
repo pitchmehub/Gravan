@@ -9,9 +9,21 @@ import './Descoberta.css'
 import NotificationBell from '../components/NotificationBell'
 import ArtistaHero, { ObrasLista } from '../components/ArtistaHero'
 import FichaTecnica from '../components/FichaTecnica'
+import { IconPlay, IconPause } from '../components/Icons'
 
 function fmt(cents) {
  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents ?? 0) / 100)
+}
+
+// Fisher-Yates: embaralha a lista para que a Descoberta nunca mostre as
+// mesmas músicas na mesma ordem. Não muta o array original.
+function shuffle(arr) {
+ const a = [...arr]
+ for (let i = a.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1))
+  ;[a[i], a[j]] = [a[j], a[i]]
+ }
+ return a
 }
 
 const GENEROS = ['Todos', 'Sertanejo', 'MPB', 'Funk', 'Samba', 'Rock', 'Pop', 'Gospel', 'Forró', 'Pagode', 'RNB']
@@ -59,7 +71,7 @@ function ObraCard({ obra, onPlay, onShowFicha, onExpand, isPlaying, isActive, on
  className={`dc-card-play ${isActive ? 'dc-card-play-active' : ''}`}
  onClick={e => { e.stopPropagation(); onAddHistorico(obra.id); onPlay(obra) }}
  >
- {isPlaying ? '⏸' : '▶'}
+ {isPlaying ? <IconPause size={16} /> : <IconPlay size={16} />}
  </button>
  )}
  </div>
@@ -185,7 +197,7 @@ export default function Descoberta() {
  const params = new URLSearchParams({ page: 1, per_page: 40 })
  if (generoFiltro !== 'Todos') params.set('genero', generoFiltro)
  const data = await api.get(`/catalogo/?${params.toString()}`)
- setCatalogo(Array.isArray(data) ? data : [])
+ setCatalogo(shuffle(Array.isArray(data) ? data : []))
  } catch (e) {
  console.error('Erro ao carregar catálogo:', e)
  setCatalogo([])
