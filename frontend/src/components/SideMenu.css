@@ -242,6 +242,13 @@
     box-shadow: 4px 0 40px rgba(9,9,11,.15);
   }
   .sidebar.mobile-drawer-open { transform: translateX(0); }
+
+  /* Empurra header pra baixo da safe-area (notch/dynamic island) */
+  .sidebar-header-mobile {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
+    padding-bottom: 12px;
+    min-height: calc(64px + env(safe-area-inset-top, 0px));
+  }
 }
 
 /* Barra inferior */

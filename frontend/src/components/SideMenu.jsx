@@ -244,9 +244,9 @@ export default function SideMenu({ onCollapse }) {
  onTouchEnd={handleDrawerTouchEnd}
  onTouchCancel={handleDrawerTouchEnd}
  >
- <div className="sidebar-header">
+ <div className="sidebar-header sidebar-header-mobile">
  <button className="sidebar-logo-btn" onClick={() => { navigate('/descoberta'); setMobileOpen(false) }}>
- <GravanLogo height={28} />
+ <GravanLogo height={40} />
  </button>
  <button
  className="sidebar-toggle"

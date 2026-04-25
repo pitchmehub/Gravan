@@ -205,14 +205,22 @@ export default function GlobalPlayer() {
           <>
             <div className="gp-exp-cover-wrap">
               <div className="gp-exp-cover">
-                <span className="gp-exp-cover-iniciais">{iniciais}</span>
+                {obra.cover_url ? (
+                  <img src={obra.cover_url} alt="" className="gp-exp-cover-img" />
+                ) : (
+                  <span className="gp-exp-cover-iniciais">{iniciais}</span>
+                )}
               </div>
             </div>
 
             {/* Linha: mini thumb + nome + autor + check (curtir) */}
             <div className="gp-exp-track-row">
-              <div className="gp-exp-track-thumb" style={{ background: miniColor(obra) }}>
-                <span style={{ fontSize: 14, color: 'rgba(255,255,255,.85)', fontWeight: 700 }}>{iniciais}</span>
+              <div className="gp-exp-track-thumb" style={!obra.cover_url ? { background: miniColor(obra) } : undefined}>
+                {obra.cover_url ? (
+                  <img src={obra.cover_url} alt="" className="gp-exp-track-thumb-img" />
+                ) : (
+                  <span style={{ fontSize: 14, color: 'rgba(255,255,255,.85)', fontWeight: 700 }}>{iniciais}</span>
+                )}
               </div>
               <div className="gp-exp-track-meta">
                 <div className="gp-exp-nome">{obra.nome}</div>
@@ -250,10 +258,11 @@ export default function GlobalPlayer() {
                 onClick={() => { if (dragIdx === null) goToIndex(i) }}
               >
                 <span className="gp-q-grip" onTouchStart={e => handleGripTouchStart(e, i)}><GripIcon /></span>
-                <div className="gp-q-mini-cover" style={{ background: miniColor(item) }}>
+                <div className="gp-q-mini-cover" style={!item.cover_url ? { background: miniColor(item) } : undefined}>
+                  {item.cover_url && <img src={item.cover_url} alt="" className="gp-q-mini-cover-img" />}
                   {i === index && playing
                     ? <span className="gp-q-playing-dot"><PlayIcon size={10} /></span>
-                    : <span style={{ fontSize: 11, fontWeight: 700 }}>{(item.nome || '').charAt(0).toUpperCase()}</span>
+                    : (!item.cover_url && <span style={{ fontSize: 11, fontWeight: 700 }}>{(item.nome || '').charAt(0).toUpperCase()}</span>)
                   }
                 </div>
                 <div className="gp-q-info">
@@ -386,7 +395,11 @@ export default function GlobalPlayer() {
   if (minimized) {
     return (
       <div className="gp-mini" onClick={expandPlayer}>
-        <div className="gp-mini-cover">{iniciais}</div>
+        <div className="gp-mini-cover">
+          {obra.cover_url
+            ? <img src={obra.cover_url} alt="" className="gp-mini-cover-img" />
+            : iniciais}
+        </div>
         <div className="gp-mini-info">
           <span className="gp-mini-nome">{obra.nome}</span>
           <span className="gp-mini-autor">{nomeArtistico}</span>
@@ -412,7 +425,11 @@ export default function GlobalPlayer() {
       </div>
       <div className="gp-body">
         <div className="gp-track-info">
-          <div className="gp-cover"><span>{iniciais}</span></div>
+          <div className="gp-cover">
+            {obra.cover_url
+              ? <img src={obra.cover_url} alt="" className="gp-cover-img" />
+              : <span>{iniciais}</span>}
+          </div>
           <div className="gp-meta">
             <div className="gp-nome">{obra.nome}</div>
             <div className="gp-autor">{nomeArtistico}</div>
