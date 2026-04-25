@@ -190,9 +190,9 @@ export default function PerfilPublico() {
         </button>
       </div>
 
-      {/* Lista vertical de obras estilo Spotify */}
-      <div style={{ padding: '12px 24px 28px' }}>
-        <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 10, letterSpacing: -.2 }}>
+      {/* Lista vertical de obras estilo Spotify — modo compacto */}
+      <div style={{ padding: '8px 16px 20px' }}>
+        <h2 style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, letterSpacing: -.1, color: '#71717A', textTransform: 'uppercase' }}>
           Composições
         </h2>
         <ObrasLista
@@ -202,6 +202,7 @@ export default function PerfilPublico() {
           isPlaying={playing}
           onPlay={handlePlayObra}
           onShowFicha={setFichaObra}
+          compact
         />
       </div>
 

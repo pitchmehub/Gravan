@@ -158,7 +158,39 @@ export function ObrasLista({
   onShowFicha,
   currentObraId = null,
   isPlaying = false,
+  compact = false,
 }) {
+  const SZ = compact ? {
+    cols: '22px 36px 1fr auto',
+    gap: 8,
+    rowPad: '5px 8px',
+    rowRadius: 6,
+    idxFs: 11,
+    cover: 36,
+    coverRadius: 5,
+    coverFs: 14,
+    titleFs: 13,
+    subFs: 11,
+    btn: 26,
+    iconSz: 11,
+    ctaPad: '5px 10px',
+    ctaFs: 11,
+  } : {
+    cols: '32px 56px 1fr auto',
+    gap: 16,
+    rowPad: '10px 12px',
+    rowRadius: 8,
+    idxFs: 13,
+    cover: 48,
+    coverRadius: 6,
+    coverFs: 18,
+    titleFs: 15,
+    subFs: 12,
+    btn: 32,
+    iconSz: 13,
+    ctaPad: '8px 16px',
+    ctaFs: 12,
+  }
   if (!obras || obras.length === 0) {
     return (
       <div style={{
@@ -193,40 +225,44 @@ export function ObrasLista({
             onMouseLeave={e => e.currentTarget.style.background = isActive ? '#FAFAFA' : 'transparent'}
             style={{
               display: 'grid',
-              gridTemplateColumns: '32px 56px 1fr auto',
-              alignItems: 'center', gap: 16,
-              padding: '10px 12px',
-              borderRadius: 8,
+              gridTemplateColumns: SZ.cols,
+              alignItems: 'center', gap: SZ.gap,
+              padding: SZ.rowPad,
+              borderRadius: SZ.rowRadius,
               cursor: 'pointer',
               transition: 'background 0.15s',
               background: isActive ? '#FAFAFA' : 'transparent',
             }}>
             <div style={{
               color: isActive ? '#E11D48' : '#71717A',
-              fontSize: 13, fontWeight: 600, textAlign: 'center',
+              fontSize: SZ.idxFs, fontWeight: 600, textAlign: 'center',
             }}>
               {isActive && isPlaying
-                ? <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'inline-block' }}><polygon points="5,3 19,12 5,21" /></svg>
+                ? <svg width={SZ.iconSz - 1} height={SZ.iconSz - 1} viewBox="0 0 24 24" fill="currentColor" style={{ display: 'inline-block' }}><polygon points="5,3 19,12 5,21" /></svg>
                 : i + 1}
             </div>
             <div style={{
-              width: 48, height: 48, borderRadius: 6,
+              width: SZ.cover, height: SZ.cover, borderRadius: SZ.coverRadius,
               background: getGrad ? getGrad(o.id) : '#09090B',
               color: '#fff',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 18, fontWeight: 700, flexShrink: 0,
+              fontSize: SZ.coverFs, fontWeight: 700, flexShrink: 0,
+              backgroundImage: o.cover_url ? `url(${o.cover_url})` : undefined,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              overflow: 'hidden',
             }}>
-              {(o.nome || '?').charAt(0).toUpperCase()}
+              {!o.cover_url && (o.nome || '?').charAt(0).toUpperCase()}
             </div>
             <div style={{ minWidth: 0 }}>
               <div style={{
-                fontSize: 15, fontWeight: 600,
+                fontSize: SZ.titleFs, fontWeight: 600,
                 color: isActive ? '#E11D48' : '#09090B',
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               }}>
                 {o.nome}
               </div>
-              <div style={{ fontSize: 12, color: '#71717A', marginTop: 2 }}>
+              <div style={{ fontSize: SZ.subFs, color: '#71717A', marginTop: compact ? 1 : 2 }}>
                 {o.genero || '—'}
               </div>
             </div>
@@ -237,13 +273,13 @@ export function ObrasLista({
                 style={{
                   background: isActive ? '#E11D48' : '#09090B', color: '#fff',
                   border: 'none', borderRadius: '50%',
-                  width: 32, height: 32,
+                  width: SZ.btn, height: SZ.btn,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', whiteSpace: 'nowrap',
+                  cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
                 }}>
                 {isActive && isPlaying
-                  ? <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
-                  : <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21" /></svg>
+                  ? <svg width={SZ.iconSz} height={SZ.iconSz} viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                  : <svg width={SZ.iconSz} height={SZ.iconSz} viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21" /></svg>
                 }
               </button>
             ) : (
@@ -252,7 +288,7 @@ export function ObrasLista({
                 style={{
                   background: '#09090B', color: '#fff',
                   border: 'none', borderRadius: 99,
-                  padding: '8px 16px', fontSize: 12, fontWeight: 700,
+                  padding: SZ.ctaPad, fontSize: SZ.ctaFs, fontWeight: 700,
                   cursor: 'pointer', whiteSpace: 'nowrap',
                 }}>
                 {ctaLabel}

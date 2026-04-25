@@ -465,8 +465,23 @@ drop view if exists public.bi_auditoria_splits    cascade;
 
 create view public.catalogo_publico as
 select
-  o.id, o.nome, o.genero, o.preco_cents, o.capa_url,
-  o.compositor_id, p.nome_artistico as compositor_nome,
+  o.id,
+  o.nome,
+  o.genero,
+  o.bpm,
+  o.preco_cents,
+  o.capa_url,
+  o.cover_url,
+  o.audio_path,
+  o.letra,
+  o.letra_status,
+  o.status,
+  o.compositor_id,
+  o.compositor_id                       as titular_id,
+  p.nome_artistico                      as compositor_nome,
+  coalesce(p.nome_artistico, p.nome)    as titular_nome,
+  p.nivel                               as titular_nivel,
+  p.avatar_url                          as titular_avatar_url,
   o.created_at
 from public.obras o
 left join public.perfis p on p.id = o.compositor_id

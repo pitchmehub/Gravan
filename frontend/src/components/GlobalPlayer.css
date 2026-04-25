@@ -674,16 +674,16 @@
   .gp-time    { display: none; }
   .gp-queue-info { display: none; }
 
-  /* Minimizado: full width colado à barra de menu inferior */
+  /* Minimizado: full width logo acima da barra de menu inferior */
   .gp-mini {
-    bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(66px + env(safe-area-inset-bottom, 0px));
     left: 0; right: 0;
     max-width: none; min-width: 0;
     border-radius: 0;
     border-left: none;
     border-right: none;
-    border-bottom: none;
-    box-shadow: none;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 -2px 8px rgba(9,9,11,.06);
   }
 
   /* Expanded: capa um pouco menor */

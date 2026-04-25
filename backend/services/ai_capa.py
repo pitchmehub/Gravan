@@ -18,30 +18,47 @@ log = logging.getLogger(__name__)
 POLLINATIONS_BASE = "https://image.pollinations.ai/prompt"
 
 # Mapa de gênero → estilo visual (em inglês p/ melhor resultado do modelo)
+# Estilos pensados pra capas de álbum reais — cinematográficas, com forte
+# identidade visual, contraste alto e estética premium.
 GENERO_STYLE = {
-    "Sertanejo": "rustic countryside, acoustic guitar, warm sunset, cinematic",
-    "MPB":       "vintage brazilian art, watercolor, tropical, bossa nova vibes",
-    "Funk":      "neon urban, favela art, vibrant pink and purple, energetic",
-    "Samba":     "rio de janeiro carnival, golden colors, percussion, festive",
-    "Rock":      "dark dramatic, electric guitar, bold contrast, gritty texture",
-    "Pop":       "modern minimalist, vibrant colors, glossy, contemporary",
-    "Gospel":    "ethereal, light beams, peaceful, sacred geometry",
-    "Forró":     "northeastern brazil, accordion, warm earthy tones, rural",
-    "Pagode":    "samba circle, brazilian instruments, golden hour, cheerful",
-    "RNB":       "smooth elegant, deep blues and gold, soulful, late night",
-    "RAP":       "urban graffiti, bold typography, street art, hip-hop culture",
-    "OUTROS":    "abstract artistic, balanced composition, musical theme",
+    "Sertanejo": "wide cinematic countryside at golden hour, lone figure silhouette, "
+                 "dust in the air, lens flare, anamorphic look, deep amber and teal palette",
+    "MPB":       "rich brazilian modernism poster, tropical foliage, bossa nova mood, "
+                 "muted ochre and emerald palette, grainy film texture, hand-painted feel",
+    "Funk":      "neon-lit favela alley at night, holographic chrome lettering objects, "
+                 "magenta and electric blue glow, motion blur, futuristic baile aesthetic",
+    "Samba":     "carnival in rio at dusk, sequins and feathers, dynamic motion, "
+                 "rich gold and crimson palette, deep contrast, editorial photo vibe",
+    "Rock":      "high contrast black and white portrait energy, smoke and stage lights, "
+                 "electric blood-red accent, gritty 35mm grain, raw editorial mood",
+    "Pop":       "ultra modern minimalist studio scene, bold geometric color blocking, "
+                 "iridescent highlights, glossy 3d render, fashion magazine cover vibe",
+    "Gospel":    "majestic cathedral light rays through stained glass, cinematic mist, "
+                 "deep indigo and warm gold palette, painterly oil texture, sacred mood",
+    "Forró":     "vast northeastern brazilian sertão landscape, accordion and rabeca, "
+                 "burnt orange sky, dramatic clouds, heroic cinematic composition",
+    "Pagode":    "intimate roda de samba at dusk in a vintage botequim, warm tungsten light, "
+                 "wooden textures, golden brass instruments, rich film grain",
+    "RNB":       "moody late night rooftop scene, neon city skyline reflections, "
+                 "deep navy and amber palette, cinematic bokeh, sensual editorial photo",
+    "RAP":       "bold contemporary street portrait energy, oversized typography shapes, "
+                 "concrete textures, dramatic spotlight, monochrome with single neon accent",
+    "OUTROS":    "striking modern poster art, dramatic lighting, bold color contrast, "
+                 "cinematic composition, editorial design quality",
 }
 
 
 def _build_prompt(nome: str, genero: str) -> str:
-    """Monta um prompt curto em inglês p/ Pollinations gerar capa de música."""
+    """Monta um prompt rico em inglês p/ Pollinations gerar capa cinematográfica."""
     style = GENERO_STYLE.get(genero, GENERO_STYLE["OUTROS"])
     return (
-        f"album cover artwork for the song '{nome}', "
-        f"{style}, "
-        f"professional music album art, "
-        f"square 1:1, no text, no logo, no watermark"
+        f"album cover artwork inspired by the song titled '{nome}'. "
+        f"Style: {style}. "
+        f"Cinematic composition, editorial album art, premium music cover, "
+        f"strong focal subject, dramatic lighting, rich contrast, "
+        f"depth and atmosphere, ultra detailed, 4k, square 1:1 format. "
+        f"Strict rules: no text, no letters, no words, no logo, no watermark, "
+        f"no signature, no caption, no typography of any kind."
     )
 
 
