@@ -200,7 +200,7 @@ export default function Descoberta() {
  try {
  const { data } = await supabase
  .from('historico_escuta')
- .select('obra_id, ouvido_em, obras(id, nome, genero, preco_cents, audio_path, status, titular_id, perfis!titular_id(nome, nome_artistico, nivel))')
+ .select('obra_id, ouvido_em, obras(id, nome, genero, preco_cents, audio_path, status, titular_id, cover_url, perfis!titular_id(nome, nome_artistico, nivel))')
  .eq('perfil_id', perfil.id)
  .order('ouvido_em', { ascending: false })
  .limit(40)

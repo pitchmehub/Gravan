@@ -88,7 +88,7 @@ export default function PerfilPublico() {
 
       const { data: coa } = await supabase
         .from('coautorias')
-        .select('obra_id, is_titular, share_pct, obras(id, nome, genero, preco_cents, audio_path, status, titular_id, perfis!titular_id(nome, nome_artistico, nivel))')
+        .select('obra_id, is_titular, share_pct, obras(id, nome, genero, preco_cents, audio_path, status, titular_id, cover_url, perfis!titular_id(nome, nome_artistico, nivel))')
         .eq('perfil_id', perfilId)
         .limit(60)
 
