@@ -22,14 +22,15 @@ from services.ai_capa import gerar_url_capa
 from services.ai_letra import transcrever_audio_bytes
 
 
-def backfill_capas(sb):
+def backfill_capas(sb, force_all=False):
     print("\n=== CAPAS ===")
-    r = (sb.table("obras")
-           .select("id, nome, genero, cover_url")
-           .is_("cover_url", "null")
-           .execute())
+    q = sb.table("obras").select("id, nome, genero, cover_url")
+    if not force_all:
+        q = q.is_("cover_url", "null")
+    r = q.execute()
     obras = r.data or []
-    print(f"Obras sem capa: {len(obras)}")
+    label = "TODAS as obras (regenerando)" if force_all else "Obras sem capa"
+    print(f"{label}: {len(obras)}")
     feitas = 0
     for o in obras:
         try:
@@ -118,11 +119,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-capas", action="store_true")
     ap.add_argument("--no-letras", action="store_true")
+    ap.add_argument("--all", action="store_true",
+                    help="Regenera capas de TODAS as obras (não só as sem capa)")
     args = ap.parse_args()
 
     sb = get_supabase()
     if not args.no_capas:
-        backfill_capas(sb)
+        backfill_capas(sb, force_all=args.all)
     if not args.no_letras:
         backfill_letras(sb)
     print("\nFeito.")
