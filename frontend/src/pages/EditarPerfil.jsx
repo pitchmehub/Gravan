@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import ImageCropper from '../components/ImageCropper'
+import PushToggle from '../components/PushToggle'
 
 const MAX_AVATAR = 2 * 1024 * 1024 // 2 MB
 const MAX_CAPA = 5 * 1024 * 1024 // 5 MB
@@ -274,6 +275,12 @@ export default function EditarPerfil() {
  {form.bio.length}/500
  </span>
  </div>
+ </div>
+
+ {/* Notificações push */}
+ <div className="card" style={{ marginBottom: 20 }}>
+ <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Notificações</h2>
+ <PushToggle />
  </div>
 
  {/* Info de conta (somente leitura) */}
