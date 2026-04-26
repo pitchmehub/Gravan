@@ -2,7 +2,7 @@
   "name": "Gravan — Licenciamento Musical",
   "short_name": "Gravan",
   "description": "Licenciamento musical descomplicado para creators, agências e produtoras.",
-  "start_url": "/descoberta",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
