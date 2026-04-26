@@ -32,10 +32,18 @@ export default function ContratoEdicaoModal({ onClose }) {
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
-        .from('landing_content').select('valor')
-        .eq('id', 'contrato_edicao_template').single()
-      setTpl(data?.valor ?? '')
+      try {
+        const { data } = await supabase
+          .from('landing_content').select('valor')
+          .eq('id', 'contrato_edicao_template').single()
+        if (data?.valor) { setTpl(data.valor); return }
+      } catch (_) { /* segue para fallback */ }
+      // Fallback: pega o template real exposto pelo backend
+      try {
+        const r = await fetch('/api/contratos/licenciamento/templates')
+        const d = await r.json()
+        setTpl(d?.edicao_bilateral || '')
+      } catch (_) { setTpl('') }
     }
     load()
   }, [])

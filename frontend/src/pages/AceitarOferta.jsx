@@ -33,6 +33,9 @@ export default function AceitarOferta() {
  const [error, setError] = useState('')
  const [submitting, setSubmitting] = useState(false)
  const [successMsg, setSuccessMsg] = useState('')
+ const [verContrato, setVerContrato] = useState(false)
+ const [contratoTexto, setContratoTexto] = useState('')
+ const [contratoCarregando, setContratoCarregando] = useState(false)
 
  const [form, setForm] = useState({
  razao_social: '', nome_fantasia: '', cnpj: '',
@@ -48,6 +51,20 @@ export default function AceitarOferta() {
  .catch(e => setError(e.message))
  .finally(() => setLoading(false))
  }, [token])
+
+ async function abrirContratoIntegral() {
+ setVerContrato(true)
+ if (contratoTexto || contratoCarregando) return
+ setContratoCarregando(true)
+ try {
+ const d = await api.get(`/contratos/licenciamento/preview-oferta/${token}`)
+ setContratoTexto(d?.conteudo || '')
+ } catch (e) {
+ setContratoTexto(`Não foi possível carregar o texto do contrato neste momento (${e.message}).`)
+ } finally {
+ setContratoCarregando(false)
+ }
+ }
 
  async function aceitarTudo(e) {
  e?.preventDefault?.()
@@ -115,6 +132,16 @@ export default function AceitarOferta() {
  O valor já está autorizado no cartão do comprador (sem cobrança). Ao aceitar e assinar o contrato trilateral,
  o pagamento é capturado e repassado conforme o contrato. Se você não aceitar até o prazo acima, o valor é
  estornado integralmente.
+ </div>
+ <div style={{ marginTop: 14 }}>
+ <button
+ type="button"
+ onClick={abrirContratoIntegral}
+ className="btn"
+ style={{ padding: '10px 16px', fontSize: 13, fontWeight: 600, border: '1px solid var(--brand)', color: 'var(--brand)', background: 'transparent' }}
+ >
+ Ver contrato trilateral integral
+ </button>
  </div>
  </div>
 
@@ -198,6 +225,47 @@ export default function AceitarOferta() {
  O contrato trilateral será disponibilizado para você, o compositor e o intérprete assinarem eletronicamente.
  </p>
  </form>
+ )}
+
+ {verContrato && (
+ <div
+ onClick={e => { if (e.target === e.currentTarget) setVerContrato(false) }}
+ style={{
+ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(4px)',
+ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 900, padding: 16,
+ }}
+ >
+ <div style={{
+ background: '#fff', borderRadius: 14, width: '100%', maxWidth: 760,
+ maxHeight: '88vh', display: 'flex', flexDirection: 'column',
+ }}>
+ <div style={{
+ padding: '18px 22px', borderBottom: '1px solid var(--border)',
+ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+ }}>
+ <h2 style={{ fontSize: 15, fontWeight: 700 }}>
+ Contrato Trilateral — Texto integral
+ </h2>
+ <button onClick={() => setVerContrato(false)} style={{
+ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: 'var(--text-muted)',
+ }}>×</button>
+ </div>
+ <div style={{
+ padding: '18px 22px', overflowY: 'auto', flex: 1, fontSize: 12.5,
+ lineHeight: 1.7, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap',
+ }}>
+ {contratoCarregando ? 'Carregando…' : (contratoTexto || 'Sem conteúdo.')}
+ </div>
+ <div style={{
+ padding: '12px 22px', borderTop: '1px solid var(--border)',
+ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8,
+ }}>
+ <button className="btn" style={{ padding: '8px 14px' }} onClick={() => setVerContrato(false)}>
+ Fechar
+ </button>
+ </div>
+ </div>
+ </div>
  )}
  </div>
  )

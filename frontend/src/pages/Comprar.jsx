@@ -89,12 +89,13 @@ export default function Comprar() {
  setVerContrato(true)
  if (contratoTpl) return
  try {
- const d = await api.get('/landing/content')
- const tpl = d?.contrato_licenciamento_template || d?.contrato_licenciamento_preview || ''
- if (tpl) { setContratoTpl(tpl); return }
- } catch (_) { /* fallback abaixo */ }
- // Fallback: texto resumido estático (cláusulas-chave)
- setContratoTpl(CONTRATO_RESUMO)
+ const params = new URLSearchParams({ obra_id: obraId })
+ if (valorFinal) params.set('valor_cents', String(valorFinal))
+ const d = await api.get(`/contratos/licenciamento/preview?${params.toString()}`)
+ setContratoTpl(d?.conteudo || '')
+ } catch (e) {
+ setContratoTpl(`Não foi possível carregar o texto do contrato neste momento (${e.message}). O contrato completo, com todos os seus dados, será gerado e disponibilizado em "Meus contratos → Licenciamentos" assim que o pagamento for confirmado.`)
+ }
  }
 
  if (loading) return (
@@ -292,7 +293,7 @@ export default function Comprar() {
  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
  }}>
  <h2 style={{ fontSize: 15, fontWeight: 700 }}>
- Contrato de Autorização — Pré-visualização
+ Contrato de Autorização — Texto integral
  </h2>
  <button onClick={() => setVerContrato(false)} style={{
  background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: 'var(--text-muted)',
@@ -309,8 +310,8 @@ export default function Comprar() {
  display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8,
  }}>
  <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
- O contrato final, com todos os seus dados preenchidos, será gerado após a compra
- e ficará disponível em <b>Meus contratos → Licenciamentos</b>.
+ Este é o texto exato do contrato que será assinado eletronicamente após o pagamento.
+ Ficará disponível em <b>Meus contratos → Licenciamentos</b> com hash SHA-256 final.
  </p>
  <button className="btn btn-primary" onClick={() => { setConcordo(true); setVerContrato(false) }}>
  Li e concordo
@@ -323,39 +324,3 @@ export default function Comprar() {
  )
 }
 
-// Resumo apresentado quando o template completo não está disponível no banco.
-// Os campos com {{placeholders}} são preenchidos automaticamente na geração
-// real do contrato (depois da confirmação do pagamento).
-const CONTRATO_RESUMO = `CONTRATO DE AUTORIZAÇÃO PARA GRAVAÇÃO E EXPLORAÇÃO DE OBRA MUSICAL
-
-Cláusulas-chave deste contrato (versão resumida para visualização antes da compra):
-
-CLÁUSULA 1 — OBJETO
-Autorização para fixação da obra musical em fonograma e sua exploração comercial pelo LICENCIADO.
-
-CLÁUSULA 2 — CESSÃO DE DIREITOS
-O(s) AUTOR(ES) autoriza(m), de forma irrevogável e irretratável, o LICENCIADO a:
- I. Reproduzir a obra em qualquer formato ou suporte;
- II. Distribuir e comercializar em meios físicos e digitais;
- III. Disponibilizar em plataformas de streaming (Spotify, Apple Music, etc.);
- IV. Utilizar em redes sociais e plataformas digitais;
- V. Sincronizar com conteúdos audiovisuais.
-
-CLÁUSULA 3 — TERRITÓRIO E PRAZO
-Autorização mundial, pelo prazo integral de proteção legal (Lei 9.610/98).
-
-CLÁUSULA 5 — REMUNERAÇÃO
- 5.1 Buyout: valor pago através do Stripe (apresentado acima).
- 5.2 Royalties ECAD: 80% autores / 10% intérprete / 10% GRAVAN.
- 5.3 Royalties de fonograma: 2% para autores, via distribuidora digital.
-
-CLÁUSULA 10 — SPLIT ENTRE COAUTORES
-Divisão conforme percentuais cadastrados na obra na plataforma GRAVAN.
-
-CLÁUSULA 11 — FORO
-Comarca do Rio de Janeiro/RJ.
-
-ASSINATURAS ELETRÔNICAS
-Este instrumento é firmado eletronicamente (MP 2.200-2/2001; Lei 14.063/2020).
-O contrato completo, preenchido com todos os dados reais, estará disponível
-em "Meus contratos → Licenciamentos" após a confirmação do pagamento.`

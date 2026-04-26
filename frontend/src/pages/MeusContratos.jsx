@@ -11,6 +11,8 @@ export default function MeusContratos() {
  const [baixando, setBaixando] = useState(null)
  const [verConteudo, setVerConteudo] = useState(null)
  const [assinando, setAssinando] = useState(null)
+ const [verEdicao, setVerEdicao] = useState(null)
+ const [carregandoEdicao, setCarregandoEdicao] = useState(false)
 
  async function carregarTudo() {
  setLoading(true); setErro('')
@@ -41,6 +43,19 @@ export default function MeusContratos() {
  const detalhe = await api.get(`/perfis/contratos/${c.id}`)
  setVerConteudo({ ...c, conteudo: detalhe.conteudo })
  } catch (e) { alert('Erro ao abrir: ' + e.message) }
+ }
+
+ async function abrirEdicao(c) {
+ setVerEdicao({ id: c.id, conteudo: '' })
+ setCarregandoEdicao(true)
+ try {
+ const d = await api.get(`/contratos-edicao/${c.id}`)
+ setVerEdicao({ id: c.id, conteudo: d?.contract_text || '(este contrato não possui texto registrado)' })
+ } catch (e) {
+ setVerEdicao({ id: c.id, conteudo: `Erro ao carregar: ${e.message}` })
+ } finally {
+ setCarregandoEdicao(false)
+ }
  }
 
  async function assinar(c) {
@@ -130,6 +145,12 @@ export default function MeusContratos() {
  <span style={{ fontSize: 11, padding: '2px 8px', background: sl.bg, color: sl.cor, borderRadius: 4 }}>{sl.txt}</span>
  </td>
  <td style={{ ...td, textAlign: 'right' }}>
+ <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end' }}>
+ <button className="btn"
+ style={{ fontSize: 12, padding: '6px 12px', border: '1px solid var(--border)', background: 'transparent' }}
+ onClick={() => abrirEdicao(c)}>
+ Ver contrato
+ </button>
  {podeAssinar && (
  <button className="btn btn-primary" disabled={assinando === c.id}
  style={{ fontSize: 12, padding: '6px 12px' }}
@@ -137,6 +158,7 @@ export default function MeusContratos() {
  {assinando === c.id ? 'Assinando…' : 'Assinar contrato'}
  </button>
  )}
+ </div>
  </td>
  </tr>
  )
@@ -203,6 +225,25 @@ export default function MeusContratos() {
  </div>
  <div style={{ padding: '18px 22px', overflowY: 'auto', flex: 1, fontSize: 12.5, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
  {verConteudo.conteudo || 'Sem conteúdo.'}
+ </div>
+ </div>
+ </div>
+ )}
+
+ {verEdicao && (
+ <div onClick={e => { if (e.target === e.currentTarget) setVerEdicao(null) }}
+ style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(4px)',
+ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 700, padding: 24 }}>
+ <div style={{ background: '#fff', borderRadius: 14, width: '100%', maxWidth: 780, maxHeight: '88vh', display: 'flex', flexDirection: 'column' }}>
+ <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+ <h2 style={{ fontSize: 15, fontWeight: 700 }}>Contrato de Edição — Texto integral</h2>
+ <button onClick={() => setVerEdicao(null)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
+ </div>
+ <div style={{ padding: '18px 22px', overflowY: 'auto', flex: 1, fontSize: 12.5, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+ {carregandoEdicao ? 'Carregando…' : (verEdicao.conteudo || 'Sem conteúdo.')}
+ </div>
+ <div style={{ padding: '12px 22px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
+ <button className="btn" style={{ padding: '8px 14px' }} onClick={() => setVerEdicao(null)}>Fechar</button>
  </div>
  </div>
  </div>

@@ -1,10 +1,20 @@
 """Routes: /api/contratos/licenciamento — contratos de gravação/exploração."""
+import hashlib
 import io
 import logging
+from datetime import datetime
 from flask import Blueprint, request, jsonify, g, abort, send_file
 from middleware.auth import require_auth
 from db.supabase_client import get_supabase
-from services.contrato_licenciamento import aceitar_contrato
+from services.contrato_licenciamento import (
+    aceitar_contrato,
+    TEMPLATE_LICENCIAMENTO,
+    TEMPLATE_TRILATERAL,
+    _moeda,
+    _endereco,
+    _cidade_uf,
+    _decrypt,
+)
 from services.contrato_pdf import gerar_pdf_contrato
 from services.dossie_licenca import gerar_zip_dossie_licenca
 from utils.crypto import hash_ip
@@ -27,6 +37,221 @@ def _user_tem_acesso(sb, contract_id: str, user_id: str) -> dict | None:
     if s:
         return c
     return None
+
+
+@contratos_lic_bp.route("/templates", methods=["GET"])
+def templates():
+    """Público — devolve os textos integrais dos templates de contrato
+    realmente usados na geração final. Permite que telas de pré-visualização
+    (Comprar, Aceitar Oferta, Modal de Edição) exibam o contrato completo
+    antes da assinatura."""
+    sb = get_supabase()
+    edicao = ""
+    try:
+        r = sb.table("landing_content").select("valor").eq(
+            "id", "contrato_edicao_template"
+        ).maybe_single().execute()
+        edicao = ((r.data if r else None) or {}).get("valor") or ""
+    except Exception:
+        pass
+    return jsonify({
+        "licenciamento_bilateral":  TEMPLATE_LICENCIAMENTO,
+        "licenciamento_trilateral": TEMPLATE_TRILATERAL,
+        "edicao_bilateral":         edicao,
+    }), 200
+
+
+def _build_autores_e_split(sb, obra: dict, titular: dict):
+    """Monta autores_bloco, split_lista e nomes artísticos a partir das coautorias."""
+    coaut = sb.table("coautorias").select("perfil_id, share_pct").eq("obra_id", obra["id"]).execute().data or []
+    if not coaut:
+        coaut = [{"perfil_id": titular["id"], "share_pct": 100}]
+    ids = list({c["perfil_id"] for c in coaut})
+    perfis = sb.table("perfis").select(
+        "id, nome, nome_artistico, nome_completo, cpf, rg,"
+        " endereco_rua, endereco_numero, endereco_compl, endereco_bairro,"
+        " endereco_cidade, endereco_uf, email"
+    ).in_("id", ids).execute().data or []
+    por_id = {p["id"]: p for p in perfis}
+    ordered = sorted(coaut, key=lambda c: 0 if c["perfil_id"] == titular["id"] else 1)
+
+    autores_bloco_partes = []
+    split_lista_partes = []
+    autores_nomes_artisticos = []
+    for c in ordered:
+        p = por_id.get(c["perfil_id"], {})
+        is_titular = c["perfil_id"] == titular["id"]
+        papel = "AUTOR PRINCIPAL" if is_titular else "COAUTOR"
+        autores_bloco_partes.append(
+            f"[{papel}]\n"
+            f"Nome: {p.get('nome_completo') or p.get('nome') or '—'}\n"
+            f"CPF: {_decrypt(p.get('cpf', '')) or 'Não informado'}\n"
+            f"RG: {_decrypt(p.get('rg', '')) or 'Não informado'}\n"
+            f"Endereço: {_endereco(p)}\n"
+            f"Cidade/UF: {_cidade_uf(p)}\n"
+        )
+        split_lista_partes.append(
+            f"- {p.get('nome_completo') or p.get('nome') or '—'}: {float(c['share_pct']):.2f}%"
+        )
+        autores_nomes_artisticos.append(p.get("nome_artistico") or p.get("nome") or "—")
+    return (
+        "\n".join(autores_bloco_partes).strip(),
+        "\n".join(split_lista_partes),
+        ", ".join(autores_nomes_artisticos),
+    )
+
+
+@contratos_lic_bp.route("/preview", methods=["GET"])
+@require_auth
+def preview():
+    """Renderiza o texto integral do contrato como será gerado, com os dados
+    reais da obra, do(s) autor(es) e do comprador (g.user). Usado pela tela
+    de Compra para mostrar o contrato COMPLETO antes de pagar."""
+    obra_id = request.args.get("obra_id")
+    if not obra_id:
+        abort(400, description="obra_id obrigatório.")
+    valor_param = request.args.get("valor_cents")
+    sb = get_supabase()
+
+    obra = sb.table("obras").select("*").eq("id", obra_id).maybe_single().execute()
+    obra = (obra.data if obra else None)
+    if not obra:
+        abort(404, description="Obra não encontrada.")
+
+    titular = sb.table("perfis").select("*").eq("id", obra["titular_id"]).maybe_single().execute()
+    titular = (titular.data if titular else None) or {}
+
+    buyer = sb.table("perfis").select("*").eq("id", g.user.id).maybe_single().execute()
+    buyer = (buyer.data if buyer else None) or {}
+
+    valor_cents = int(valor_param) if (valor_param and valor_param.isdigit()) else int(obra.get("preco_cents") or 0)
+
+    autores_bloco, split_lista, nomes_art = _build_autores_e_split(sb, obra, titular)
+
+    # Tipo: trilateral se titular é AGREGADO de uma editora-mãe
+    if titular.get("publisher_id"):
+        editora = sb.table("perfis").select("*").eq("id", titular["publisher_id"]).maybe_single().execute()
+        editora = (editora.data if editora else None) or {}
+        cnpj_dec = _decrypt(editora.get("cnpj", "")) or "Não informado"
+        editora_endereco = ", ".join(filter(None, [
+            editora.get("endereco_rua"), editora.get("endereco_numero"),
+            editora.get("endereco_compl"), editora.get("endereco_bairro"),
+            editora.get("endereco_cidade"), editora.get("endereco_uf"),
+        ])) or "Não informado"
+        clausula_split_editora = (
+            "\n\nNos termos do contrato de agregação vigente entre AUTOR(ES) e EDITORA, "
+            "a GRAVAN, na qualidade de plataforma intermediária, fica autorizada e "
+            "obrigada a creditar automaticamente, em cada licenciamento desta obra, "
+            "o percentual de 10% (dez por cento) do valor pago pelo LICENCIADO "
+            "diretamente à EDITORA, sendo o saldo remanescente, deduzida a taxa de "
+            "intermediação da GRAVAN, distribuído ao(s) AUTOR(ES) conforme o split "
+            "declarado na Cláusula 7."
+        )
+        conteudo = (TEMPLATE_TRILATERAL
+            .replace("{{autores_bloco}}",          autores_bloco)
+            .replace("{{editora_razao}}",          editora.get("razao_social") or editora.get("nome_completo") or editora.get("nome") or "—")
+            .replace("{{editora_cnpj}}",           cnpj_dec)
+            .replace("{{editora_responsavel}}",    editora.get("responsavel_nome") or editora.get("nome_completo") or editora.get("nome") or "—")
+            .replace("{{editora_email}}",          editora.get("email") or "—")
+            .replace("{{editora_endereco}}",       editora_endereco)
+            .replace("{{interprete_nome}}",        buyer.get("nome_completo") or buyer.get("nome") or "—")
+            .replace("{{interprete_nome_artistico}}", buyer.get("nome_artistico") or "Não informado")
+            .replace("{{interprete_cpf}}",         _decrypt(buyer.get("cpf","")) or "Não informado")
+            .replace("{{interprete_rg}}",          _decrypt(buyer.get("rg","")) or "Não informado")
+            .replace("{{interprete_email}}",       buyer.get("email") or "Não informado")
+            .replace("{{interprete_endereco}}",    _endereco(buyer))
+            .replace("{{interprete_cidade_uf}}",   _cidade_uf(buyer))
+            .replace("{{obra_nome}}",              obra.get("nome", "—"))
+            .replace("{{obra_letra}}",             (obra.get("letra") or "").strip() or "—")
+            .replace("{{valor_buyout_extenso}}",   _moeda(valor_cents))
+            .replace("{{split_lista}}",            split_lista)
+            .replace("{{clausula_split_editora}}", clausula_split_editora)
+            .replace("{{data_emissao}}",           datetime.utcnow().strftime("%d/%m/%Y às %H:%M UTC"))
+        )
+        tipo = "trilateral"
+    else:
+        conteudo = (TEMPLATE_LICENCIAMENTO
+            .replace("{{autores_bloco}}",            autores_bloco)
+            .replace("{{interprete_nome}}",          buyer.get("nome_completo") or buyer.get("nome") or "—")
+            .replace("{{interprete_cpf}}",           _decrypt(buyer.get("cpf","")) or "Não informado")
+            .replace("{{interprete_endereco}}",      _endereco(buyer))
+            .replace("{{interprete_cidade_uf}}",     _cidade_uf(buyer))
+            .replace("{{obra_nome}}",                obra.get("nome","—"))
+            .replace("{{obra_letra}}",               (obra.get("letra") or "").strip() or "—")
+            .replace("{{valor_buyout_extenso}}",     _moeda(valor_cents))
+            .replace("{{autores_nomes_artisticos}}", nomes_art)
+            .replace("{{isrc}}",                     obra.get("isrc") or "a definir após lançamento")
+            .replace("{{iswc}}",                     obra.get("iswc") or "a definir após lançamento")
+            .replace("{{split_lista}}",              split_lista)
+            .replace("{{data_emissao}}",             datetime.utcnow().strftime("%d/%m/%Y às %H:%M UTC"))
+        )
+        tipo = "bilateral"
+
+    # Hash provisório do preview (o final será recalculado na geração real)
+    h = hashlib.sha256(conteudo.encode("utf-8")).hexdigest()
+    conteudo = conteudo.replace("{{conteudo_hash}}", f"{h} (preview — recalculado quando todas as partes assinarem)")
+    return jsonify({"tipo": tipo, "conteudo": conteudo, "valor_cents": valor_cents}), 200
+
+
+@contratos_lic_bp.route("/preview-oferta/<token>", methods=["GET"])
+def preview_oferta(token):
+    """Pré-visualização do contrato TRILATERAL (autor + editora-terceira + Gravan
+    + intérprete) gerado a partir de uma OFERTA com terceira editora. Usado na
+    página /editora/aceitar-oferta/<token> antes da editora aceitar."""
+    sb = get_supabase()
+    of = sb.table("ofertas_licenciamento").select("*").eq("registration_token", token).maybe_single().execute()
+    of = (of.data if of else None)
+    if not of:
+        abort(404, description="Oferta não encontrada ou link expirado.")
+
+    obra = sb.table("obras").select("*").eq("id", of["obra_id"]).maybe_single().execute()
+    obra = (obra.data if obra else None)
+    if not obra:
+        abort(404, description="Obra não encontrada.")
+    titular = sb.table("perfis").select("*").eq("id", obra["titular_id"]).maybe_single().execute()
+    titular = (titular.data if titular else None) or {}
+    buyer = sb.table("perfis").select("*").eq("id", of["comprador_id"]).maybe_single().execute()
+    buyer = (buyer.data if buyer else None) or {}
+
+    # Editora terceira: pode já existir no perfil ou ainda estar só na oferta
+    editora = {}
+    if of.get("editora_terceira_id"):
+        e = sb.table("perfis").select("*").eq("id", of["editora_terceira_id"]).maybe_single().execute()
+        editora = (e.data if e else None) or {}
+
+    autores_bloco, split_lista, _ = _build_autores_e_split(sb, obra, titular)
+
+    cnpj_dec = _decrypt(editora.get("cnpj", "")) if editora else ""
+    editora_endereco = ", ".join(filter(None, [
+        editora.get("endereco_rua"), editora.get("endereco_numero"),
+        editora.get("endereco_compl"), editora.get("endereco_bairro"),
+        editora.get("endereco_cidade"), editora.get("endereco_uf"),
+    ])) if editora else ""
+
+    conteudo = (TEMPLATE_TRILATERAL
+        .replace("{{autores_bloco}}",          autores_bloco)
+        .replace("{{editora_razao}}",          editora.get("razao_social") or of.get("editora_terceira_nome") or "(razão social da sua editora)")
+        .replace("{{editora_cnpj}}",           cnpj_dec or "(CNPJ a confirmar no cadastro)")
+        .replace("{{editora_responsavel}}",    editora.get("responsavel_nome") or "(responsável legal a confirmar)")
+        .replace("{{editora_email}}",          editora.get("email") or of.get("editora_terceira_email") or "(e-mail da editora)")
+        .replace("{{editora_endereco}}",       editora_endereco or "(endereço a confirmar no cadastro)")
+        .replace("{{interprete_nome}}",        buyer.get("nome_completo") or buyer.get("nome") or "—")
+        .replace("{{interprete_nome_artistico}}", buyer.get("nome_artistico") or "Não informado")
+        .replace("{{interprete_cpf}}",         _decrypt(buyer.get("cpf","")) or "Não informado")
+        .replace("{{interprete_rg}}",          _decrypt(buyer.get("rg","")) or "Não informado")
+        .replace("{{interprete_email}}",       buyer.get("email") or "Não informado")
+        .replace("{{interprete_endereco}}",    _endereco(buyer))
+        .replace("{{interprete_cidade_uf}}",   _cidade_uf(buyer))
+        .replace("{{obra_nome}}",              obra.get("nome", "—"))
+        .replace("{{obra_letra}}",             (obra.get("letra") or "").strip() or "—")
+        .replace("{{valor_buyout_extenso}}",   _moeda(of.get("valor_cents") or 0))
+        .replace("{{split_lista}}",            split_lista)
+        .replace("{{clausula_split_editora}}", "")
+        .replace("{{data_emissao}}",           datetime.utcnow().strftime("%d/%m/%Y às %H:%M UTC"))
+    )
+    h = hashlib.sha256(conteudo.encode("utf-8")).hexdigest()
+    conteudo = conteudo.replace("{{conteudo_hash}}", f"{h} (preview — recalculado quando todas as partes assinarem)")
+    return jsonify({"tipo": "trilateral", "conteudo": conteudo}), 200
 
 
 @contratos_lic_bp.route("", methods=["GET"])
