@@ -435,9 +435,45 @@ def liberar_pendentes(limite: int = 25) -> dict:
     return {"processados": len(a_processar), "pagos": pagos, "falhas": falhas}
 
 
+def _buscar_charge_id_da_transacao(sb, transacao_id: str) -> Optional[str]:
+    """
+    Busca o ID da Charge Stripe (ch_xxx) vinculada a uma transação.
+    Necessário para `source_transaction` em Transfers com Connect Brasil.
+    """
+    if not transacao_id:
+        return None
+    t = sb.table("transacoes").select("stripe_payment_intent") \
+        .eq("id", transacao_id).maybe_single().execute()
+    pi_id = ((t.data if t else None) or {}).get("stripe_payment_intent")
+    if not pi_id:
+        return None
+    try:
+        pi = stripe.PaymentIntent.retrieve(pi_id, expand=["latest_charge"])
+        ch = pi.get("latest_charge")
+        if isinstance(ch, dict):
+            return ch.get("id")
+        return ch  # já é string
+    except Exception as e:
+        log.warning("Falha ao buscar charge do PI %s: %s", pi_id, e)
+        return None
+
+
 def _processar_um_saque(sb, saque: dict) -> None:
+    """
+    Libera um saque criando UMA Stripe Transfer por charge de origem,
+    cada uma com `source_transaction=ch_xxx` (obrigatório no Brasil).
+
+    Estratégia:
+      1. Busca pagamentos_compositores pendentes do perfil em FIFO.
+      2. Para cada um, garante o `stripe_charge_id` (lazy lookup do PI).
+      3. Cria 1 Transfer por charge, consumindo até bater valor_cents.
+         O último pagamento pode ser parcialmente sacado (split).
+      4. Em caso de erro Stripe no meio, reverte os Transfers já feitos.
+      5. Marca os pagamentos como 'pago' e debita a wallet.
+    """
     perfil_id   = saque["perfil_id"]
     valor_cents = int(saque["valor_cents"])
+    saque_id    = saque["id"]
     acc_id      = saque.get("stripe_account_id")
     if not acc_id:
         raise RuntimeError("Conta Stripe não vinculada no saque.")
@@ -447,34 +483,136 @@ def _processar_um_saque(sb, saque: dict) -> None:
     if saldo < valor_cents:
         raise RuntimeError(f"Saldo insuficiente no momento da liberação ({_fmt_brl(saldo)}).")
 
-    # Cria Transfer (idempotente pelo saque_id)
-    tr = stripe.Transfer.create(
-        amount=valor_cents,
-        currency="brl",
-        destination=acc_id,
-        metadata={"saque_id": str(saque["id"]), "perfil_id": str(perfil_id)},
-        idempotency_key=f"saque_{saque['id']}",
-    )
+    # ── 1) Busca pagamentos pendentes em FIFO ──
+    pend_q = (sb.table("pagamentos_compositores")
+              .select("id, valor_cents, transacao_id, stripe_charge_id, "
+                      "coautoria_id, share_pct, perfil_id")
+              .eq("perfil_id", perfil_id)
+              .eq("status", "pendente")
+              .is_("saque_id", "null")
+              .order("created_at", desc=False)
+              .execute())
+    pendentes = pend_q.data or []
+    soma_disp = sum(int(p["valor_cents"] or 0) for p in pendentes)
+    if soma_disp < valor_cents:
+        raise RuntimeError(
+            f"Pagamentos rastreáveis insuficientes ({_fmt_brl(soma_disp)} de "
+            f"{_fmt_brl(valor_cents)} pedidos). Há saldo legado sem origem "
+            f"vinculada — só é possível sacar valores até esse limite."
+        )
 
-    # Debita wallet
+    # ── 2) Garante charge_id em cada pagamento ──
+    for p in pendentes:
+        if not p.get("stripe_charge_id"):
+            ch_id = _buscar_charge_id_da_transacao(sb, p["transacao_id"])
+            if ch_id:
+                sb.table("pagamentos_compositores").update({
+                    "stripe_charge_id": ch_id,
+                }).eq("id", p["id"]).execute()
+                p["stripe_charge_id"] = ch_id
+
+    # ── 3) Cria Transfers por charge ──
+    restante = valor_cents
+    transfers_criados: list = []         # [(tr_id, pag_id, consumido, original)]
+    for p in pendentes:
+        if restante <= 0:
+            break
+        if not p.get("stripe_charge_id"):
+            # Reverte o que já foi feito antes de abortar
+            _reverter_transfers(transfers_criados)
+            raise RuntimeError(
+                f"Pagamento {p['id']} (transação {p['transacao_id']}) sem "
+                f"charge Stripe vinculada. Não é possível sacar o valor pedido."
+            )
+        original   = int(p["valor_cents"])
+        consumir   = min(original, restante)
+        try:
+            tr = stripe.Transfer.create(
+                amount=consumir,
+                currency="brl",
+                destination=acc_id,
+                source_transaction=p["stripe_charge_id"],
+                metadata={
+                    "saque_id":     str(saque_id),
+                    "pagamento_id": str(p["id"]),
+                    "perfil_id":    str(perfil_id),
+                },
+                idempotency_key=f"saque_{saque_id}_pag_{p['id']}",
+            )
+        except stripe.StripeError as e:
+            log.error("Stripe Transfer falhou no pag %s: %s", p["id"], e)
+            _reverter_transfers(transfers_criados)
+            raise RuntimeError(
+                f"Stripe rejeitou Transfer do pagamento {p['id']}: "
+                f"{getattr(e, 'user_message', None) or str(e)}"
+            )
+        transfers_criados.append((tr.id, p["id"], consumir, original, p))
+        restante -= consumir
+
+    # ── 4) Atualiza pagamentos (consumo total ou parcial) ──
+    agora_iso = _now().isoformat()
+    for tr_id, pag_id, consumido, original, orig_row in transfers_criados:
+        if consumido >= original:
+            # Pagamento totalmente sacado
+            sb.table("pagamentos_compositores").update({
+                "saque_id":            saque_id,
+                "status":              "pago",
+                "stripe_transfer_id":  tr_id,
+                "liberado_em":         agora_iso,
+            }).eq("id", pag_id).execute()
+        else:
+            # Parcial: encolhe o original (continua pendente) e cria filho 'pago'
+            sb.table("pagamentos_compositores").update({
+                "valor_cents": original - consumido,
+            }).eq("id", pag_id).execute()
+            sb.table("pagamentos_compositores").insert({
+                "perfil_id":          orig_row["perfil_id"],
+                "transacao_id":       orig_row["transacao_id"],
+                "coautoria_id":       orig_row.get("coautoria_id"),
+                "share_pct":          orig_row.get("share_pct"),
+                "valor_cents":        consumido,
+                "status":             "pago",
+                "saque_id":           saque_id,
+                "stripe_transfer_id": tr_id,
+                "stripe_charge_id":   orig_row.get("stripe_charge_id"),
+                "liberado_em":        agora_iso,
+            }).execute()
+
+    # ── 5) Debita wallet + finaliza saque ──
     novo_saldo = saldo - valor_cents
     sb.table("wallets").upsert({
         "perfil_id": perfil_id, "saldo_cents": novo_saldo,
     }).execute()
 
+    primary_tr = transfers_criados[0][0] if transfers_criados else None
     sb.table("saques").update({
         "status":             "pago",
-        "stripe_transfer_id": tr.id,
-    }).eq("id", saque["id"]).execute()
+        "stripe_transfer_id": primary_tr,
+        "processed_at":       agora_iso,
+    }).eq("id", saque_id).execute()
 
-    # E-mail
+    # E-mail de confirmação
     perfil = sb.table("perfis").select("email, nome, nome_artistico") \
         .eq("id", perfil_id).maybe_single().execute().data or {}
-    html, text = render_saque_pago_email(
-        nome=perfil.get("nome_artistico") or perfil.get("nome") or "",
-        valor_brl=_fmt_brl(valor_cents), transfer_id=tr.id,
-    )
-    send_email(perfil.get("email", ""), "Gravan — Saque enviado ✓", html, text)
+    try:
+        html, text = render_saque_pago_email(
+            nome=perfil.get("nome_artistico") or perfil.get("nome") or "",
+            valor_brl=_fmt_brl(valor_cents),
+            transfer_id=primary_tr or "(múltiplos)",
+        )
+        send_email(perfil.get("email", ""), "Gravan — Saque enviado ✓", html, text)
+    except Exception as e:
+        log.warning("E-mail de saque pago falhou: %s", e)
+
+
+def _reverter_transfers(criados: list) -> None:
+    """Best-effort: reverte Transfers já criados quando há erro no meio."""
+    for item in criados:
+        tr_id = item[0]
+        try:
+            stripe.Transfer.create_reversal(tr_id, metadata={"motivo": "rollback_saque"})
+        except Exception as e:
+            log.error("Falha ao reverter transfer %s: %s", tr_id, e)
 
 
 # ────────── (5) Auto-criação no último dia útil ──────────

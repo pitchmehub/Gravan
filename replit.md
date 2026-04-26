@@ -3,6 +3,23 @@
 ## Visão Geral
 Plataforma premium que conecta compositores e compradores de obras musicais com pagamentos via Stripe (PayPal removido em abr/2026), autenticação via Supabase, e transcrição de áudio com faster-whisper.
 
+### Saques (Stripe Connect Brasil — atualizado abr/2026)
+- A Stripe Brasil **exige** `source_transaction=ch_xxx` em toda Transfer
+  Connect. Por isso, cada saque agora consome 1+ registros da tabela
+  `pagamentos_compositores` em FIFO e cria **uma Transfer por charge**,
+  cada uma vinculada à charge de origem.
+- Migração obrigatória antes de usar: `backend/db/migration_saques_source_transaction.sql`
+  (adiciona `saque_id`, `stripe_charge_id`, `liberado_em` em
+  `pagamentos_compositores` + 2 índices). É idempotente.
+- Implementação: `backend/services/saque_security.py::_processar_um_saque`.
+  Em caso de erro Stripe no meio, todos os Transfers já criados são
+  revertidos automaticamente (`Transfer.create_reversal`).
+- O último pagamento pode ser parcialmente sacado (split): o registro
+  original é encolhido (continua pendente) e um filho com `status='pago'`
+  é criado pra rastrear o que foi pro saque.
+- Rate-limit Stripe: idempotency_key por par saque/pagamento
+  (`saque_{id}_pag_{pag_id}`).
+
 ### Modelo Comercial (atualizado abr/2026)
 - **Planos de compositor:** apenas duas categorias — **Free (STARTER)** e **PRO**.
   O sistema antigo de "níveis" (prata / ouro / diamante) foi removido.
