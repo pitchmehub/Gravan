@@ -299,7 +299,6 @@
   .mobile-bottom-item:active { transform: scale(.96); }
   .mobile-bottom-item.active {
     color: var(--brand);
-    background: var(--brand-light);
   }
   .mobile-bottom-item.active .mobile-bottom-icon {
     color: var(--brand);
