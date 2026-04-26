@@ -190,6 +190,9 @@ export default function Descoberta() {
  const [buscando, setBuscando] = useState(false)
  const [fichaObra, setFichaObra] = useState(null)
  const buscaTimer = useRef(null)
+ const buscaLogTimer = useRef(null)
+ const [buscaFocada, setBuscaFocada] = useState(false)
+ const [buscasRecentes, setBuscasRecentes] = useState([])
 
  useEffect(() => {
  async function load() {
@@ -290,6 +293,46 @@ export default function Descoberta() {
  return () => clearTimeout(buscaTimer.current)
  }, [busca])
 
+ // Registra a busca no histórico global após o usuário "parar de digitar"
+ // por ~1s, evitando inserir um registro a cada tecla.
+ useEffect(() => {
+ const q = busca.trim()
+ clearTimeout(buscaLogTimer.current)
+ if (q.length < 2) return
+ buscaLogTimer.current = setTimeout(async () => {
+ try {
+ await supabase.from('historico_buscas').insert({
+ perfil_id: perfil?.id ?? null,
+ query: q.slice(0, 120),
+ })
+ } catch (_) { /* silencioso — log de busca não pode quebrar a UI */ }
+ }, 1200)
+ return () => clearTimeout(buscaLogTimer.current)
+ }, [busca, perfil?.id])
+
+ // Carrega as últimas buscas (de todos os perfis) quando o input recebe foco
+ // pela primeira vez. As buscas ficam em cache na sessão do componente.
+ async function carregarBuscasRecentes() {
+ if (buscasRecentes.length > 0) return
+ try {
+ const { data } = await supabase
+ .from('historico_buscas')
+ .select('query, criada_em')
+ .order('criada_em', { ascending: false })
+ .limit(40)
+ const vistos = new Set()
+ const distintas = []
+ for (const r of (data ?? [])) {
+ const k = r.query.trim().toLowerCase()
+ if (!k || vistos.has(k)) continue
+ vistos.add(k)
+ distintas.push(r.query.trim())
+ if (distintas.length >= 8) break
+ }
+ setBuscasRecentes(distintas)
+ } catch (_) { /* silencioso */ }
+ }
+
  async function selecionarCompositor(comp) {
  if (!comp?.id) return
  navigate(`/perfil/${comp.id}`)
@@ -384,11 +427,44 @@ export default function Descoberta() {
  <NotificationBell />
  </div>
  </div>
- <div className="dc-search-wrap">
+ <div className="dc-search-wrap" style={{ position: 'relative' }}>
  <span className="dc-search-icon">⌕</span>
  <input className="dc-search" placeholder="Buscar obras, compositores ou editoras…"
- value={busca} onChange={e => setBusca(e.target.value)} />
+ value={busca}
+ onChange={e => setBusca(e.target.value)}
+ onFocus={() => { setBuscaFocada(true); carregarBuscasRecentes() }}
+ onBlur={() => { setTimeout(() => setBuscaFocada(false), 150) }} />
  {busca && <button className="dc-search-clear" onClick={() => { setBusca(''); setResultados({ obras: [], compositores: [], editoras: [] }) }}>×</button>}
+
+ {buscaFocada && !busca && buscasRecentes.length > 0 && (
+ <div style={{
+ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0,
+ background: '#FFFFFF', border: '1px solid #E4E4E7', borderRadius: 12,
+ boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '8px 0',
+ zIndex: 50, maxHeight: 320, overflowY: 'auto',
+ }}>
+ <div style={{
+ padding: '6px 14px 8px', fontSize: 11, fontWeight: 700,
+ letterSpacing: 0.5, color: '#71717A', textTransform: 'uppercase',
+ }}>
+ Últimas buscas
+ </div>
+ {buscasRecentes.map((q, i) => (
+ <button key={i}
+ onMouseDown={(e) => { e.preventDefault(); setBusca(q) }}
+ style={{
+ display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+ padding: '8px 14px', background: 'transparent', border: 'none',
+ textAlign: 'left', cursor: 'pointer', fontSize: 14, color: '#09090B',
+ }}
+ onMouseEnter={(e) => e.currentTarget.style.background = '#FAFAFA'}
+ onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+ <span style={{ color: '#A1A1AA', fontSize: 14 }}>⌕</span>
+ <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q}</span>
+ </button>
+ ))}
+ </div>
+ )}
  </div>
  </div>
 

@@ -53,6 +53,7 @@ const NAV_ITEMS = {
  { to: '/obras/nova', Icon: IconPlus, label: 'Nova obra' },
  { to: '/obras', Icon: IconMusic, label: 'Obras' },
  { to: '/contratos', Icon: IconDocument, label: 'Contratos' },
+ { to: '/saques', Icon: IconWallet, label: 'Saques' },
  { to: '/notificacoes', Icon: IconBell, label: 'Notificações' },
  { to: '/descoberta', Icon: IconCompass, label: 'Descoberta' },
  ],

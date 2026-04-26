@@ -148,8 +148,8 @@ function AppRoutes() {
 
       <Route path="/descoberta"    element={<PrivateRoute><AppShell><Descoberta /></AppShell></PrivateRoute>} />
       <Route path="/dashboard"     element={<PrivateRoute><AppShell><Dashboard /></AppShell></PrivateRoute>} />
-      <Route path="/obras"         element={<PrivateRoute roles={['compositor','administrador']}><AppShell><MinhasObras /></AppShell></PrivateRoute>} />
-      <Route path="/obras/nova"    element={<PrivateRoute roles={['compositor','administrador']}><AppShell><NovaObra /></AppShell></PrivateRoute>} />
+      <Route path="/obras"         element={<PrivateRoute roles={['compositor','administrador','publisher']}><AppShell><MinhasObras /></AppShell></PrivateRoute>} />
+      <Route path="/obras/nova"    element={<PrivateRoute roles={['compositor','administrador','publisher']}><AppShell><NovaObra /></AppShell></PrivateRoute>} />
       <Route path="/contratos"     element={<PrivateRoute><AppShell><MeusContratos /></AppShell></PrivateRoute>} />
       <Route path="/contratos/licenciamento/:id" element={<PrivateRoute><AppShell><ContratoLicenciamentoDetalhe /></AppShell></PrivateRoute>} />
       <Route path="/biblioteca"    element={<PrivateRoute><AppShell><Biblioteca /></AppShell></PrivateRoute>} />
@@ -157,7 +157,7 @@ function AppRoutes() {
       <Route path="/planos"        element={<PrivateRoute><AppShell><Planos /></AppShell></PrivateRoute>} />
       <Route path="/assinatura/sucesso" element={<PrivateRoute><AppShell><AssinaturaSucesso /></AppShell></PrivateRoute>} />
       <Route path="/saques/cancelar" element={<CancelarSaque />} />
-              <Route path="/saques"        element={<PrivateRoute roles={['compositor','administrador']}><AppShell><Saques /></AppShell></PrivateRoute>} />
+              <Route path="/saques"        element={<PrivateRoute roles={['compositor','administrador','publisher']}><AppShell><Saques /></AppShell></PrivateRoute>} />
       <Route path="/connect"           element={<PrivateRoute><AppShell><ConnectOnboarding /></AppShell></PrivateRoute>} />
       <Route path="/connect/sucesso"   element={<PrivateRoute><AppShell><ConnectOnboarding /></AppShell></PrivateRoute>} />
       <Route path="/connect/refresh"   element={<PrivateRoute><AppShell><ConnectOnboarding /></AppShell></PrivateRoute>} />
