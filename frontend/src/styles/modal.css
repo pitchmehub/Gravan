@@ -34,12 +34,30 @@
   box-shadow:
     0 30px 80px rgba(0, 0, 0, 0.30),
     inset 0 1px 0 rgba(255, 255, 255, 0.60);
-  animation: gvModalPop .22s cubic-bezier(.2,.9,.3,1.2);
+  animation: gvModalPop .22s ease-out;
   overflow: hidden;
+  /* Evita distorção sub-pixel do texto durante a animação de entrada */
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transform: translateZ(0);
 }
 @keyframes gvModalPop {
-  from { opacity: 0; transform: scale(.94) translateY(12px); }
-  to   { opacity: 1; transform: scale(1)   translateY(0); }
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* Garante que botões dentro do modal nunca sobreponham letras */
+.gv-modal-box .btn,
+.gv-modal-box .gv-btn-primary,
+.gv-modal-box .gv-btn-ghost,
+.gv-modal-box .gv-btn-danger,
+.gv-modal-box button {
+  -webkit-font-smoothing: antialiased;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 /* ── Scrollbar interna ── */

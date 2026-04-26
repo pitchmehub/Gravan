@@ -47,6 +47,23 @@ def listar():
     }), 200
 
 
+@notificacoes_bp.route("/<nid>", methods=["GET"])
+@require_auth
+def obter(nid):
+    """Retorna uma única notificação do usuário logado (404 se não for dele)."""
+    sb = get_supabase()
+    r = (sb.table("notificacoes")
+         .select("*")
+         .eq("id", nid)
+         .eq("perfil_id", _user_id())
+         .limit(1)
+         .execute())
+    items = r.data or []
+    if not items:
+        return jsonify({"error": "not_found"}), 404
+    return jsonify(items[0]), 200
+
+
 @notificacoes_bp.route("/nao-lidas", methods=["GET"])
 @require_auth
 def contar_nao_lidas():

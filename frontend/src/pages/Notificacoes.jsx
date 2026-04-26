@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../lib/api'
 import NotificationDetailModal from '../components/NotificationDetailModal'
@@ -48,6 +49,8 @@ const PAGE_SIZE = 20
 
 export default function Notificacoes() {
   const { perfil } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [items, setItems]     = useState([])
   const [total, setTotal]     = useState(0)
   const [hasMore, setHasMore] = useState(false)
@@ -82,6 +85,32 @@ export default function Notificacoes() {
 
   // Carrega na primeira vez e quando muda o filtro de não-lidas
   useEffect(() => { carregar(true) /* eslint-disable-next-line */ }, [naoLidasOnly])
+
+  // Abre o modal automaticamente quando vier `?abrir=<id>` na URL
+  // (usado pelas push notifications e por links externos)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const abrirId = params.get('abrir')
+    if (!abrirId) return
+    let cancelado = false
+    ;(async () => {
+      try {
+        const n = await api.get(`/notificacoes/${abrirId}`)
+        if (cancelado || !n) return
+        if (!n.lida) {
+          try { await api.patch(`/notificacoes/${abrirId}/marcar-lida`) } catch (_) {}
+        }
+        setSelecionada({ ...n, lida: true })
+        // remove o param da URL para não reabrir ao recarregar a tela
+        navigate('/notificacoes', { replace: true })
+        carregar(true)
+      } catch (_) {
+        navigate('/notificacoes', { replace: true })
+      }
+    })()
+    return () => { cancelado = true }
+    // eslint-disable-next-line
+  }, [location.search])
 
   // Atualiza push status
   useEffect(() => {

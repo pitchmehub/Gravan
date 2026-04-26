@@ -35,7 +35,9 @@ function detalhePadrao(n, navigate) {
   const ir = (path) => () => navigate(path || n.link || '/dashboard')
 
   switch (n.tipo) {
-    case 'obra_cadastrada':
+    case 'obra_cadastrada': {
+      const obraId = n.payload?.obra_id
+      const linkDescoberta = obraId ? `/descoberta?obraId=${obraId}` : '/descoberta'
       return {
         lead: 'Sua obra foi cadastrada com sucesso e está disponível na sua biblioteca. A partir de agora ela pode receber ofertas e entrar em contratos.',
         dicas: [
@@ -44,9 +46,10 @@ function detalhePadrao(n, navigate) {
         ],
         acoes: [
           { label: 'Ver obra',            kind: 'primary', onClick: ir(n.link || '/obras') },
-          { label: 'Ir para a Descoberta', kind: 'ghost',  onClick: ir('/descoberta') },
+          { label: 'Ir para a Descoberta', kind: 'ghost',  onClick: ir(linkDescoberta) },
         ],
       }
+    }
     case 'contrato_gerado':
       return {
         lead: 'Um novo contrato foi gerado e está aguardando sua assinatura. Sem sua assinatura, ele não passa para a próxima etapa.',

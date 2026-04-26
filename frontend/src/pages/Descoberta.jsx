@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { usePlayer } from '../contexts/PlayerContext'
 import BotaoCurtir from '../components/BotaoCurtir'
@@ -158,6 +158,7 @@ export default function Descoberta() {
 
  const { perfil } = useAuth()
  const navigate = useNavigate()
+ const location = useLocation()
  const { playObra, expandPlayer, setMinimized, obra: obraAtual, playing, togglePlay, nextTrack, prevTrack } = usePlayer()
 
  // Swipe esquerda/direita na tela → próxima/anterior
@@ -205,6 +206,34 @@ export default function Descoberta() {
  }
  load()
  }, [generoFiltro])
+
+ // Quando vier `?obraId=<id>` (ex.: clique numa notificação),
+ // busca a obra e abre a Ficha Técnica automaticamente.
+ useEffect(() => {
+   const params = new URLSearchParams(location.search)
+   const obraId = params.get('obraId')
+   if (!obraId) return
+   let cancelado = false
+   ;(async () => {
+     try {
+       const obra = await api.get(`/catalogo/${obraId}`)
+       if (cancelado || !obra) return
+       const titularNome =
+         obra.titular_nome ||
+         obra.perfis?.nome_artistico ||
+         obra.perfis?.nome ||
+         ''
+       setFichaObra({ ...obra, titular_nome: titularNome })
+     } catch (e) {
+       console.warn('Não foi possível abrir a obra da notificação:', e)
+     } finally {
+       // limpa o param para não reabrir ao navegar
+       navigate('/descoberta', { replace: true })
+     }
+   })()
+   return () => { cancelado = true }
+   // eslint-disable-next-line
+ }, [location.search])
 
  useEffect(() => {
  if (aba !== 'biblioteca' || !perfil?.id) return

@@ -35,11 +35,29 @@
   display: flex;
   flex-direction: column;
   color: var(--text-primary, #2C2C2A);
-  animation: ndmPop .22s cubic-bezier(.2,.9,.3,1.1);
+  animation: ndmPop .22s ease-out;
+  /* Evita distorção sub-pixel do texto durante a animação */
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transform: translateZ(0);
 }
 @keyframes ndmPop {
-  from { opacity: 0; transform: scale(.95) translateY(14px); }
-  to   { opacity: 1; transform: scale(1)   translateY(0); }
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* Botões dentro deste modal — evita sobreposição de letras na entrada */
+.ndm-box .btn,
+.ndm-box .ndm-btn-primary,
+.ndm-box .ndm-btn-ghost,
+.ndm-box .ndm-btn-danger,
+.ndm-box button {
+  -webkit-font-smoothing: antialiased;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 /* Scrollbar dentro do modal */
