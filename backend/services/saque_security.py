@@ -50,9 +50,8 @@ log = logging.getLogger("gravan.saque")
 OTP_VALIDADE_MIN          = 10
 OTP_MAX_TENTATIVAS        = 5
 JANELA_LIBERACAO_HORAS    = int(os.environ.get("SAQUE_JANELA_HORAS", "24"))
-LIMITE_DIARIO_CENTS       = int(os.environ.get("SAQUE_LIMITE_DIARIO_CENTS", str(500_000)))  # R$5.000
-LIMITE_PENDENTES_USUARIO  = int(os.environ.get("SAQUE_MAX_PENDENTES", "3"))
-VALOR_MIN_CENTS           = 1000
+# Sem limites por valor/quantidade — o único requisito é ter saldo disponível.
+VALOR_MIN_CENTS           = 1  # qualquer valor positivo é aceito
 
 
 # ────────── Helpers de hash com pepper ──────────
@@ -169,28 +168,7 @@ def iniciar_saque(
     sb = get_supabase()
 
     if not isinstance(valor_cents, int) or valor_cents < VALOR_MIN_CENTS:
-        raise ValueError(f"Valor mínimo: R$ {VALOR_MIN_CENTS/100:.2f}")
-
-    # ── Janela mensal (só pra saques manuais) ──
-    if not auto:
-        info = janela_atual()
-        if not info["aberta"]:
-            if info["dias_ate_abrir"] > 0:
-                raise ValueError(
-                    f"Saques só ficam disponíveis a partir do dia "
-                    f"{info['dia_inicio_config']} de cada mês. "
-                    f"Próxima janela abre em {info['dias_ate_abrir']} dia(s)."
-                )
-            raise ValueError(
-                f"A janela deste mês já fechou. Próxima janela: "
-                f"{info['proxima_inicio']} a {info['proxima_fim']}."
-            )
-        if _ja_sacou_este_mes(sb, perfil_id):
-            raise ValueError(
-                "Você já realizou um saque este mês. O próximo saque ficará "
-                "disponível a partir do dia "
-                f"{janela_atual()['dia_inicio_config']} do próximo mês."
-            )
+        raise ValueError("Informe um valor válido para sacar.")
 
     perfil = _validar_perfil_pode_sacar(sb, perfil_id)
 
@@ -203,25 +181,8 @@ def iniciar_saque(
             f"({_fmt_brl(reservado)} já reservado em saques em andamento)."
         )
 
-    # Limite diário
-    sacado24 = _sacado_ultimas_24h(sb, perfil_id)
-    if sacado24 + valor_cents > LIMITE_DIARIO_CENTS:
-        restante = max(0, LIMITE_DIARIO_CENTS - sacado24)
-        raise ValueError(
-            f"Limite diário de saque ({_fmt_brl(LIMITE_DIARIO_CENTS)}) atingido. "
-            f"Disponível hoje: {_fmt_brl(restante)}."
-        )
-
-    # Limite de pendentes simultâneos
-    n_pendentes = sum(
-        1 for s in (sb.table("saques").select("status").eq("perfil_id", perfil_id).execute().data or [])
-        if s.get("status") in ("pendente_otp", "aguardando_liberacao")
-    )
-    if n_pendentes >= LIMITE_PENDENTES_USUARIO:
-        raise ValueError(
-            f"Você já tem {n_pendentes} saques aguardando confirmação ou liberação. "
-            f"Aguarde concluí-los."
-        )
+    # Sem limites de quantidade, valor diário ou janela mensal —
+    # o usuário pode fazer quantos saques quiser desde que tenha saldo.
 
     # Gera OTP de 6 dígitos
     codigo = f"{secrets.randbelow(1_000_000):06d}"

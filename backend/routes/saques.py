@@ -51,7 +51,6 @@ def _frontend_origin() -> str:
 # ──────────────────────────────────────────────────────────
 @saques_bp.route("/iniciar", methods=["POST"])
 @require_auth
-@limiter.limit("5 per hour")
 def iniciar():
     data = request.get_json(silent=True) or {}
     try:
@@ -82,7 +81,6 @@ def iniciar():
 # ──────────────────────────────────────────────────────────
 @saques_bp.route("/<saque_id>/confirmar", methods=["POST"])
 @require_auth
-@limiter.limit("10 per hour")
 def confirmar(saque_id):
     data = request.get_json(silent=True) or {}
     codigo = (data.get("codigo") or "").strip()
@@ -131,7 +129,6 @@ def confirmar(saque_id):
 # ──────────────────────────────────────────────────────────
 @saques_bp.route("/<saque_id>/reenviar-otp", methods=["POST"])
 @require_auth
-@limiter.limit("3 per hour")
 def reenviar(saque_id):
     """Cancela o saque atual e cria um novo com mesmo valor — gera novo OTP."""
     from db.supabase_client import get_supabase
@@ -167,7 +164,6 @@ def reenviar(saque_id):
 # ──────────────────────────────────────────────────────────
 @saques_bp.route("/<saque_id>/cancelar", methods=["POST"])
 @require_auth
-@limiter.limit("20 per hour")
 def cancelar_app(saque_id):
     data = request.get_json(silent=True) or {}
     motivo = (data.get("motivo") or "")[:300]
@@ -198,7 +194,6 @@ def cancelar_app(saque_id):
 # 5. Cancelamento via link público "Não fui eu"
 # ──────────────────────────────────────────────────────────
 @saques_bp.route("/cancelar-por-token", methods=["POST"])
-@limiter.limit("30 per hour")
 def cancelar_token():
     data = request.get_json(silent=True) or {}
     token  = (data.get("token") or "").strip()
@@ -247,11 +242,11 @@ def processar_pendentes():
 @saques_bp.route("/janela", methods=["GET"])
 @require_auth
 def janela():
-    """Retorna o status da janela mensal e se o usuário já sacou este mês."""
+    """Saques estão sempre disponíveis — sem janela mensal nem limite de quantidade."""
     info = janela_atual()
-    sb = get_supabase()
-    info["ja_sacou_este_mes"] = _ja_sacou_este_mes(sb, g.user.id)
-    info["pode_sacar_agora"] = info["aberta"] and not info["ja_sacou_este_mes"]
+    info["aberta"] = True
+    info["ja_sacou_este_mes"] = False
+    info["pode_sacar_agora"] = True
     return jsonify(info), 200
 
 

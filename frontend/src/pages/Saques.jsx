@@ -62,8 +62,9 @@ export default function Saques() {
  setErro(''); setSucesso(''); setEnviando(true)
  try {
  const valorNum = parseFloat((valor || '').replace(',', '.'))
- if (isNaN(valorNum) || valorNum < 10) throw new Error('Valor mínimo: R$ 10,00')
+ if (isNaN(valorNum) || valorNum <= 0) throw new Error('Informe um valor válido para sacar.')
  const valor_cents = Math.round(valorNum * 100)
+ if (valor_cents > disponivel) throw new Error(`Saldo disponível: ${fmt(disponivel)}.`)
  const r = await api.post('/saques/iniciar', { valor_cents })
  setOtpMeta({ ...r, valor_cents })
  setOtpOpen(true)
@@ -112,9 +113,7 @@ export default function Saques() {
  const disponivel = Math.max(0, saldo - reservado)
 
  const connectAtivo = connect?.charges_enabled
- const janelaAberta = janela?.aberta ?? true
- const jaSacouMes = janela?.ja_sacou_este_mes ?? false
- const podeSacar = connectAtivo && disponivel >= 1000 && janelaAberta && !jaSacouMes
+ const podeSacar = connectAtivo && disponivel > 0
 
  return (
  <div style={{ padding: 32, maxWidth: 880 }}>
@@ -169,29 +168,12 @@ export default function Saques() {
  </div>
  )}
 
- {janela && (
  <div style={{
  padding: 16, marginBottom: 16, borderRadius: 12, fontSize: 13,
- background: jaSacouMes ? '#F3F4F6' : (janelaAberta ? 'var(--success-bg)' : '#FEF3C7'),
- color: jaSacouMes ? '#6B7280' : (janelaAberta ? 'var(--success)' : '#92400E'),
- border: jaSacouMes ? '1px solid #E5E7EB' : 'none',
+ background: 'var(--success-bg)', color: 'var(--success)',
  }}>
- {jaSacouMes ? (
- <>
- <strong>✓ Você já solicitou seu saque deste mês.</strong><br/>
- A próxima janela abre em {new Date(janela.proxima_inicio).toLocaleDateString('pt-BR')} e fecha em {new Date(janela.proxima_fim).toLocaleDateString('pt-BR')}.
- </>
- ) : janelaAberta ? (
- <>
- <strong> Janela de saque aberta!</strong> Você pode solicitar seu saque até <strong>{new Date(janela.fim).toLocaleDateString('pt-BR')}</strong> ({janela.dias_ate_fechar} dia(s)). Se você não solicitar, faremos o saque automaticamente no último dia útil.
- </>
- ) : (
- <>
- <strong>⏳ Janela fechada.</strong> Saques são liberados a partir do dia {janela.dia_inicio_config} de cada mês. Próxima janela: <strong>{new Date(janela.proxima_inicio).toLocaleDateString('pt-BR')}</strong> a {new Date(janela.proxima_fim).toLocaleDateString('pt-BR')}.
- </>
- )}
+ <strong>✓ Saques liberados a qualquer momento.</strong> Você pode sacar quantas vezes quiser, com qualquer valor, desde que tenha saldo disponível.
  </div>
- )}
 
  <div className="card" style={{ marginBottom: 24 }}>
  <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Solicitar saque</h2>
@@ -210,13 +192,12 @@ export default function Saques() {
  disabled={!podeSacar}
  data-testid="saque-valor" />
  <small style={{ color: 'var(--text-muted)', fontSize: 12 }}>
- Mínimo: R$ 10,00 · Disponível: <strong>{fmt(disponivel)}</strong> ·
- Limite diário: R$ 5.000,00
+ Disponível: <strong>{fmt(disponivel)}</strong> · sem valor mínimo, sem limite por dia
  </small>
  </div>
 
  <div className="form-group" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
- {[10, 50, 100, disponivel/100].filter(v => v >= 10 && v <= disponivel/100).slice(0,4).map(v => (
+ {[10, 50, 100, disponivel/100].filter(v => v > 0 && v <= disponivel/100).slice(0,4).map(v => (
  <button key={v} type="button"
  className="btn btn-ghost" style={{ fontSize: 12, padding: '4px 10px' }}
  onClick={() => setValor(v.toFixed(2).replace('.', ','))}>
@@ -235,9 +216,7 @@ export default function Saques() {
  data-testid="saque-submit">
  {enviando ? 'Enviando código…'
  : !connectAtivo ? ' Conecte sua conta Stripe primeiro'
- : disponivel < 1000 ? ' Saldo disponível insuficiente (mín. R$ 10)'
- : jaSacouMes ? '✓ Você já sacou este mês'
- : !janelaAberta ? `⏳ Aguarde a abertura da janela (dia ${janela?.dia_inicio_config ?? 25})`
+ : disponivel <= 0 ? ' Sem saldo disponível para saque'
  : ' Enviar código de confirmação'}
  </button>
  </form>
