@@ -147,7 +147,7 @@ def criar_oferta(
                 "oferta_id": novo["id"],
             },
         )
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         sb.table("ofertas_licenciamento").update({
             "status": "cancelada",
             "cancelada_em": datetime.now(timezone.utc).isoformat(),
@@ -336,7 +336,7 @@ def on_contrato_concluido(contract_id: str) -> Optional[dict]:
     if pi_id:
         try:
             stripe.PaymentIntent.capture(pi_id)
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             log.error("Falha ao capturar PI %s: %s", pi_id, e)
             return of
 
@@ -439,7 +439,7 @@ def _expirar_oferta(of: dict) -> None:
                 stripe.PaymentIntent.cancel(pi_id)
             elif pi.status == "succeeded":
                 stripe.Refund.create(payment_intent=pi_id)
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             log.error("Erro Stripe ao expirar PI %s: %s", pi_id, e)
 
     sb.table("ofertas_licenciamento").update({

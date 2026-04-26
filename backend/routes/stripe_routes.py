@@ -166,7 +166,7 @@ def criar_checkout():
                 "oferta_tipo":  (oferta or {}).get("tipo", ""),
             },
         )
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         msg = e.user_message or str(e)
         abort(500, description=f"Erro Stripe: {msg}")
     except Exception as e:
@@ -260,7 +260,7 @@ def webhook():
         else:
             abort(500, description="Configuração de webhook inválida.")
             
-    except stripe.error.SignatureVerificationError as e:
+    except stripe.SignatureVerificationError as e:
         logger.error(f"Assinatura inválida: {e}")
         abort(400, description="Assinatura inválida do webhook.")
     except json.JSONDecodeError:
@@ -510,7 +510,7 @@ def verificar_sucesso(session_id):
 
     try:
         session = stripe.checkout.Session.retrieve(session_id)
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         abort(404, description=f"Sessão não encontrada: {str(e)}")
 
     sb = get_supabase()

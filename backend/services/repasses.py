@@ -237,7 +237,7 @@ def executar_saque_stripe(perfil_id: str, valor_cents: int) -> dict:
             metadata={"saque_id": str(saque_id), "perfil_id": str(perfil_id)},
             idempotency_key=f"saque_{saque_id}",
         )
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         sb.table("saques").update({
             "status":   "rejeitado",
             "metadata": {"erro": (e.user_message or str(e))[:500]},
@@ -365,7 +365,7 @@ def gerar_repasses_para_transacao(transacao_id: str) -> dict:
             repasse_row["enviado_at"] = "now()"
             sb.table("repasses").insert(repasse_row).execute()
             enviados += 1
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             repasse_row["status"]   = "falhou"
             repasse_row["erro_msg"] = (e.user_message or str(e))[:500]
             sb.table("repasses").insert(repasse_row).execute()
@@ -427,7 +427,7 @@ def liberar_repasses_retidos(perfil_id: str) -> dict:
                 "liberado_at":        "now()",
             }).eq("id", rep["id"]).execute()
             enviados += 1
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             sb.table("repasses").update({
                 "status":   "falhou",
                 "erro_msg": (e.user_message or str(e))[:500],
@@ -457,7 +457,7 @@ def reverter_repasses_de_transacao(transacao_id: str, motivo: str = "refund") ->
             )
             sb.table("repasses").update({"status": "revertido"}).eq("id", r["id"]).execute()
             revertidos += 1
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             logger.error("Falha ao reverter transfer %s: %s", r["stripe_transfer_id"], e)
 
     return {"status": "ok", "revertidos": revertidos}

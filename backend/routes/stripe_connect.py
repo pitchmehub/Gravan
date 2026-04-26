@@ -160,7 +160,7 @@ def criar_onboarding():
                 abort(500, description=_MIGRATION_HINT)
             _safe_update_perfil(perfil["id"], {"stripe_account_id": account_id})
             logger.info("Conta Connect criada: %s para perfil %s", account_id, perfil["id"])
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             logger.error("Falha ao criar conta Connect: %s", e)
             abort(500, description=f"Erro Stripe: {e.user_message or str(e)}")
 
@@ -171,7 +171,7 @@ def criar_onboarding():
             return_url=f"{FRONTEND_URL}/connect/sucesso",
             type="account_onboarding",
         )
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         abort(500, description=f"Erro ao gerar link: {e.user_message or str(e)}")
 
     return jsonify({"url": link.url, "account_id": account_id}), 200
@@ -197,7 +197,7 @@ def status_conta():
 
     try:
         acc = stripe.Account.retrieve(account_id)
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         logger.warning("Falha ao consultar Stripe Account %s: %s", account_id, e)
         return jsonify({
             "conectado": True,
@@ -242,7 +242,7 @@ def gerar_dashboard_link():
         abort(404, description="Você ainda não conectou sua conta Stripe.")
     try:
         link = stripe.Account.create_login_link(account_id)
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         abort(500, description=f"Erro Stripe: {e.user_message or str(e)}")
     return jsonify({"url": link.url}), 200
 
