@@ -1,5 +1,19 @@
 # Gravan — Marketplace de Obras Musicais
 
+### Assinatura PRO — Dunning automático (abr/2026)
+- Renovação mensal recorrente no Stripe (Subscriptions).
+- Em falha de cobrança (`invoice.payment_failed`), o perfil entra em
+  `status_assinatura='past_due'` e recebe carimbo `past_due_desde` (timestamptz).
+  Se a cobrança subsequente for bem sucedida, o carimbo é zerado.
+- Após `DUNNING_GRACE_DAYS=7` dias em past_due, a rotina
+  `services.subscription.expirar_assinaturas_em_atraso()` cancela a Subscription
+  no Stripe; o webhook `customer.subscription.deleted` rebaixa o perfil para
+  STARTER (handler já existente). Idempotente.
+- Agendamento: `backend/watchdog.py` chama a rotina a cada
+  `WATCHDOG_DUNNING_INTERVAL` segundos (default 3600), em subprocesso isolado,
+  só quando o backend está saudável. Migração obrigatória:
+  `backend/db/migration_assinatura.sql` (coluna `past_due_desde`).
+
 ## Visão Geral
 Plataforma premium que conecta compositores e compradores de obras musicais com pagamentos via Stripe (PayPal removido em abr/2026), autenticação via Supabase, e transcrição de áudio com faster-whisper.
 

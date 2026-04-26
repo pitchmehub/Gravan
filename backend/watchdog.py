@@ -30,6 +30,7 @@ CHECK_INTERVAL    = int(os.getenv("WATCHDOG_INTERVAL", "30"))   # segundos entre
 MAX_FAILURES      = int(os.getenv("WATCHDOG_MAX_FAILURES", "3"))# falhas antes de reiniciar
 STARTUP_WAIT      = int(os.getenv("WATCHDOG_STARTUP_WAIT", "20"))# segundos para o gunicorn subir
 BACKEND_PORT      = int(os.getenv("WATCHDOG_PORT", "8000"))
+DUNNING_INTERVAL  = int(os.getenv("WATCHDOG_DUNNING_INTERVAL", "3600"))  # segundos entre rodadas de dunning
 BACKEND_DIR       = os.path.dirname(os.path.abspath(__file__))
 GUNICORN_CMD      = [
     sys.executable, "-m", "gunicorn",
@@ -110,6 +111,38 @@ def _start_gunicorn() -> None:
     )
 
 
+def _run_dunning() -> None:
+    """
+    Dispara em subprocesso a rotina de dunning (cancela PRO em past_due > 7d).
+    Isolado para não derrubar o watchdog se algo falhar.
+    """
+    logger.info("Rodando dunning de assinaturas em atraso...")
+    try:
+        result = subprocess.run(
+            [
+                sys.executable, "-c",
+                "from services.subscription import expirar_assinaturas_em_atraso;"
+                "import json, sys;"
+                "sys.stdout.write(json.dumps(expirar_assinaturas_em_atraso()))",
+            ],
+            cwd=BACKEND_DIR,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        if result.returncode == 0:
+            logger.info("Dunning OK: %s", (result.stdout or "").strip())
+        else:
+            logger.warning(
+                "Dunning falhou (rc=%s): %s",
+                result.returncode, (result.stderr or "").strip()[:500],
+            )
+    except subprocess.TimeoutExpired:
+        logger.warning("Dunning excedeu timeout de 120s — abortado.")
+    except Exception as e:
+        logger.warning("Dunning erro inesperado: %s", e)
+
+
 def _restart_backend(reason: str) -> None:
     logger.error("REINICIANDO backend. Motivo: %s", reason)
     _sentry_alert(
@@ -138,10 +171,11 @@ def _restart_backend(reason: str) -> None:
 
 def main() -> None:
     logger.info(
-        "Watchdog iniciado | url=%s intervalo=%ss max_falhas=%s",
-        HEALTH_URL, CHECK_INTERVAL, MAX_FAILURES,
+        "Watchdog iniciado | url=%s intervalo=%ss max_falhas=%s dunning=%ss",
+        HEALTH_URL, CHECK_INTERVAL, MAX_FAILURES, DUNNING_INTERVAL,
     )
     consecutive_failures = 0
+    last_dunning_run = 0.0  # epoch da última rodada de dunning
 
     # Aguarda o backend subir pela primeira vez
     logger.info("Aguardando backend ficar disponível...")
@@ -161,6 +195,12 @@ def main() -> None:
                 logger.info("Backend OK (estava com %s falha(s))", consecutive_failures)
             consecutive_failures = 0
             logger.debug("Health check OK")
+
+            # Tick de dunning — só roda quando backend está saudável
+            now = time.time()
+            if DUNNING_INTERVAL > 0 and (now - last_dunning_run) >= DUNNING_INTERVAL:
+                last_dunning_run = now
+                _run_dunning()
             continue
 
         consecutive_failures += 1

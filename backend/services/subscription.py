@@ -157,25 +157,94 @@ def on_subscription_updated(sub_obj: dict):
 def on_subscription_deleted(sub_obj: dict):
     """customer.subscription.deleted → volta pra STARTER."""
     perfil_id = (sub_obj.get("metadata") or {}).get("perfil_id")
+    sb = get_supabase()
+    if not perfil_id:
+        # fallback: localiza pelo stripe_subscription_id
+        sub_id = sub_obj.get("id")
+        if sub_id:
+            row = sb.table("perfis").select("id").eq(
+                "stripe_subscription_id", sub_id
+            ).limit(1).execute()
+            if row.data:
+                perfil_id = row.data[0]["id"]
     if not perfil_id:
         return
-    sb = get_supabase()
-    sb.table("perfis").update({
+
+    update = {
         "plano":             "STARTER",
         "status_assinatura": "inativa",
         "assinatura_fim":    _ts(sub_obj.get("canceled_at") or sub_obj.get("ended_at")),
         "stripe_subscription_id": None,
-    }).eq("id", perfil_id).execute()
+    }
+    # tenta limpar past_due_desde (coluna pode não existir em DBs antigos)
+    try:
+        sb.table("perfis").update({**update, "past_due_desde": None}) \
+          .eq("id", perfil_id).execute()
+    except Exception:
+        sb.table("perfis").update(update).eq("id", perfil_id).execute()
+
+    # Notifica o usuário do downgrade
+    try:
+        from services.notificacoes import notify
+        notify(
+            perfil_id=perfil_id,
+            tipo="assinatura",
+            titulo="Sua assinatura PRO foi encerrada",
+            mensagem=(
+                "Sua conta voltou para o plano STARTER. As condições do plano "
+                "STARTER (taxa de plataforma de 20%) já valem para suas próximas "
+                "vendas. Você pode reativar o PRO quando quiser na página de Planos."
+            ),
+            link="/planos",
+        )
+    except Exception:
+        pass
 
 
 def on_invoice_payment_failed(invoice_obj: dict):
-    """Cobrança falhou — marca past_due mas não remove PRO imediatamente."""
+    """
+    Cobrança falhou — marca past_due e carimba `past_due_desde` (1ª falha).
+    O downgrade automático para STARTER acontece após 7 dias contados desse
+    carimbo, via `expirar_assinaturas_em_atraso()` (rodada pelo watchdog).
+    """
     sub_id = invoice_obj.get("subscription")
     if not sub_id:
         return
     sb = get_supabase()
-    sb.table("perfis").update({"status_assinatura": "past_due"}) \
-      .eq("stripe_subscription_id", sub_id).execute()
+    row = sb.table("perfis").select("id, past_due_desde").eq(
+        "stripe_subscription_id", sub_id
+    ).limit(1).execute()
+    if not row.data:
+        return
+    perf = row.data[0]
+
+    update = {"status_assinatura": "past_due"}
+    if not perf.get("past_due_desde"):
+        update["past_due_desde"] = datetime.now(timezone.utc).isoformat()
+
+    try:
+        sb.table("perfis").update(update).eq("id", perf["id"]).execute()
+    except Exception:
+        # coluna past_due_desde inexistente: aplica só o status
+        sb.table("perfis").update({"status_assinatura": "past_due"}) \
+          .eq("id", perf["id"]).execute()
+
+    # Notifica o usuário sobre a falha
+    try:
+        from services.notificacoes import notify
+        notify(
+            perfil_id=perf["id"],
+            tipo="assinatura",
+            titulo="Falha na cobrança da sua assinatura PRO",
+            mensagem=(
+                "Não conseguimos cobrar sua assinatura PRO. Vamos tentar novamente "
+                "nos próximos dias. Atualize seu cartão na página de Planos para "
+                "evitar a perda do plano PRO em até 7 dias."
+            ),
+            link="/planos",
+        )
+    except Exception:
+        pass
 
 
 def _ativar_pro(perfil_id: str, sub: dict):
@@ -193,10 +262,106 @@ def _ativar_pro(perfil_id: str, sub: dict):
         novo_status, plano = "inativa", "STARTER"
 
     sb = get_supabase()
-    sb.table("perfis").update({
+    update = {
         "plano":                 plano,
         "status_assinatura":     novo_status,
         "assinatura_inicio":     _ts(sub.get("start_date") or sub.get("current_period_start")),
         "assinatura_fim":        _ts(sub.get("current_period_end")),
         "stripe_subscription_id": sub.get("id"),
-    }).eq("id", perfil_id).execute()
+    }
+    # Limpa o relógio de past_due quando a assinatura volta a ficar saudável
+    if novo_status in ("ativa", "cancelada"):
+        try:
+            sb.table("perfis").update({**update, "past_due_desde": None}) \
+              .eq("id", perfil_id).execute()
+            return
+        except Exception:
+            pass
+    sb.table("perfis").update(update).eq("id", perfil_id).execute()
+
+
+# ─────────────────────────────────────────────────────────────────
+# Dunning: força cancelamento após 7 dias de past_due
+# ─────────────────────────────────────────────────────────────────
+
+DUNNING_GRACE_DAYS = 7  # dias após 1ª falha de cobrança até cancelar PRO
+
+
+def expirar_assinaturas_em_atraso() -> dict:
+    """
+    Rotina periódica (chamada pelo watchdog).
+    Para cada perfil com `status_assinatura='past_due'` há mais de
+    `DUNNING_GRACE_DAYS` dias, cancela a assinatura no Stripe.
+    Isso dispara `customer.subscription.deleted` que volta o perfil
+    para STARTER pelo handler já existente.
+    Idempotente e seguro de chamar repetidamente.
+    """
+    _ensure_stripe_key()
+    sb = get_supabase()
+    out = {"verificadas": 0, "canceladas": 0, "erros": 0}
+
+    try:
+        rows = sb.table("perfis").select(
+            "id, stripe_subscription_id, past_due_desde"
+        ).eq("status_assinatura", "past_due") \
+         .not_.is_("past_due_desde", "null").execute().data or []
+    except Exception:
+        # coluna past_due_desde inexistente; nada a fazer ainda.
+        return out
+
+    cutoff = datetime.now(timezone.utc) - _td(days=DUNNING_GRACE_DAYS)
+
+    for r in rows:
+        out["verificadas"] += 1
+        sub_id = r.get("stripe_subscription_id")
+        try:
+            past_dt = datetime.fromisoformat(
+                r["past_due_desde"].replace("Z", "+00:00")
+            )
+        except Exception:
+            continue
+
+        if past_dt > cutoff:
+            continue  # ainda dentro da janela de tolerância
+
+        if not sub_id:
+            # já não tem subscription Stripe associada — só rebaixa direto.
+            try:
+                sb.table("perfis").update({
+                    "plano":             "STARTER",
+                    "status_assinatura": "inativa",
+                    "past_due_desde":    None,
+                }).eq("id", r["id"]).execute()
+                out["canceladas"] += 1
+            except Exception:
+                out["erros"] += 1
+            continue
+
+        try:
+            stripe.Subscription.cancel(sub_id, invoice_now=False, prorate=False)
+            out["canceladas"] += 1
+        except stripe.StripeError as e:
+            msg = str(e).lower()
+            if "no such subscription" in msg or "resource_missing" in msg:
+                # Sub já não existe no Stripe — limpa local
+                try:
+                    sb.table("perfis").update({
+                        "plano":             "STARTER",
+                        "status_assinatura": "inativa",
+                        "stripe_subscription_id": None,
+                        "past_due_desde":    None,
+                    }).eq("id", r["id"]).execute()
+                    out["canceladas"] += 1
+                except Exception:
+                    out["erros"] += 1
+            else:
+                out["erros"] += 1
+        except Exception:
+            out["erros"] += 1
+
+    return out
+
+
+def _td(**kw):
+    from datetime import timedelta
+    return timedelta(**kw)

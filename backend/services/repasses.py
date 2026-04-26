@@ -107,12 +107,19 @@ def _calcular_split_sobre_net(
     }
 
 
-def creditar_wallets_por_transacao(transacao_id: str) -> dict:
+def creditar_wallets_por_transacao(
+    transacao_id: str,
+    publisher_id_override: str | None = None,
+) -> dict:
     """
     Chamado pelo webhook após uma venda confirmada.
     Calcula o split (sobre o NET Stripe) e CREDITA na wallet de cada autor.
     NÃO dispara Transfer — o autor saca manualmente em /saques.
     Idempotente: se já creditou pra essa transação, não duplica.
+
+    `publisher_id_override`: se informado, usa essa editora (em vez do
+    publisher_id do titular). Usado pelo fluxo de oferta trilateral
+    para creditar a editora terceira que aceitou a oferta.
     """
     sb = get_supabase()
 
@@ -149,7 +156,7 @@ def creditar_wallets_por_transacao(transacao_id: str) -> dict:
     status_ass = titular.get("status_assinatura", "inativa")
     if plano == "PRO" and status_ass not in ("ativa", "cancelada", "past_due"):
         plano = "STARTER"
-    publisher_id = titular.get("publisher_id")
+    publisher_id = publisher_id_override or titular.get("publisher_id")
 
     coaut = sb.table("coautorias").select("perfil_id, share_pct").eq(
         "obra_id", t["obra_id"]

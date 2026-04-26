@@ -321,7 +321,12 @@ def vincular_editora_por_token(token: str, publisher_id: str) -> dict:
 def on_contrato_concluido(contract_id: str) -> Optional[dict]:
     """
     Chamado quando o contrato trilateral é totalmente assinado.
-    Captura o PaymentIntent (libera o valor) e marca a oferta como concluida.
+    Captura o PaymentIntent (libera o valor), cria registro em `transacoes`
+    e CREDITA AUTOMATICAMENTE as wallets do split:
+      - 15% (PRO) ou 20% (STARTER) → plataforma
+      - 10% → editora terceira (que aceitou a oferta)
+      - resto → autor titular + coautores conforme `share_pct`
+    Idempotente: só credita uma vez (proteção via `pagamentos_compositores`).
     """
     sb = get_supabase()
     of = sb.table("ofertas_licenciamento").select("*").eq(
@@ -337,17 +342,114 @@ def on_contrato_concluido(contract_id: str) -> Optional[dict]:
         try:
             stripe.PaymentIntent.capture(pi_id)
         except stripe.StripeError as e:
-            log.error("Falha ao capturar PI %s: %s", pi_id, e)
-            return of
+            # idempotência: se já foi capturada antes, segue em frente
+            msg = str(e).lower()
+            if "already" not in msg and "already_captured" not in msg:
+                log.error("Falha ao capturar PI %s: %s", pi_id, e)
+                return of
 
     sb.table("ofertas_licenciamento").update({
         "status":       "concluida",
         "concluida_em": datetime.now(timezone.utc).isoformat(),
     }).eq("id", of["id"]).execute()
 
-    # Comunicação
-    obra = sb.table("obras").select("nome").eq("id", of["obra_id"]).single().execute().data or {}
+    # ── Cria transação + credita wallets (split automático) ────────
+    transacao_id = of.get("transacao_id")
+    try:
+        if not transacao_id and pi_id:
+            # Reaproveita transação existente (caso webhook tenha disparado 2x)
+            existente = sb.table("transacoes").select("id").eq(
+                "stripe_payment_intent", pi_id
+            ).limit(1).execute()
+            if existente.data:
+                transacao_id = existente.data[0]["id"]
+
+        if not transacao_id:
+            ins = sb.table("transacoes").insert({
+                "obra_id":               of["obra_id"],
+                "comprador_id":          of["comprador_id"],
+                "valor_cents":           of["valor_cents"],
+                "metodo":                "credito",
+                "provedor":              "stripe",
+                "status":                "confirmada",
+                "stripe_payment_intent": pi_id,
+                "confirmed_at":          datetime.now(timezone.utc).isoformat(),
+                "metadata": {
+                    "origem":     "oferta_licenciamento_terceiros",
+                    "oferta_id":  of["id"],
+                    "contrato_id": contract_id,
+                },
+            }).execute()
+            transacao_id = ins.data[0]["id"] if ins.data else None
+            if transacao_id:
+                sb.table("ofertas_licenciamento").update({
+                    "transacao_id": transacao_id,
+                }).eq("id", of["id"]).execute()
+    except Exception as e:
+        log.exception("Falha ao criar transação para oferta %s: %s", of["id"], e)
+
+    # Credita as wallets reusando o pipeline padrão (10% editora terceira,
+    # plataforma conforme plano do titular, resto entre coautores).
+    if transacao_id and of.get("editora_terceira_id"):
+        try:
+            from services.repasses import creditar_wallets_por_transacao
+            resultado = creditar_wallets_por_transacao(
+                transacao_id,
+                publisher_id_override=of["editora_terceira_id"],
+            )
+            log.info("Wallets creditadas oferta %s: %s", of["id"], resultado)
+        except Exception as e:
+            log.exception("Falha ao creditar wallets da oferta %s: %s", of["id"], e)
+
+    # ── Notifica autor titular + comunicação por e-mail ──────────────
+    obra = sb.table("obras").select("nome, titular_id").eq("id", of["obra_id"]).single().execute().data or {}
     comprador = sb.table("perfis").select("nome, email").eq("id", of["comprador_id"]).single().execute().data or {}
+
+    if obra.get("titular_id"):
+        try:
+            from services.notificacoes import notify
+            notify(
+                perfil_id=obra["titular_id"],
+                tipo="compra",
+                titulo=f"Licença concluída: \"{obra.get('nome','sua obra')}\"",
+                mensagem=(
+                    f"O contrato trilateral de \"{obra.get('nome','—')}\" foi assinado "
+                    f"por todas as partes. Sua parte do valor ({_moeda(of['valor_cents'])}) "
+                    f"já foi creditada na sua carteira."
+                ),
+                link="/dashboard",
+                payload={
+                    "oferta_id":    of["id"],
+                    "obra_id":      of["obra_id"],
+                    "transacao_id": transacao_id,
+                    "valor_cents":  of["valor_cents"],
+                },
+            )
+        except Exception as e:
+            log.warning("Falha ao notificar titular sobre conclusão da oferta %s: %s", of["id"], e)
+
+    if of.get("editora_terceira_id"):
+        try:
+            from services.notificacoes import notify
+            notify(
+                perfil_id=of["editora_terceira_id"],
+                tipo="compra",
+                titulo=f"Você recebeu uma comissão: \"{obra.get('nome','obra')}\"",
+                mensagem=(
+                    f"Sua comissão de 10% sobre \"{obra.get('nome','—')}\" "
+                    f"({_moeda(int(of['valor_cents'] * 0.10))} aprox.) já foi "
+                    f"creditada na sua carteira. Você pode sacar quando quiser."
+                ),
+                link="/publisher/dashboard",
+                payload={
+                    "oferta_id":    of["id"],
+                    "obra_id":      of["obra_id"],
+                    "transacao_id": transacao_id,
+                },
+            )
+        except Exception as e:
+            log.warning("Falha ao notificar editora terceira sobre conclusão da oferta %s: %s", of["id"], e)
+
     if comprador.get("email"):
         h, t = render_oferta_concluida_email(comprador.get("nome") or "Intérprete",
                                              obra.get("nome", "—"),
