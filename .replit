@@ -23,6 +23,10 @@ args = "Backend"
 task = "workflow.run"
 args = "Start application"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Watchdog"
+
 [[workflows.workflow]]
 name = "Backend"
 author = "agent"
@@ -46,6 +50,17 @@ waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow]]
+name = "Watchdog"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd backend && python watchdog.py"
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[ports]]
 localPort = 5000
