@@ -348,7 +348,8 @@ def webhook():
             except Exception as _e:
                 logger.error("Falha ao creditar wallets: %s", _e)
 
-            # Push/notificação para o compositor: obra licenciada
+            # Push/notificação para o compositor e o comprador
+            obra_info = {}
             try:
                 from services.notificacoes import notify as _notify
                 obra_info = sb.table("obras").select("nome, titular_id").eq(
@@ -378,6 +379,32 @@ def webhook():
                     )
             except Exception as _e:
                 logger.warning("Falha ao notificar compositor da compra: %s", _e)
+
+            # Push/notificação para o comprador: compra confirmada
+            try:
+                from services.notificacoes import notify as _notify2
+                if not obra_info:
+                    obra_info = sb.table("obras").select("nome, titular_id").eq(
+                        "id", trans["obra_id"]
+                    ).single().execute().data or {}
+                valor_reais_comprador = f"R$ {trans['valor_cents'] / 100:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+                _notify2(
+                    perfil_id=trans["comprador_id"],
+                    tipo="compra",
+                    titulo=f"Compra confirmada: \"{obra_info.get('nome','—')}\"",
+                    mensagem=(
+                        f"Seu pagamento de {valor_reais_comprador} foi aprovado. "
+                        f"Acesse seus contratos para baixar a licença."
+                    ),
+                    link="/contratos",
+                    payload={
+                        "transacao_id": trans["id"],
+                        "obra_id":      trans["obra_id"],
+                        "valor_cents":  trans["valor_cents"],
+                    },
+                )
+            except Exception as _e:
+                logger.warning("Falha ao notificar comprador da compra: %s", _e)
 
     elif event_type == "payment_intent.succeeded":
         # Backup: se checkout.session.completed não disparou, garante crédito
