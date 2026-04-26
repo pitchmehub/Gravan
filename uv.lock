@@ -1362,20 +1362,6 @@ wheels = [
 ]
 
 [[package]]
-name = "paypalrestsdk"
-version = "1.13.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pyopenssl" },
-    { name = "requests" },
-    { name = "six" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/af/f9/5e585f31a1c6caeec1af093edc3c6046a46af330ab9d9f91bbf86b019b59/paypalrestsdk-1.13.3.tar.gz", hash = "sha256:dac236492a9ac1260a760014a2e56ab38b09d8143295b5e896545359b61fedd6", size = 23865, upload-time = "2023-11-01T20:50:00.725Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/10/e0/ce62183f4ca1d9cab773a086a5d49e934f3a782960558ff971adc9fc9d05/paypalrestsdk-1.13.3-py3-none-any.whl", hash = "sha256:a3f51616ee8f6d975a5a5a8c2049db63653c843479c8fdd71c9d588a31e14560", size = 23681, upload-time = "2023-11-01T20:49:57.307Z" },
-]
-
-[[package]]
 name = "pillow"
 version = "12.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1799,19 +1785,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pyopenssl"
-version = "25.1.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "cryptography" },
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/04/8c/cd89ad05804f8e3c17dea8f178c3f40eeab5694c30e0c9f5bcd49f576fc3/pyopenssl-25.1.0.tar.gz", hash = "sha256:8d031884482e0c67ee92bf9a4d8cceb08d92aba7136432ffb0703c5280fc205b", size = 179937, upload-time = "2025-05-17T16:28:31.31Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/80/28/2659c02301b9500751f8d42f9a6632e1508aa5120de5e43042b8b30f8d5d/pyopenssl-25.1.0-py3-none-any.whl", hash = "sha256:2b11f239acc47ac2e5aca04fd7fa829800aeee22a2eb30d744572a157bd8a1ab", size = 56771, upload-time = "2025-05-17T16:28:29.197Z" },
-]
-
-[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 source = { registry = "https://pypi.org/simple" }
@@ -1954,7 +1927,6 @@ dependencies = [
     { name = "flask-wtf" },
     { name = "gunicorn" },
     { name = "holidays" },
-    { name = "paypalrestsdk" },
     { name = "psycopg2-binary" },
     { name = "pyjwt" },
     { name = "python-dotenv" },
@@ -1980,7 +1952,6 @@ requires-dist = [
     { name = "flask-wtf", specifier = "==1.2.2" },
     { name = "gunicorn", specifier = "==23.0.0" },
     { name = "holidays", specifier = ">=0.95" },
-    { name = "paypalrestsdk", specifier = "==1.13.3" },
     { name = "psycopg2-binary", specifier = ">=2.9.12" },
     { name = "pyjwt", specifier = "==2.10.1" },
     { name = "python-dotenv", specifier = "==1.0.1" },
