@@ -506,35 +506,76 @@ def webhook():
 @require_auth
 def verificar_sucesso(session_id):
     if not stripe.api_key:
-        abort(500, description="Stripe não configurado.")
+        logger.error("verificar_sucesso: STRIPE_SECRET_KEY ausente")
+        return jsonify({"error": "Stripe não configurado no servidor."}), 500
 
+    # 1) Recupera a sessão no Stripe
     try:
         session = stripe.checkout.Session.retrieve(session_id)
     except stripe.StripeError as e:
-        abort(404, description=f"Sessão não encontrada: {str(e)}")
+        logger.warning("verificar_sucesso: sessão Stripe inválida (%s): %s", session_id, e)
+        return jsonify({"error": "Sessão de pagamento não encontrada no Stripe."}), 404
+    except Exception as e:
+        logger.exception("verificar_sucesso: erro inesperado ao recuperar sessão %s", session_id)
+        return jsonify({"error": f"Falha ao consultar Stripe: {str(e)}"}), 500
 
     sb = get_supabase()
-    trans = (
-        sb.table("transacoes")
-        .select("id, status, valor_cents, obras(nome)")
-        .eq("stripe_session_id", session_id)
-        .single()
-        .execute()
-    )
-    if not trans.data:
-        abort(404, description="Transação não encontrada.")
 
-    # Confirma se Stripe pagou mas o webhook não rodou
-    if session.payment_status == "paid" and trans.data["status"] == "pendente":
-        sb.table("transacoes").update({
-            "status":                "confirmada",
-            "stripe_payment_intent": session.payment_intent,
-            "confirmed_at":          "now()",
-        }).eq("stripe_session_id", session_id).execute()
-        trans.data["status"] = "confirmada"
+    # 2) Busca a transação (sem join — evita falha caso a FK não esteja exposta no PostgREST)
+    try:
+        resp = (
+            sb.table("transacoes")
+            .select("id, status, valor_cents, obra_id")
+            .eq("stripe_session_id", session_id)
+            .limit(1)
+            .execute()
+        )
+        rows = resp.data or []
+    except Exception as e:
+        logger.exception("verificar_sucesso: erro ao buscar transação %s", session_id)
+        return jsonify({"error": f"Falha ao consultar transação: {str(e)}"}), 500
+
+    if not rows:
+        # Fallback: a transação ainda não foi criada no banco (raro). Devolve só status do Stripe.
+        logger.info("verificar_sucesso: transação ausente para session_id=%s; devolvendo só status Stripe", session_id)
+        return jsonify({
+            "transacao":     None,
+            "stripe_status": session.payment_status,
+            "obra_nome":     None,
+        }), 200
+
+    trans = rows[0]
+
+    # 3) Confirma se Stripe pagou mas o webhook ainda não rodou
+    try:
+        if session.payment_status == "paid" and trans.get("status") == "pendente":
+            sb.table("transacoes").update({
+                "status":                "confirmada",
+                "stripe_payment_intent": session.payment_intent,
+                "confirmed_at":          "now()",
+            }).eq("stripe_session_id", session_id).execute()
+            trans["status"] = "confirmada"
+    except Exception as e:
+        logger.exception("verificar_sucesso: falha ao atualizar transação para confirmada (%s)", session_id)
+
+    # 4) Busca o nome da obra separadamente (não bloqueia a resposta se falhar)
+    obra_nome = None
+    try:
+        if trans.get("obra_id"):
+            o = (
+                sb.table("obras")
+                .select("nome")
+                .eq("id", trans["obra_id"])
+                .limit(1)
+                .execute()
+            )
+            if o.data:
+                obra_nome = o.data[0].get("nome")
+    except Exception as e:
+        logger.warning("verificar_sucesso: falha ao buscar nome da obra %s: %s", trans.get("obra_id"), e)
 
     return jsonify({
-        "transacao":     trans.data,
+        "transacao":     trans,
         "stripe_status": session.payment_status,
-        "obra_nome":     trans.data.get("obras", {}).get("nome") if trans.data.get("obras") else None,
+        "obra_nome":     obra_nome,
     }), 200

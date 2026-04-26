@@ -173,6 +173,10 @@ def gerar_contrato_licenciamento(transacao_id: str, ip_remote: str | None = None
     """
     Dispara a criação do contrato de licenciamento para uma transação confirmada.
     Idempotente: se já existe um contrato para essa transação, retorna o existente.
+
+    Regra: se o titular da obra é AGREGADO de uma editora no momento da geração
+    (perfis.publisher_id preenchido), o contrato gerado é TRILATERAL — incluindo
+    a editora como parte signatária. Caso contrário, contrato bilateral padrão.
     """
     sb = get_supabase()
 
@@ -196,6 +200,28 @@ def gerar_contrato_licenciamento(transacao_id: str, ip_remote: str | None = None
 
     titular = sb.table("perfis").select("*").eq("id", obra["titular_id"]).single().execute().data or {}
     buyer   = sb.table("perfis").select("*").eq("id", tx["comprador_id"]).single().execute().data or {}
+
+    # 3.1 — Dispatcher: se titular é agregado de uma editora, gera trilateral
+    if titular.get("publisher_id"):
+        try:
+            return gerar_contrato_trilateral_agregado(
+                transacao_id=transacao_id,
+                tx=tx,
+                obra=obra,
+                titular=titular,
+                buyer=buyer,
+                ip_remote=ip_remote,
+            )
+        except Exception as e:
+            # Se o trilateral por agregação falhar, registra e cai para o bilateral.
+            try:
+                sb.table("contract_events").insert({
+                    "contract_id": None,
+                    "event_type":  "trilateral_agregado_fallback",
+                    "payload":     {"erro": str(e), "transacao_id": transacao_id},
+                }).execute()
+            except Exception:
+                pass
 
     coaut = sb.table("coautorias").select("perfil_id, share_pct").eq("obra_id", obra["id"]).execute().data or []
     if not coaut:
@@ -302,6 +328,183 @@ def gerar_contrato_licenciamento(transacao_id: str, ip_remote: str | None = None
             "event_type":  "created",
             "payload":     {"hash": content_hash, "ip": (ip_remote or "")[:32]},
         }).execute()
+    except Exception:
+        pass
+
+    return contract
+
+
+def gerar_contrato_trilateral_agregado(
+    transacao_id: str,
+    tx: dict,
+    obra: dict,
+    titular: dict,
+    buyer: dict,
+    ip_remote: str | None = None,
+) -> dict | None:
+    """
+    Gera o contrato TRILATERAL para uma transação direta (Stripe/PayPal) quando
+    o titular da obra é AGREGADO de uma editora cadastrada na plataforma
+    (perfis.publisher_id preenchido).
+
+    Partes: Autor(es) + Editora-mãe (publisher) + Gravan (intermediária) + Comprador.
+    Idempotente.
+    """
+    sb = get_supabase()
+
+    # 1) Editora à qual o titular está vinculado
+    editora = sb.table("perfis").select("*").eq("id", titular["publisher_id"]).maybe_single().execute()
+    editora = (editora.data if editora else None) or {}
+    if not editora.get("id"):
+        # Sem editora válida → cai para o bilateral
+        raise RuntimeError("publisher_id do titular não encontrado em perfis")
+
+    # 2) Coautores
+    coaut = sb.table("coautorias").select("perfil_id, share_pct").eq("obra_id", obra["id"]).execute().data or []
+    if not coaut:
+        coaut = [{"perfil_id": titular["id"], "share_pct": 100}]
+    ids = list({c["perfil_id"] for c in coaut})
+    perfis = sb.table("perfis").select(
+        "id, nome, nome_artistico, nome_completo, cpf, rg,"
+        " endereco_rua, endereco_numero, endereco_compl, endereco_bairro,"
+        " endereco_cidade, endereco_uf, email"
+    ).in_("id", ids).execute().data or []
+    por_id = {p["id"]: p for p in perfis}
+
+    autores_bloco = []
+    split_lista = []
+    ordered = sorted(coaut, key=lambda c: 0 if c["perfil_id"] == titular["id"] else 1)
+    for c in ordered:
+        p = por_id.get(c["perfil_id"], {})
+        is_titular = c["perfil_id"] == titular["id"]
+        autores_bloco.append(
+            f"[{'AUTOR PRINCIPAL' if is_titular else 'COAUTOR'}]\n"
+            f"Nome: {p.get('nome_completo') or p.get('nome') or '—'}\n"
+            f"CPF: {_decrypt(p.get('cpf','')) or 'Não informado'}\n"
+            f"RG: {_decrypt(p.get('rg','')) or 'Não informado'}\n"
+            f"Endereço: {_endereco(p)}\n"
+            f"Cidade/UF: {_cidade_uf(p)}\n"
+        )
+        split_lista.append(
+            f"- {p.get('nome_completo') or p.get('nome') or '—'}: {float(c['share_pct']):.2f}%"
+        )
+
+    # 3) Endereço/CNPJ da editora
+    cnpj_dec = _decrypt(editora.get("cnpj", "")) or "Não informado"
+    editora_endereco = ", ".join(filter(None, [
+        editora.get("endereco_rua"), editora.get("endereco_numero"),
+        editora.get("endereco_compl"), editora.get("endereco_bairro"),
+        editora.get("endereco_cidade"), editora.get("endereco_uf"),
+    ])) or "Não informado"
+
+    conteudo = (TEMPLATE_TRILATERAL
+        .replace("{{autores_bloco}}",          "\n".join(autores_bloco).strip())
+        .replace("{{editora_razao}}",          editora.get("razao_social") or editora.get("nome_completo") or editora.get("nome") or "—")
+        .replace("{{editora_cnpj}}",           cnpj_dec)
+        .replace("{{editora_responsavel}}",    editora.get("responsavel_nome") or editora.get("nome_completo") or editora.get("nome") or "—")
+        .replace("{{editora_email}}",          editora.get("email") or "—")
+        .replace("{{editora_endereco}}",       editora_endereco)
+        .replace("{{interprete_nome}}",        buyer.get("nome_completo") or buyer.get("nome") or "—")
+        .replace("{{interprete_cpf}}",         _decrypt(buyer.get("cpf","")) or "Não informado")
+        .replace("{{interprete_endereco}}",    _endereco(buyer))
+        .replace("{{interprete_cidade_uf}}",   _cidade_uf(buyer))
+        .replace("{{obra_nome}}",              obra.get("nome", "—"))
+        .replace("{{obra_letra}}",             (obra.get("letra") or "").strip() or "—")
+        .replace("{{valor_buyout_extenso}}",   _moeda(tx["valor_cents"]))
+        .replace("{{split_lista}}",            "\n".join(split_lista))
+        .replace("{{data_emissao}}",           datetime.utcnow().strftime("%d/%m/%Y às %H:%M UTC"))
+    )
+    content_hash = hashlib.sha256(conteudo.encode("utf-8")).hexdigest()
+    conteudo = conteudo.replace("{{conteudo_hash}}", content_hash)
+
+    # 4) HTML formatado para visualização
+    html_lines = []
+    for bloco in conteudo.split("\n\n"):
+        b = bloco.strip()
+        if not b: continue
+        if b.isupper() or b.startswith("CLÁUSULA") or b.startswith("CONTRATO"):
+            html_lines.append(f"<h3>{b}</h3>")
+        else:
+            html_lines.append(f"<p>{b.replace(chr(10), '<br/>')}</p>")
+    contract_html = "\n".join(html_lines)
+
+    # 5) Insere contrato (trilateral=True, sem oferta_id — diferencia do fluxo
+    # de ofertas a editora terceira, que mantém oferta_id preenchido).
+    insert = sb.table("contracts").insert({
+        "transacao_id":  transacao_id,
+        "obra_id":       obra["id"],
+        "seller_id":     titular["id"],
+        "buyer_id":      buyer["id"],
+        "valor_cents":   tx["valor_cents"],
+        "contract_html": contract_html,
+        "contract_text": conteudo,
+        "status":        "pendente",
+        "trilateral":    True,
+    }).execute()
+    contract = insert.data[0]
+
+    # 6) Signers: coautores + editora-mãe + comprador
+    signers = []
+    for c in ordered:
+        signers.append({
+            "contract_id": contract["id"],
+            "user_id":     c["perfil_id"],
+            "role":        "autor" if c["perfil_id"] == titular["id"] else "coautor",
+            "share_pct":   float(c["share_pct"]),
+        })
+    signers.append({
+        "contract_id": contract["id"],
+        "user_id":     editora["id"],
+        "role":        "editora_agregadora",
+        "share_pct":   None,
+    })
+    signers.append({
+        "contract_id": contract["id"],
+        "user_id":     buyer["id"],
+        "role":        "interprete",
+        "share_pct":   None,
+    })
+    try:
+        sb.table("contract_signers").insert(signers).execute()
+    except Exception as e:
+        try:
+            sb.table("contract_events").insert({
+                "contract_id": contract["id"],
+                "event_type":  "signers_error",
+                "payload":     {"erro": str(e)},
+            }).execute()
+        except Exception:
+            pass
+
+    try:
+        sb.table("contract_events").insert({
+            "contract_id": contract["id"],
+            "event_type":  "created",
+            "payload":     {
+                "hash": content_hash,
+                "trilateral": True,
+                "motivo": "agregado",
+                "publisher_id": editora["id"],
+                "ip": (ip_remote or "")[:32],
+            },
+        }).execute()
+    except Exception:
+        pass
+
+    # 7) Notifica a editora-mãe que há um novo contrato a assinar
+    try:
+        from services.notificacoes import notify
+        notify(
+            editora["id"],
+            tipo="contrato_pendente",
+            titulo="Novo contrato para assinatura",
+            mensagem=(
+                f'Um agregado seu vendeu a obra "{obra.get("nome","—")}". '
+                "Como editora vinculada, sua assinatura é necessária."
+            ),
+            link=f"/contratos/{contract['id']}",
+            payload={"contract_id": contract["id"], "obra_id": obra["id"]},
+        )
     except Exception:
         pass
 
