@@ -1934,6 +1934,8 @@ dependencies = [
     { name = "pywebpush" },
     { name = "redis" },
     { name = "reportlab" },
+    { name = "requests" },
+    { name = "sentry-sdk", extra = ["flask"] },
     { name = "stripe" },
     { name = "supabase" },
     { name = "waitress" },
@@ -1959,6 +1961,8 @@ requires-dist = [
     { name = "pywebpush", specifier = ">=2.3.0" },
     { name = "redis", specifier = "==5.2.1" },
     { name = "reportlab", specifier = "==4.4.10" },
+    { name = "requests", specifier = ">=2.33.1" },
+    { name = "sentry-sdk", extras = ["flask"], specifier = ">=2.58.0" },
     { name = "stripe", specifier = "==13.0.0" },
     { name = "supabase", specifier = "==2.10.0" },
     { name = "waitress", specifier = "==3.0.2" },
@@ -2003,6 +2007,26 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ab/3a/0316b28d0761c6734d6bc14e770d85506c986c85ffb239e688eeaab2c2bc/rich-13.9.4.tar.gz", hash = "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098", size = 223149, upload-time = "2024-11-01T16:43:57.873Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/19/71/39c7c0d87f8d4e6c020a393182060eaefeeae6c01dab6a84ec346f2567df/rich-13.9.4-py3-none-any.whl", hash = "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90", size = 242424, upload-time = "2024-11-01T16:43:55.817Z" },
+]
+
+[[package]]
+name = "sentry-sdk"
+version = "2.58.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/26/b3/fb8291170d0e844173164709fc0fa0c221ed75a5da740c8746f2a83b4eb1/sentry_sdk-2.58.0.tar.gz", hash = "sha256:c1144d947352d54e5b7daa63596d9f848adf684989c06c4f5a659f0c85a18f6f", size = 438764, upload-time = "2026-04-13T17:23:26.265Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fa/eb/d875669993b762556ae8b2efd86219943b4c0864d22204d622a9aee3052b/sentry_sdk-2.58.0-py2.py3-none-any.whl", hash = "sha256:688d1c704ddecf382ea3326f21a67453d4caa95592d722b7c780a36a9d23109e", size = 460919, upload-time = "2026-04-13T17:23:24.675Z" },
+]
+
+[package.optional-dependencies]
+flask = [
+    { name = "blinker" },
+    { name = "flask" },
+    { name = "markupsafe" },
 ]
 
 [[package]]
