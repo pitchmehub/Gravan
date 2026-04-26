@@ -36,7 +36,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd backend && python -m gunicorn --bind=0.0.0.0:8000 --workers 2 --reuse-port --capture-output --log-level debug 'app:create_app()'"
+args = "cd backend && gunicorn --bind=0.0.0.0:8000 --workers 2 --reuse-port --capture-output --log-level debug 'app:create_app()'"
 waitForPort = 8000
 
 [[workflows.workflow]]
