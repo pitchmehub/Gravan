@@ -9,6 +9,8 @@ CORREÇÕES DE VULNERABILIDADES IMPLEMENTADAS:
 - #19 (BAIXA): SameSite cookie configuration
 """
 import os
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -17,6 +19,16 @@ from flask_wtf.csrf import CSRFProtect
 from dotenv import load_dotenv
 
 load_dotenv()
+
+_sentry_dsn = os.getenv("SENTRY_DSN_BACKEND")
+if _sentry_dsn:
+    sentry_sdk.init(
+        dsn=_sentry_dsn,
+        integrations=[FlaskIntegration()],
+        traces_sample_rate=0.2,
+        send_default_pii=False,
+        environment=os.getenv("FLASK_ENV", "development"),
+    )
 
 REDIS_URL = os.getenv("REDIS_URL", "memory://")
 limiter = Limiter(
