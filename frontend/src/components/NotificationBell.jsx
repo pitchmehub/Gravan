@@ -16,6 +16,7 @@ const ICONES = {
  dossie_download: IconDownload,
  saque_confirmado: IconWallet,
  saque_cancelado: IconXCircle,
+ convite_editora: IconDocument,
 }
 
 function tempoRelativo(iso) {

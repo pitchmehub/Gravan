@@ -29,6 +29,7 @@ import AdminVerComo  from './pages/AdminVerComo'
 import CadastroEditora    from './pages/CadastroEditora'
 import PublisherDashboard from './pages/PublisherDashboard'
 import Agregados          from './pages/Agregados'
+import Convites           from './pages/Convites'
 import EscolherTipoPerfil  from './pages/EscolherTipoPerfil'
 import PerfilPublico       from './pages/PerfilPublico'
 import AdminEditoras       from './pages/AdminEditoras'
@@ -184,6 +185,7 @@ function AppRoutes() {
       <Route path="/editora/dashboard" element={<PrivateRoute roles={['publisher','administrador']}><AppShell><PublisherDashboard /></AppShell></PrivateRoute>} />
       <Route path="/editora/aceitar-oferta/:token" element={<AceitarOferta />} />
       <Route path="/agregados"         element={<PrivateRoute roles={['publisher','administrador']}><AppShell><Agregados /></AppShell></PrivateRoute>} />
+      <Route path="/convites"          element={<PrivateRoute><AppShell><Convites /></AppShell></PrivateRoute>} />
 
       {/* Páginas legais (públicas) */}
       <Route path="/termos"            element={<Termos />} />
