@@ -10,11 +10,352 @@ const fmtBRL = (cents) => (Number(cents || 0) / 100).toLocaleString('pt-BR', {
 
 export default function Analytics() {
   const { perfil } = useAuth()
+  const isPro = isPerfilPro(perfil)
+
+  if (!isPro) {
+    return <AnalyticsPaywall />
+  }
+  return <AnalyticsDashboard />
+}
+
+/* ============================================================
+   PAYWALL — usuários grátis
+   ============================================================ */
+
+function AnalyticsPaywall() {
+  const navigate = useNavigate()
+
+  const beneficios = [
+    {
+      icone: '%',
+      titulo: 'COMISSÃO',
+      itens: [
+        'Fee reduzido de 20% para 15%',
+        'Mais lucro em cada venda',
+      ],
+    },
+    {
+      icone: 'R$',
+      titulo: 'PRECIFICAÇÃO',
+      itens: [
+        'Precifique de R$ 500 a R$ 10.000',
+        'Acesso a compradores premium',
+      ],
+    },
+    {
+      icone: '✦',
+      titulo: 'OFERTAS',
+      itens: [
+        'Receba ofertas diretas de compradores',
+        'Negocie sem sair do app',
+        'Aceite, recuse ou contra-proponha',
+        'Licenciamento com exclusividade',
+      ],
+    },
+    {
+      icone: '◎',
+      titulo: 'VISIBILIDADE',
+      itens: [
+        'Prioridade na aba Descoberta',
+        'Selo PRO no perfil e nas obras',
+        'Mais chances de ser escolhido',
+      ],
+    },
+    {
+      icone: '◔',
+      titulo: 'ANALYTICS',
+      itens: [
+        'Dashboard financeiro completo',
+        'Veja quanto você economizou sendo PRO',
+        'Descubra o que está vendendo mais',
+        'Tome decisões com base em dados',
+      ],
+      destaque: true,
+    },
+  ]
+
+  return (
+    <div data-testid="analytics-paywall" style={{
+      minHeight: '100%',
+      background: 'linear-gradient(180deg, #F7F5EE 0%, #FFFFFF 60%)',
+      padding: '40px 20px 80px',
+    }}>
+      <div style={{ maxWidth: 980, margin: '0 auto' }}>
+
+        {/* HERO */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: 40,
+        }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '6px 14px',
+            background: 'linear-gradient(135deg, #0C447C, #378ADD)',
+            color: '#fff',
+            fontSize: 11, fontWeight: 800, letterSpacing: 1.5,
+            borderRadius: 999,
+            marginBottom: 18,
+            boxShadow: '0 4px 14px rgba(12,68,124,0.25)',
+          }}>
+            <span style={{ fontSize: 14 }}>★</span> EXCLUSIVO PARA ASSINANTES PRO
+          </div>
+
+          <h1 style={{
+            fontSize: 'clamp(28px, 4vw, 40px)',
+            fontWeight: 800, letterSpacing: -0.8,
+            lineHeight: 1.15, marginBottom: 14,
+            color: '#0C447C',
+          }}>
+            Desbloqueie o seu<br />painel completo de Analytics
+          </h1>
+
+          <p style={{
+            fontSize: 15, color: 'var(--text-muted)',
+            maxWidth: 560, margin: '0 auto', lineHeight: 1.55,
+          }}>
+            Veja o quanto está vendendo, o quanto está economizando sendo PRO
+            e descubra exatamente o que está performando melhor.
+            Tudo em um só lugar.
+          </p>
+        </div>
+
+        {/* PREVIEW MOCKUP DO DASHBOARD (blurred) */}
+        <DashboardPreview />
+
+        {/* GRID DE BENEFÍCIOS */}
+        <div style={{
+          display: 'grid', gap: 16,
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          marginBottom: 40,
+        }}>
+          {beneficios.map((b) => (
+            <BeneficioCard key={b.titulo} {...b} />
+          ))}
+        </div>
+
+        {/* CTA FINAL */}
+        <div style={{
+          padding: '36px 24px',
+          borderRadius: 18,
+          background: 'linear-gradient(135deg, #0C447C 0%, #083257 100%)',
+          textAlign: 'center',
+          color: '#fff',
+          boxShadow: '0 20px 60px rgba(12,68,124,0.30)',
+        }}>
+          <div style={{
+            display: 'inline-block',
+            padding: '4px 12px',
+            background: 'rgba(255,255,255,0.15)',
+            borderRadius: 999,
+            fontSize: 11, fontWeight: 700, letterSpacing: 1.5,
+            marginBottom: 16,
+          }}>
+            APENAS R$ 29,90/MÊS
+          </div>
+          <h2 style={{
+            fontSize: 'clamp(20px, 3vw, 26px)',
+            fontWeight: 800, marginBottom: 10, letterSpacing: -0.3,
+          }}>
+            Pare de deixar dinheiro na mesa
+          </h2>
+          <p style={{
+            fontSize: 14, opacity: 0.92, marginBottom: 24,
+            maxWidth: 480, margin: '0 auto 24px',
+            lineHeight: 1.55,
+          }}>
+            Com 1 venda de R$ 600 por mês, o PRO já se paga
+            só na economia de comissão. Comece hoje.
+          </p>
+
+          <button
+            data-testid="btn-assine-pro"
+            onClick={() => navigate('/planos')}
+            style={{
+              padding: '16px 38px',
+              borderRadius: 10,
+              border: 'none',
+              background: '#fff',
+              color: '#0C447C',
+              fontSize: 15,
+              fontWeight: 800,
+              letterSpacing: 1.5,
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+              transition: 'transform .15s ease, box-shadow .15s ease',
+            }}
+            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.97)'}
+            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            ASSINE PRO →
+          </button>
+
+          <p style={{
+            fontSize: 11, opacity: 0.7, marginTop: 18,
+          }}>
+            Cancele quando quiser. Sem fidelidade.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
+function BeneficioCard({ icone, titulo, itens, destaque }) {
+  return (
+    <article style={{
+      background: '#fff',
+      border: destaque ? '2px solid #0C447C' : '1px solid var(--border)',
+      borderRadius: 14,
+      padding: 22,
+      position: 'relative',
+      boxShadow: destaque
+        ? '0 12px 32px rgba(12,68,124,0.12)'
+        : '0 2px 8px rgba(0,0,0,0.04)',
+    }}>
+      {destaque && (
+        <div style={{
+          position: 'absolute', top: -10, right: 16,
+          padding: '3px 10px',
+          background: 'linear-gradient(135deg, #0C447C, #378ADD)',
+          color: '#fff',
+          fontSize: 9, fontWeight: 800, letterSpacing: 1.2,
+          borderRadius: 999,
+        }}>
+          VOCÊ ESTÁ AQUI
+        </div>
+      )}
+
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        marginBottom: 14,
+      }}>
+        <div style={{
+          width: 42, height: 42, borderRadius: 10,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'linear-gradient(135deg, #0C447C, #378ADD)',
+          color: '#fff', fontSize: 18, fontWeight: 800,
+          flexShrink: 0,
+        }}>
+          {icone}
+        </div>
+        <h3 style={{
+          fontSize: 13, fontWeight: 800, letterSpacing: 1.5,
+          color: '#0C447C', margin: 0,
+        }}>
+          {titulo}
+        </h3>
+      </div>
+
+      <ul style={{
+        listStyle: 'none', padding: 0, margin: 0,
+        display: 'flex', flexDirection: 'column', gap: 8,
+      }}>
+        {itens.map((item, i) => (
+          <li key={i} style={{
+            display: 'flex', alignItems: 'flex-start', gap: 8,
+            fontSize: 13.5, color: '#3a3a3a', lineHeight: 1.5,
+          }}>
+            <span style={{
+              color: '#0C447C', fontWeight: 800, fontSize: 13,
+              flexShrink: 0, marginTop: 1,
+            }}>✓</span>
+            {item}
+          </li>
+        ))}
+      </ul>
+    </article>
+  )
+}
+
+function DashboardPreview() {
+  return (
+    <div style={{
+      position: 'relative',
+      marginBottom: 40,
+      borderRadius: 16,
+      overflow: 'hidden',
+      border: '1px solid var(--border)',
+      background: '#fff',
+      boxShadow: '0 16px 48px rgba(0,0,0,0.08)',
+    }}>
+      {/* fake dashboard */}
+      <div style={{
+        padding: 24,
+        filter: 'blur(4px)',
+        userSelect: 'none', pointerEvents: 'none',
+      }}>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+          <FakeKPI label="Economia este mês" value="R$ 1.840,50" accent="#0C447C" />
+          <FakeKPI label="Receita líquida" value="R$ 12.350,00" accent="#10b981" />
+          <FakeKPI label="ROI da assinatura" value="+264%" accent="#0C447C" />
+        </div>
+        <div style={{
+          height: 140, borderRadius: 10,
+          background: 'linear-gradient(180deg, #E6F1FB 0%, #fff 100%)',
+          position: 'relative', overflow: 'hidden',
+        }}>
+          <svg viewBox="0 0 400 140" style={{ width: '100%', height: '100%' }}>
+            <polyline
+              fill="none" stroke="#0C447C" strokeWidth="3"
+              points="0,110 40,95 80,100 120,80 160,70 200,55 240,60 280,40 320,30 360,18 400,10"
+            />
+            <polyline
+              fill="rgba(12,68,124,0.10)" stroke="none"
+              points="0,110 40,95 80,100 120,80 160,70 200,55 240,60 280,40 320,30 360,18 400,10 400,140 0,140"
+            />
+          </svg>
+        </div>
+      </div>
+
+      {/* lock overlay */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(255,255,255,0.55)',
+        backdropFilter: 'blur(2px)',
+      }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: '50%',
+          background: 'linear-gradient(135deg, #0C447C, #378ADD)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 28, color: '#fff',
+          boxShadow: '0 8px 24px rgba(12,68,124,0.35)',
+        }}>
+          🔒
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FakeKPI({ label, value, accent }) {
+  return (
+    <div style={{
+      flex: 1, padding: 14,
+      border: '1px solid var(--border)', borderRadius: 10,
+      background: '#fff',
+    }}>
+      <div style={{
+        fontSize: 10, color: 'var(--text-muted)',
+        textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4,
+      }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: accent }}>{value}</div>
+    </div>
+  )
+}
+
+/* ============================================================
+   DASHBOARD — usuários PRO
+   ============================================================ */
+
+function AnalyticsDashboard() {
+  const { perfil } = useAuth()
   const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState('')
-
   const isPro = isPerfilPro(perfil)
 
   useEffect(() => {
@@ -29,17 +370,9 @@ export default function Analytics() {
       <header style={{ marginBottom: 8, display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
         <h1 style={{ fontSize: 22, fontWeight: 700 }}>Analytics</h1>
         <SeloPro ativo={isPro} size="md" />
-        {!isPro && (
-          <span style={{
-            padding: '3px 8px', background: '#f3f4f6', color: '#6b7280',
-            fontSize: 10, fontWeight: 700, letterSpacing: 1, borderRadius: 4,
-          }}>
-            VOCÊ ESTÁ NO PLANO GRÁTIS
-          </span>
-        )}
       </header>
       <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 24 }}>
-        Acompanhe engajamento, receita e quanto você está economizando (ou poderia economizar) com o plano PRO.
+        Acompanhe engajamento, receita e quanto você está economizando com o plano PRO.
       </p>
 
       {loading && <p style={{ color: 'var(--text-muted)' }}>Carregando métricas…</p>}
@@ -47,16 +380,6 @@ export default function Analytics() {
 
       {data && (
         <>
-          {/* Banner de upgrade para STARTER com economia significativa */}
-          {!isPro && data.economia_mes_cents > 0 && (
-            <UpgradeBanner
-              economiaMes={data.economia_mes_cents}
-              economiaTotal={data.economia_total_cents}
-              assinaturaCents={data.assinatura_pro_cents}
-              onUpgrade={() => navigate('/planos')}
-            />
-          )}
-
           {/* ── 1. ENGAJAMENTO ─────────────────────────── */}
           <Section title="Engajamento">
             <div style={kpiGrid}>
@@ -68,24 +391,20 @@ export default function Analytics() {
 
           {/* ── 2. ECONOMIA PRO ────────────────────────── */}
           <Section
-            title={isPro ? 'Sua economia PRO' : 'Quanto você economizaria sendo PRO'}
-            subtitle={
-              isPro
-                ? 'A diferença entre 20% (Grátis) e 15% (PRO) sobre cada venda volta para o seu bolso.'
-                : 'Mostramos o quanto você teria economizado em comissão se já fosse PRO. Vire PRO agora e comece a economizar.'
-            }
+            title="Sua economia PRO"
+            subtitle="A diferença entre 20% (Grátis) e 15% (PRO) sobre cada venda volta para o seu bolso."
           >
             <div style={kpiGrid}>
               <KPI
-                label={isPro ? 'Economia este mês' : 'Você economizaria este mês'}
+                label="Economia este mês"
                 value={fmtBRL(data.economia_mes_cents)}
-                accent={!isPro ? '#2563eb' : '#10b981'}
+                accent="#10b981"
                 testid="kpi-economia-mes"
               />
               <KPI
-                label={isPro ? 'Economia acumulada' : 'Economia potencial acumulada'}
+                label="Economia acumulada"
                 value={fmtBRL(data.economia_total_cents)}
-                accent={!isPro ? '#2563eb' : '#10b981'}
+                accent="#10b981"
                 testid="kpi-economia-total"
               />
               <KPI
@@ -96,26 +415,12 @@ export default function Analytics() {
               />
             </div>
             <div style={contextBox}>
-              {isPro ? (
-                <>
-                  Sua assinatura PRO custa <b>{fmtBRL(data.assinatura_pro_cents)}/mês</b>.
-                  Você já economizou <b>{fmtBRL(data.economia_mes_cents)}</b> este mês.
-                  {data.roi_mes_pct != null && (
-                    <> ROI: <b style={{ color: data.roi_mes_pct > 0 ? '#10b981' : '#c0392b' }}>
-                      {data.roi_mes_pct > 0 ? '+' : ''}{data.roi_mes_pct}%
-                    </b></>
-                  )}
-                </>
-              ) : (
-                <>
-                  Pelo plano Grátis, a Gravan retém 20% de cada venda. PRO retém 15%.
-                  Sobre suas vendas deste mês, isso seria uma economia de <b>{fmtBRL(data.economia_mes_cents)}</b>
-                  {' '}contra a mensalidade de <b>{fmtBRL(data.assinatura_pro_cents)}</b>.
-                  {' '}<button onClick={() => navigate('/planos')}
-                    style={linkBtn} data-testid="btn-upgrade-economia">
-                    Conhecer o plano PRO →
-                  </button>
-                </>
+              Sua assinatura PRO custa <b>{fmtBRL(data.assinatura_pro_cents)}/mês</b>.
+              Você já economizou <b>{fmtBRL(data.economia_mes_cents)}</b> este mês.
+              {data.roi_mes_pct != null && (
+                <> ROI: <b style={{ color: data.roi_mes_pct > 0 ? '#10b981' : '#c0392b' }}>
+                  {data.roi_mes_pct > 0 ? '+' : ''}{data.roi_mes_pct}%
+                </b></>
               )}
             </div>
           </Section>
@@ -248,38 +553,10 @@ export default function Analytics() {
                 ) : (
                   <>
                     Quanto mais rápido você responde a uma oferta, maior a chance dela virar venda.
-                    {!isPro && ' Plano PRO desbloqueia ofertas de exclusividade (5 anos).'}
                   </>
                 )}
               </div>
             </Section>
-          )}
-
-          {/* CTA final pra STARTER */}
-          {!isPro && (
-            <div style={{
-              marginTop: 32, padding: 24, borderRadius: 12,
-              background: 'linear-gradient(135deg, #1e3a8a, #2563eb)', color: '#fff',
-              textAlign: 'center',
-            }}>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
-                Pronto para faturar mais por obra?
-              </h3>
-              <p style={{ fontSize: 13, opacity: 0.92, marginBottom: 16 }}>
-                Vire PRO por {fmtBRL(data.assinatura_pro_cents)}/mês e desbloqueie obras até R$ 10.000, comissão de 15% e ofertas de exclusividade.
-              </p>
-              <button
-                data-testid="btn-upgrade-final"
-                onClick={() => navigate('/planos')}
-                style={{
-                  padding: '12px 22px', borderRadius: 8, border: 'none',
-                  background: '#fff', color: '#1e3a8a', fontWeight: 700,
-                  fontSize: 14, cursor: 'pointer',
-                }}
-              >
-                Assinar plano PRO
-              </button>
-            </div>
           )}
         </>
       )}
@@ -360,39 +637,6 @@ function RankingTable({ rows, colunas, emptyMsg }) {
           ))}
         </tbody>
       </table>
-    </div>
-  )
-}
-
-function UpgradeBanner({ economiaMes, economiaTotal, assinaturaCents, onUpgrade }) {
-  return (
-    <div data-testid="upgrade-banner" style={{
-      marginBottom: 24, padding: 18, borderRadius: 12,
-      background: 'linear-gradient(135deg, #1e3a8a, #2563eb)', color: '#fff',
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      gap: 16, flexWrap: 'wrap',
-    }}>
-      <div>
-        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, opacity: 0.85, marginBottom: 4 }}>
-          VOCÊ ESTÁ DEIXANDO DINHEIRO NA MESA
-        </div>
-        <div style={{ fontSize: 16, fontWeight: 700 }}>
-          {fmtBRL(economiaMes)} este mês · {fmtBRL(economiaTotal)} no total
-        </div>
-        <div style={{ fontSize: 12, opacity: 0.9, marginTop: 2 }}>
-          Quanto você teria economizado em comissão sendo PRO ({fmtBRL(assinaturaCents)}/mês).
-        </div>
-      </div>
-      <button
-        onClick={onUpgrade}
-        style={{
-          padding: '10px 18px', borderRadius: 8, border: 'none',
-          background: '#fff', color: '#1e3a8a', fontWeight: 700,
-          fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap',
-        }}
-      >
-        Virar PRO
-      </button>
     </div>
   )
 }
