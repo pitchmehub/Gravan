@@ -703,7 +703,7 @@
 
   /* Minimizado: full width logo acima da barra de menu inferior */
   .gp-mini {
-    bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     left: 0; right: 0;
     max-width: none; min-width: 0;
     border-radius: 0;
@@ -711,6 +711,11 @@
     border-right: none;
     border-bottom: 1px solid var(--border);
     box-shadow: 0 -2px 8px rgba(9,9,11,.06);
+  }
+
+  /* Player barra no mobile: também fica acima da barra de navegação */
+  .gp-root {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }
 
   /* Expanded: capa um pouco menor */

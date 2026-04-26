@@ -334,7 +334,7 @@ export default function SideMenu({ onCollapse }) {
 
  {/* Direita: Mais (drawer) */}
  <button
- className="mobile-bottom-item"
+ className={`mobile-bottom-item ${mobileOpen ? 'active' : ''}`}
  onClick={() => setMobileOpen(o => !o)}
  aria-label="Mais opções">
  <span className="mobile-bottom-icon"><IconMore size={22} /></span>

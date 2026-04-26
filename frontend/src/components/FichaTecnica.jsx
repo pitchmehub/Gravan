@@ -165,33 +165,31 @@ export default function FichaTecnica({ obra, onClose }) {
               >
                 Licenciar Composição
               </button>
-              {isInterprete && (
-                <button
-                  data-testid="btn-fazer-oferta"
-                  onClick={() => {
-                    if (isMeuPro) setShowOferta(true)
-                    else setShowUpgrade(true)
-                  }}
-                  style={{
-                    width: '100%', padding: '11px 16px', borderRadius: 8,
-                    background: '#fff', border: '2px solid #0C447C', color: '#0C447C',
-                    fontWeight: 700, fontSize: 14, cursor: 'pointer',
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  }}
-                  title={isMeuPro ? '' : 'Disponível para assinantes PRO'}
-                >
-                  Fazer oferta
-                  {!isMeuPro && (
-                    <span style={{
-                      padding: '2px 6px', borderRadius: 4,
-                      background: 'linear-gradient(135deg, #0C447C, #378ADD)',
-                      color: '#fff', fontSize: 9, fontWeight: 800, letterSpacing: 0.8,
-                    }}>
-                      PRO
-                    </span>
-                  )}
-                </button>
-              )}
+              <button
+                data-testid="btn-fazer-oferta"
+                onClick={() => {
+                  if (isMeuPro) setShowOferta(true)
+                  else setShowUpgrade(true)
+                }}
+                style={{
+                  width: '100%', padding: '11px 16px', borderRadius: 8,
+                  background: '#fff', border: '2px solid #0C447C', color: '#0C447C',
+                  fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}
+                title={isMeuPro ? '' : 'Disponível para assinantes PRO'}
+              >
+                Fazer oferta
+                {!isMeuPro && (
+                  <span style={{
+                    padding: '2px 6px', borderRadius: 4,
+                    background: 'linear-gradient(135deg, #0C447C, #378ADD)',
+                    color: '#fff', fontSize: 9, fontWeight: 800, letterSpacing: 0.8,
+                  }}>
+                    PRO
+                  </span>
+                )}
+              </button>
             </>
           )}
         </div>
