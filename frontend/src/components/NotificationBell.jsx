@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import {
   IconBell, IconMusic, IconDocument, IconCheckCircle, IconKey,
   IconTag, IconDownload, IconWallet, IconXCircle,
 } from './Icons'
+import NotificationDetailModal from './NotificationDetailModal'
 import './NotificationBell.css'
 
 const ICONES = {
@@ -31,8 +31,9 @@ export default function NotificationBell() {
  const [open, setOpen] = useState(false)
  const [list, setList] = useState([])
  const [naoLidas, setNaoLidas] = useState(0)
+ const [filtro, setFiltro] = useState('todas')   // 'todas' | 'nao-lidas'
+ const [selecionada, setSelecionada] = useState(null)
  const ref = useRef(null)
- const navigate = useNavigate()
 
  async function carregar() {
  try {
@@ -42,6 +43,11 @@ export default function NotificationBell() {
  ])
  setList(items || [])
  setNaoLidas(count?.total || 0)
+ // sincroniza notificação aberta caso tenha mudado de status
+ if (selecionada) {
+   const atualizada = (items || []).find(n => n.id === selecionada.id)
+   if (atualizada) setSelecionada(atualizada)
+ }
  } catch (_) { /* silencioso */ }
  }
 
@@ -60,9 +66,12 @@ export default function NotificationBell() {
  }, [])
 
  async function abrir(n) {
- try { await api.patch(`/notificacoes/${n.id}/marcar-lida`) } catch (_) {}
+ // marca como lida automaticamente, mas não navega — abre modal
+ if (!n.lida) {
+   try { await api.patch(`/notificacoes/${n.id}/marcar-lida`) } catch (_) {}
+ }
  setOpen(false)
- if (n.link) navigate(n.link)
+ setSelecionada({ ...n, lida: true })
  carregar()
  }
 
@@ -71,7 +80,12 @@ export default function NotificationBell() {
  carregar()
  }
 
+ const visiveis = filtro === 'nao-lidas'
+   ? list.filter(n => !n.lida)
+   : list
+
  return (
+ <>
  <div className="notif-wrap" ref={ref}>
  <button
  className="notif-btn"
@@ -94,11 +108,25 @@ export default function NotificationBell() {
  </button>
  )}
  </div>
+
+ <div className="notif-tabs">
+   <button className={`notif-tab ${filtro === 'todas' ? 'active' : ''}`}
+           onClick={() => setFiltro('todas')}>
+     Todas ({list.length})
+   </button>
+   <button className={`notif-tab ${filtro === 'nao-lidas' ? 'active' : ''}`}
+           onClick={() => setFiltro('nao-lidas')}>
+     Não-lidas ({naoLidas})
+   </button>
+ </div>
+
  <div className="notif-list">
- {list.length === 0 && (
- <div className="notif-empty">Nenhuma notificação ainda.</div>
+ {visiveis.length === 0 && (
+ <div className="notif-empty">
+   {filtro === 'nao-lidas' ? 'Nenhuma notificação não-lida.' : 'Nenhuma notificação ainda.'}
+ </div>
  )}
- {list.map(n => (
+ {visiveis.map(n => (
  <div
  key={n.id}
  className={`notif-item ${n.lida ? '' : 'notif-item-unread'}`}
@@ -119,5 +147,14 @@ export default function NotificationBell() {
  </div>
  )}
  </div>
+
+ {selecionada && (
+   <NotificationDetailModal
+     notif={selecionada}
+     onClose={() => setSelecionada(null)}
+     onChange={carregar}
+   />
+ )}
+ </>
  )
 }

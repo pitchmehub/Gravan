@@ -65,3 +65,27 @@ def marcar_todas():
       .eq("lida", False) \
       .execute()
     return jsonify({"ok": True}), 200
+
+
+@notificacoes_bp.route("/<nid>/marcar-nao-lida", methods=["PATCH"])
+@require_auth
+def marcar_nao_lida(nid):
+    sb = get_supabase()
+    sb.table("notificacoes") \
+      .update({"lida": False, "lida_em": None}) \
+      .eq("id", nid) \
+      .eq("perfil_id", _user_id()) \
+      .execute()
+    return jsonify({"ok": True}), 200
+
+
+@notificacoes_bp.route("/<nid>", methods=["DELETE"])
+@require_auth
+def excluir(nid):
+    sb = get_supabase()
+    sb.table("notificacoes") \
+      .delete() \
+      .eq("id", nid) \
+      .eq("perfil_id", _user_id()) \
+      .execute()
+    return jsonify({"ok": True}), 200

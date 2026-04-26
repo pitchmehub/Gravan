@@ -70,6 +70,30 @@
 }
 .notif-markall:hover { text-decoration: underline; }
 
+.notif-tabs {
+  display: flex;
+  border-bottom: 1px solid #eee;
+  background: #fafafa;
+}
+.notif-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  cursor: pointer;
+  font-family: inherit;
+  border-bottom: 2px solid transparent;
+}
+.notif-tab.active {
+  color: #BE123C;
+  border-bottom-color: #BE123C;
+  background: #fff;
+}
+.notif-tab:hover:not(.active) { color: #444; }
+
 .notif-list { overflow-y: auto; flex: 1; }
 
 .notif-empty {
