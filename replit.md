@@ -68,3 +68,15 @@ Shared components:
   - Player mode (`onPlay` + `onShowFicha`): 1st click plays, 2nd click on the active row opens ficha técnica; right-side button becomes ▶/⏸.
   - Legacy (`onSelect` + `ctaLabel`): row/button click invokes `onSelect`.
 - `Descoberta.jsx` and `PerfilPublico.jsx` both wire `ObrasLista` to the global player so artist pages behave identically to Descoberta.
+
+## Notificações em tempo real + Web Push (PWA)
+
+Três peças trabalham juntas para entregar notificações instantâneas:
+
+1. **Supabase Realtime** — a tabela `notificacoes` está na publicação `supabase_realtime` (com `REPLICA IDENTITY FULL`). O hook `frontend/src/hooks/useRealtimeNotifications.js` assina `postgres_changes` filtrando por `perfil_id=eq.<uid>`. O `NotificationBell` e a página `/notificacoes` consomem esse hook para recarregar instantaneamente; o polling antigo virou fallback de 2 min. Migração: `backend/db/migration_realtime_notificacoes.sql`.
+
+2. **Web Push (VAPID)** — backend usa `pywebpush`. Tabela: `push_subscriptions` (1 entrada por endpoint, com RLS por `perfil_id`). Migração: `backend/db/migration_push_subscriptions.sql`. Service: `backend/services/push_service.py` (`send_push(perfil_id, title, body, url, tag, data)` — degrada silenciosamente quando VAPID não está configurado). Rotas: `GET/POST /api/push/{public-key,subscribe,unsubscribe,test}` (`backend/routes/push.py`, csrf-exempt). O helper `notify()` em `backend/services/notificacoes.py` dispara push automaticamente para toda inserção. Frontend: `frontend/src/lib/push.js` (subscribe/unsubscribe/status/teste) + service worker `frontend/public/sw.js` (handlers `push` e `notificationclick`, versão `gravan-v5-design1-push-20260426`). UI de ativação fica na página `/notificacoes`.
+
+   Secrets necessários: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (mailto:contato@gravan.app).
+
+3. **Histórico paginado `/notificacoes`** — `frontend/src/pages/Notificacoes.jsx`, rota em `App.jsx`, link "Notificações" na sidebar (todos os perfis) e "Ver todas" no rodapé do sino. Backend: `GET /api/notificacoes/?offset=&limit=&nao_lidas=` devolve `{items,total,offset,limit,has_more}` (compat: sem esses params, devolve apenas a lista, formato antigo). Filtros client-side por tipo + chip "Só não-lidas" + botão "Marcar todas como lidas".

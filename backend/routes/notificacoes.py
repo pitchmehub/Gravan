@@ -20,15 +20,31 @@ def _user_id():
 def listar():
     sb = get_supabase()
     try:
-        limit = min(50, max(1, int(request.args.get("limit", 20))))
+        limit  = min(50, max(1, int(request.args.get("limit", 20))))
+        offset = max(0, int(request.args.get("offset", 0)))
     except ValueError:
-        limit = 20
-    r = (sb.table("notificacoes")
-         .select("*")
-         .eq("perfil_id", _user_id())
-         .order("criada_em", desc=True)
-         .limit(limit).execute())
-    return jsonify(r.data or []), 200
+        limit, offset = 20, 0
+    only_unread = (request.args.get("nao_lidas") or "").lower() in ("1", "true", "yes")
+
+    q = (sb.table("notificacoes")
+         .select("*", count="exact")
+         .eq("perfil_id", _user_id()))
+    if only_unread:
+        q = q.eq("lida", False)
+    r = q.order("criada_em", desc=True).range(offset, offset + limit - 1).execute()
+
+    items = r.data or []
+    # compat: se o cliente NÃO pediu paginação, devolve só a lista (formato antigo)
+    if "offset" not in request.args and "nao_lidas" not in request.args:
+        return jsonify(items), 200
+
+    return jsonify({
+        "items":   items,
+        "total":   r.count or 0,
+        "offset":  offset,
+        "limit":   limit,
+        "has_more": (offset + len(items)) < (r.count or 0),
+    }), 200
 
 
 @notificacoes_bp.route("/nao-lidas", methods=["GET"])

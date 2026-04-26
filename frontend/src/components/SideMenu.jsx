@@ -6,7 +6,7 @@ import {
   IconCompass, IconGrid, IconMusic, IconPlus, IconChart, IconDocument,
   IconWallet, IconTag, IconStar, IconBag, IconShield, IconEdit,
   IconFolder, IconBuilding, IconLayers, IconUser, IconLogout,
-  IconChevronUp, IconChevronDown, IconMore,
+  IconChevronUp, IconChevronDown, IconMore, IconBell,
 } from './Icons'
 import './SideMenu.css'
 
@@ -20,12 +20,14 @@ const NAV_ITEMS = {
  { to: '/contratos', Icon: IconDocument, label: 'Meus contratos' },
  { to: '/saques', Icon: IconWallet, label: 'Saques' },
  { to: '/ofertas', Icon: IconTag, label: 'Ofertas' },
+ { to: '/notificacoes', Icon: IconBell, label: 'Notificações' },
  { to: '/planos', Icon: IconStar, label: 'Planos' },
  ],
  interprete: [
  { to: '/descoberta', Icon: IconCompass, label: 'Descoberta' },
  { to: '/compras', Icon: IconBag, label: 'Compras' },
  { to: '/ofertas', Icon: IconTag, label: 'Ofertas' },
+ { to: '/notificacoes', Icon: IconBell, label: 'Notificações' },
  { to: '/planos', Icon: IconStar, label: 'Planos' },
  ],
  // ADMINISTRADOR: "Biblioteca" substituída por "Dossiês" conforme spec.
@@ -42,6 +44,7 @@ const NAV_ITEMS = {
  { to: '/saques', Icon: IconWallet, label: 'Saques' },
  { to: '/admin/editoras', Icon: IconBuilding, label: 'Editoras' },
  { to: '/ofertas', Icon: IconTag, label: 'Ofertas' },
+ { to: '/notificacoes', Icon: IconBell, label: 'Notificações' },
  { to: '/planos', Icon: IconStar, label: 'Planos' },
  ],
  publisher: [
@@ -50,11 +53,13 @@ const NAV_ITEMS = {
  { to: '/obras/nova', Icon: IconPlus, label: 'Nova obra' },
  { to: '/obras', Icon: IconMusic, label: 'Obras' },
  { to: '/contratos', Icon: IconDocument, label: 'Contratos' },
+ { to: '/notificacoes', Icon: IconBell, label: 'Notificações' },
  { to: '/descoberta', Icon: IconCompass, label: 'Descoberta' },
  ],
  artist: [
  { to: '/dashboard', Icon: IconGrid, label: 'Dashboard' },
  { to: '/contratos', Icon: IconDocument, label: 'Meus contratos' },
+ { to: '/notificacoes', Icon: IconBell, label: 'Notificações' },
  { to: '/descoberta', Icon: IconCompass, label: 'Descoberta' },
  ],
 }

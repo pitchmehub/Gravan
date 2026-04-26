@@ -200,6 +200,9 @@ def create_app() -> Flask:
     app.register_blueprint(agregados_bp)
     app.register_blueprint(contratos_edicao_bp)
     app.register_blueprint(notificacoes_bp, url_prefix="/api/notificacoes")
+    from routes.push import push_bp
+    app.register_blueprint(push_bp)
+    csrf.exempt(push_bp)
     app.register_blueprint(keep_alive_bp, url_prefix="/api")
     csrf.exempt(keep_alive_bp)
     limiter.exempt(keep_alive_bp)

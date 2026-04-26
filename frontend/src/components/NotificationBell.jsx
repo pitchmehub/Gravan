@@ -1,10 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import {
   IconBell, IconMusic, IconDocument, IconCheckCircle, IconKey,
   IconTag, IconDownload, IconWallet, IconXCircle,
 } from './Icons'
 import NotificationDetailModal from './NotificationDetailModal'
+import { useAuth } from '../contexts/AuthContext'
+import useRealtimeNotifications from '../hooks/useRealtimeNotifications'
 import './NotificationBell.css'
 
 const ICONES = {
@@ -28,6 +31,7 @@ function tempoRelativo(iso) {
 }
 
 export default function NotificationBell() {
+ const { perfil } = useAuth()
  const [open, setOpen] = useState(false)
  const [list, setList] = useState([])
  const [naoLidas, setNaoLidas] = useState(0)
@@ -53,9 +57,13 @@ export default function NotificationBell() {
 
  useEffect(() => {
  carregar()
- const t = setInterval(carregar, 30000) // polling 30s
+ // polling de fallback bem espaçado — Realtime cobre o resto
+ const t = setInterval(carregar, 120000)
  return () => clearInterval(t)
  }, [])
+
+ // Realtime: assina mudanças em `notificacoes` filtradas pelo perfil_id
+ useRealtimeNotifications(perfil?.id, () => carregar())
 
  useEffect(() => {
  function onClick(e) {
@@ -143,6 +151,12 @@ export default function NotificationBell() {
  {!n.lida && <span className="notif-dot" />}
  </div>
  ))}
+ </div>
+
+ <div className="notif-footer">
+   <Link to="/notificacoes" className="notif-seeall" onClick={() => setOpen(false)}>
+     Ver todas
+   </Link>
  </div>
  </div>
  )}

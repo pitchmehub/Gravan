@@ -5,16 +5,9 @@ from db.supabase_client import get_supabase
 def notify(perfil_id: str, *, tipo: str, titulo: str,
            mensagem: str = "", link: str = "", payload: dict | None = None):
     """
-    Cria uma notificação para o perfil indicado.
+    Cria uma notificação para o perfil indicado e dispara um Web Push
+    para todos os dispositivos cadastrados.
     Nunca quebra o fluxo principal em caso de erro — só loga.
-
-    tipos suportados:
-      - 'obra_cadastrada'
-      - 'contrato_gerado'
-      - 'contrato_assinado'
-      - 'licenciamento'
-      - 'oferta'
-      - 'dossie_download'
     """
     if not perfil_id:
         return
@@ -29,3 +22,12 @@ def notify(perfil_id: str, *, tipo: str, titulo: str,
         }).execute()
     except Exception as e:
         print(f"[notify] falhou ({tipo} -> {perfil_id}): {e}")
+
+    # Web Push (PWA) — silencioso, nunca derruba o fluxo
+    try:
+        from services.push_service import send_push
+        send_push(perfil_id, title=titulo, body=mensagem or "",
+                  url=link or "/dashboard", tag=tipo,
+                  data={"tipo": tipo, "payload": payload or {}})
+    except Exception as e:
+        print(f"[notify] push falhou ({tipo} -> {perfil_id}): {e}")

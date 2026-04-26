@@ -136,3 +136,17 @@
     right: -8px;
   }
 }
+
+.notif-footer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border, #eee);
+  text-align: center;
+  background: var(--surface, #fff);
+}
+.notif-seeall {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand, #BE123C);
+  text-decoration: none;
+}
+.notif-seeall:hover { text-decoration: underline; }
