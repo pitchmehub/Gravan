@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import {
@@ -63,16 +62,18 @@ export default function NotificationBell() {
 
   useRealtimeNotifications(perfil?.id, () => carregar())
 
-  // Fecha com tecla ESC + bloqueia scroll do body quando modal aberto
+  // Fecha com tecla ESC + clique fora
   useEffect(() => {
     if (!open) return
     function onKey(e) { if (e.key === 'Escape') setOpen(false) }
+    function onClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
     document.addEventListener('keydown', onKey)
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    document.addEventListener('mousedown', onClickOutside)
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
+      document.removeEventListener('mousedown', onClickOutside)
     }
   }, [open])
 
@@ -109,69 +110,66 @@ export default function NotificationBell() {
         </button>
       </div>
 
-      {open && createPortal(
-        <div className="notif-backdrop" onClick={() => setOpen(false)}>
-          <div className="notif-panel" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Notificações">
-            <div className="notif-header">
-              <strong>Notificações</strong>
-              <div className="notif-header-actions">
-                {naoLidas > 0 && (
-                  <button className="notif-markall" onClick={marcarTodas}>
-                    Marcar todas como lidas
-                  </button>
-                )}
-                <button
-                  className="notif-close"
-                  onClick={() => setOpen(false)}
-                  aria-label="Fechar"
-                >×</button>
-              </div>
-            </div>
-
-            <div className="notif-tabs">
-              <button className={`notif-tab ${filtro === 'todas' ? 'active' : ''}`}
-                      onClick={() => setFiltro('todas')}>
-                Todas ({list.length})
-              </button>
-              <button className={`notif-tab ${filtro === 'nao-lidas' ? 'active' : ''}`}
-                      onClick={() => setFiltro('nao-lidas')}>
-                Não-lidas ({naoLidas})
-              </button>
-            </div>
-
-            <div className="notif-list">
-              {visiveis.length === 0 && (
-                <div className="notif-empty">
-                  {filtro === 'nao-lidas' ? 'Nenhuma notificação não-lida.' : 'Nenhuma notificação ainda.'}
-                </div>
+      {open && (
+        <div className="notif-panel" role="dialog" aria-label="Notificações">
+          <div className="notif-header">
+            <strong>Notificações</strong>
+            <div className="notif-header-actions">
+              {naoLidas > 0 && (
+                <button className="notif-markall" onClick={marcarTodas}>
+                  Marcar todas como lidas
+                </button>
               )}
-              {visiveis.map(n => (
-                <div
-                  key={n.id}
-                  className={`notif-item ${n.lida ? '' : 'notif-item-unread'}`}
-                  onClick={() => abrir(n)}
-                >
-                  <div className="notif-icon">
-                    {(() => { const Ic = ICONES[n.tipo] || IconBell; return <Ic size={18} /> })()}
-                  </div>
-                  <div className="notif-content">
-                    <div className="notif-title">{n.titulo}</div>
-                    {n.mensagem && <div className="notif-msg">{n.mensagem}</div>}
-                    <div className="notif-time">{tempoRelativo(n.criada_em)}</div>
-                  </div>
-                  {!n.lida && <span className="notif-dot" />}
-                </div>
-              ))}
-            </div>
-
-            <div className="notif-footer">
-              <Link to="/notificacoes" className="notif-seeall" onClick={() => setOpen(false)}>
-                Ver todas
-              </Link>
+              <button
+                className="notif-close"
+                onClick={() => setOpen(false)}
+                aria-label="Fechar"
+              >×</button>
             </div>
           </div>
-        </div>,
-        document.body
+
+          <div className="notif-tabs">
+            <button className={`notif-tab ${filtro === 'todas' ? 'active' : ''}`}
+                    onClick={() => setFiltro('todas')}>
+              Todas ({list.length})
+            </button>
+            <button className={`notif-tab ${filtro === 'nao-lidas' ? 'active' : ''}`}
+                    onClick={() => setFiltro('nao-lidas')}>
+              Não-lidas ({naoLidas})
+            </button>
+          </div>
+
+          <div className="notif-list">
+            {visiveis.length === 0 && (
+              <div className="notif-empty">
+                {filtro === 'nao-lidas' ? 'Nenhuma notificação não-lida.' : 'Nenhuma notificação ainda.'}
+              </div>
+            )}
+            {visiveis.map(n => (
+              <div
+                key={n.id}
+                className={`notif-item ${n.lida ? '' : 'notif-item-unread'}`}
+                onClick={() => abrir(n)}
+              >
+                <div className="notif-icon">
+                  {(() => { const Ic = ICONES[n.tipo] || IconBell; return <Ic size={18} /> })()}
+                </div>
+                <div className="notif-content">
+                  <div className="notif-title">{n.titulo}</div>
+                  {n.mensagem && <div className="notif-msg">{n.mensagem}</div>}
+                  <div className="notif-time">{tempoRelativo(n.criada_em)}</div>
+                </div>
+                {!n.lida && <span className="notif-dot" />}
+              </div>
+            ))}
+          </div>
+
+          <div className="notif-footer">
+            <Link to="/notificacoes" className="notif-seeall" onClick={() => setOpen(false)}>
+              Ver todas
+            </Link>
+          </div>
+        </div>
       )}
 
       {selecionada && (

@@ -34,44 +34,40 @@
   border: 2px solid #083257;
 }
 
-/* Backdrop com blur forte — cobre toda a tela e centraliza o painel.
-   Estilo "vidro fosco do iOS": forte desfoque do que está atrás. */
-.notif-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(20, 25, 40, .35);
-  backdrop-filter: blur(28px) saturate(140%);
-  -webkit-backdrop-filter: blur(28px) saturate(140%);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  animation: notifFadeIn .18s ease;
-}
-@keyframes notifFadeIn { from { opacity: 0 } to { opacity: 1 } }
-
-/* Painel translúcido — vidro fosco também (igual o card do iOS) */
+/* Painel dropdown — ancorado embaixo do sino */
 .notif-panel {
-  width: 100%;
-  max-width: 420px;
-  max-height: 80vh;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 360px;
+  max-width: calc(100vw - 24px);
+  max-height: 70vh;
   overflow: hidden;
-  background: rgba(255, 255, 255, .78);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, .5);
-  border-radius: 28px;
-  box-shadow:
-    0 30px 80px rgba(0, 0, 0, .35),
-    inset 0 1px 0 rgba(255, 255, 255, .6);
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .18);
+  z-index: 900;
   display: flex;
   flex-direction: column;
-  animation: notifSlideUp .22s cubic-bezier(.2,.9,.3,1.2);
+  animation: notifSlideUp .18s ease;
 }
 @keyframes notifSlideUp {
-  from { opacity: 0; transform: scale(.94) translateY(12px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* No mobile, o dropdown vira "ancorado à direita da tela" */
+@media (max-width: 540px) {
+  .notif-panel {
+    position: fixed;
+    top: 64px;
+    right: 8px;
+    left: 8px;
+    width: auto;
+    max-width: none;
+    max-height: 75vh;
+  }
 }
 
 .notif-header {
@@ -171,15 +167,6 @@
   background: #083257;
   flex-shrink: 0;
   margin-top: 6px;
-}
-
-@media (max-width: 540px) {
-  .notif-backdrop { padding: 0; align-items: flex-end; }
-  .notif-panel {
-    max-width: 100%;
-    max-height: 92vh;
-    border-radius: 28px 28px 0 0;
-  }
 }
 
 .notif-footer {

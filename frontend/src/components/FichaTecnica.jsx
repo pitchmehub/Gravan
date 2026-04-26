@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import '../pages/Descoberta.css'
@@ -45,7 +46,7 @@ export default function FichaTecnica({ obra, onClose, onPlay, isPlaying, isActiv
     load()
   }, [obra.id])
 
-  return (
+  return createPortal(
     <div className="dc-modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="dc-modal">
         <button className="dc-modal-close" onClick={onClose}>×</button>
@@ -116,6 +117,7 @@ export default function FichaTecnica({ obra, onClose, onPlay, isPlaying, isActiv
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

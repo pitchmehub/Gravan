@@ -268,30 +268,36 @@
 
 .dc-muted { color: var(--text-muted); font-size: 13px; }
 
-/* ── MODAL FICHA TÉCNICA ─────────────────── */
+/* ── MODAL FICHA TÉCNICA (vidro fosco, centralizado) ─────────────────── */
 .dc-modal-overlay {
   position: fixed; inset: 0;
-  background: rgba(9,9,11,0.75);
-  backdrop-filter: blur(6px);
+  background: rgba(20, 25, 40, .35);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
   display: flex; align-items: center; justify-content: center;
-  z-index: 600; padding: 24px;
-  animation: dcFadeIn .15s ease;
+  z-index: 1000; padding: 24px;
+  animation: dcFadeIn .18s ease;
 }
 @keyframes dcFadeIn { from{opacity:0} to{opacity:1} }
 
 .dc-modal {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 0;
+  background: rgba(255, 255, 255, .78);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 28px;
   width: 100%; max-width: 440px;
   max-height: 88vh;
+  overflow: hidden;
   overflow-y: auto;
   position: relative;
-  box-shadow: var(--shadow-lg);
-  animation: dcSlideUp .2s ease;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, .35),
+    inset 0 1px 0 rgba(255, 255, 255, .6);
+  animation: dcSlideUp .22s cubic-bezier(.2,.9,.3,1.2);
 }
 @keyframes dcSlideUp {
-  from { opacity:0; transform: scale(.96) translateY(8px); }
+  from { opacity:0; transform: scale(.94) translateY(12px); }
   to   { opacity:1; transform: scale(1) translateY(0); }
 }
 
@@ -486,7 +492,7 @@
 
   /* Modal */
   .dc-modal-overlay   { padding: 0; align-items: flex-end; }
-  .dc-modal           { max-width: 100%; border-radius: 12px 12px 0 0; max-height: 90vh; }
+  .dc-modal           { max-width: 100%; border-radius: 28px 28px 0 0; max-height: 90vh; }
   .dc-modal-header    { padding: 16px; gap: 12px; }
   .dc-modal-cover     { width: 56px; height: 56px; font-size: 24px; }
   .dc-modal-nome      { font-size: 18px; }
