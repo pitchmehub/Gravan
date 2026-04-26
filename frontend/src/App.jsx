@@ -150,7 +150,7 @@ function AppRoutes() {
       <Route path="/dashboard"     element={<PrivateRoute><AppShell><Dashboard /></AppShell></PrivateRoute>} />
       <Route path="/obras"         element={<PrivateRoute roles={['compositor','administrador']}><AppShell><MinhasObras /></AppShell></PrivateRoute>} />
       <Route path="/obras/nova"    element={<PrivateRoute roles={['compositor','administrador']}><AppShell><NovaObra /></AppShell></PrivateRoute>} />
-      <Route path="/contratos"     element={<PrivateRoute roles={['compositor','administrador']}><AppShell><MeusContratos /></AppShell></PrivateRoute>} />
+      <Route path="/contratos"     element={<PrivateRoute><AppShell><MeusContratos /></AppShell></PrivateRoute>} />
       <Route path="/contratos/licenciamento/:id" element={<PrivateRoute><AppShell><ContratoLicenciamentoDetalhe /></AppShell></PrivateRoute>} />
       <Route path="/biblioteca"    element={<PrivateRoute><AppShell><Biblioteca /></AppShell></PrivateRoute>} />
       <Route path="/analytics"     element={<PrivateRoute roles={['compositor','administrador']}><AppShell><Analytics /></AppShell></PrivateRoute>} />
