@@ -215,7 +215,9 @@ export default function SideMenu({ onCollapse }) {
  }
 
  const role = perfil?.role ?? 'compositor'
- const items = NAV_ITEMS[role] ?? NAV_ITEMS.compositor
+ const allItems = NAV_ITEMS[role] ?? NAV_ITEMS.compositor
+ // "Nova obra" foi removida do menu — o atalho fica dentro da tela "Minhas obras".
+ const items = allItems.filter(i => i.to !== '/obras/nova')
  const isAdmin = role === 'administrador'
 
  // ── MOBILE: barra de navegação inferior ──────────────────────
