@@ -24,7 +24,6 @@ export default function Catalogo() {
  const [page, setPage] = useState(1)
  const [hasMore, setHasMore] = useState(true)
  const [selected, setSelected] = useState(null)
- const [ofertaModal, setOfertaModal] = useState(null) // obra para a qual fazer oferta
 
  const perPage = 12
 
@@ -56,8 +55,6 @@ export default function Catalogo() {
  const idx = obras.findIndex(o => o.id === obra.id)
  playObra(obras.filter(o => o.audio_path), Math.max(0, obras.filter(o => o.audio_path).findIndex(o => o.id === obra.id)))
  }
-
- const isInterprete = perfil?.role === 'interprete'
 
  return (
  <div>
@@ -243,32 +240,12 @@ export default function Catalogo() {
  {fmt(selected.preco_cents)}
  </span>
  <div style={{ display: 'flex', gap: 8 }}>
- {isInterprete && (
- <button
- className="btn btn-secondary btn-sm"
- onClick={() => {
- setSelected(null)
- // TODO: abrir modal de oferta
- }}
- >
- Contraproposta
- </button>
- )}
- {selected.obra_editada_terceiros ? (
- <button
- className="btn btn-primary btn-sm"
- onClick={() => { const o = selected; setSelected(null); setOfertaModal(o) }}
- >
- Fazer oferta à editora
- </button>
- ) : (
  <button
  className="btn btn-primary btn-sm"
  onClick={() => { setSelected(null); navigate(`/comprar/${selected.id}`) }}
  >
- Comprar licença
+ Licenciar Composição
  </button>
- )}
  </div>
  </div>
 
@@ -277,63 +254,6 @@ export default function Catalogo() {
  </div>
  )}
 
- {ofertaModal && (
- <OfertaModal obra={ofertaModal} onClose={() => setOfertaModal(null)} />
- )}
- </div>
- )
-}
-
-function OfertaModal({ obra, onClose }) {
- const [valor, setValor] = useState((obra.preco_cents ?? 0) / 100)
- const [mensagem, setMensagem] = useState('')
- const [loading, setLoading] = useState(false)
- const [error, setError] = useState('')
-
- async function enviar() {
- setError('')
- const cents = Math.round(Number(valor) * 100)
- if (!cents || cents < 50000) { setError('Valor mínimo: R$ 500,00.'); return }
- setLoading(true)
- try {
- const r = await api.post('/ofertas-licenciamento/', {
- obra_id: obra.id,
- valor_cents: cents,
- mensagem: mensagem.trim() || null,
- })
- if (r.checkout_url) window.location.href = r.checkout_url
- } catch (e) { setError(e.message); setLoading(false) }
- }
-
- return (
- <div className="modal-overlay" onClick={onClose}>
- <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
- <div className="modal-header">
- <h2>Fazer oferta de licenciamento</h2>
- <button className="btn-close" onClick={onClose}>×</button>
- </div>
- <div className="modal-body" style={{ display: 'grid', gap: 12 }}>
- <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
- <strong>{obra.nome}</strong> está editada por uma editora terceira.
- Sua oferta será autorizada no cartão (sem cobrança imediata) e enviada à editora.
- Ela tem <strong>72 horas úteis</strong> para aceitar. Sem aceite, o valor é estornado integralmente.
- </div>
- <label style={{ fontSize: 12, fontWeight: 600 }}>Valor da oferta (R$)</label>
- <input className="input" type="number" step="0.01" min="500"
- value={valor} onChange={e => setValor(e.target.value)} />
- <label style={{ fontSize: 12, fontWeight: 600 }}>Mensagem (opcional)</label>
- <textarea className="input" rows={3}
- placeholder="Conte para a editora o uso pretendido para a obra"
- value={mensagem} onChange={e => setMensagem(e.target.value)} />
- {error && <div style={{ color: 'var(--error)', fontSize: 13 }}>{error}</div>}
- </div>
- <div className="modal-footer" style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
- <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
- <button className="btn btn-primary" onClick={enviar} disabled={loading}>
- {loading ? 'Processando…' : 'Autorizar pagamento e enviar'}
- </button>
- </div>
- </div>
  </div>
  )
 }

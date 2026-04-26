@@ -1,4 +1,5 @@
 import React from 'react'
+import SeloPro, { isPerfilPro } from './SeloPro'
 
 /**
  * Header estilo Spotify reutilizável:
@@ -19,6 +20,7 @@ export default function ArtistaHero({
   const tipo = perfil.role === 'publisher' ? 'Editora'
              : perfil.role === 'compositor' ? 'Artista'
              : (perfil.role || '')
+  const isPro = isPerfilPro(perfil)
 
   return (
     <div style={{ position: 'relative' }}>
@@ -114,8 +116,10 @@ export default function ArtistaHero({
             fontWeight: 900, margin: '2px 0 0',
             lineHeight: 1.1, letterSpacing: -.8,
             color: '#09090B',
+            display: 'inline-flex', alignItems: 'center', flexWrap: 'wrap',
           }}>
             {nomeExibicao}
+            <SeloPro ativo={isPro} size="md" />
           </h1>
           <div style={{
             fontSize: 12, color: '#3F3F46', marginTop: 6,

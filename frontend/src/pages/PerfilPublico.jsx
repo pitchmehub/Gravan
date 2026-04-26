@@ -80,7 +80,7 @@ export default function PerfilPublico() {
     try {
       const { data: p, error: ePerfil } = await supabase
         .from('perfis')
-        .select('id, nome, nome_artistico, avatar_url, capa_url, nivel, role, bio')
+        .select('id, nome, nome_artistico, avatar_url, capa_url, nivel, role, bio, plano, status_assinatura')
         .eq('id', perfilId)
         .maybeSingle()
       if (ePerfil) throw new Error(ePerfil.message)

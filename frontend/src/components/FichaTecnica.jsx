@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import OfertaModal from './OfertaModal'
+import UpgradeProModal from './UpgradeProModal'
+import SeloPro, { isPerfilPro } from './SeloPro'
 import '../pages/Descoberta.css'
 
 const GRADIENTS = [
@@ -31,9 +33,11 @@ export default function FichaTecnica({ obra, onClose }) {
   const navigate = useNavigate()
   const { perfil } = useAuth()
   const isInterprete = perfil?.role === 'interprete'
+  const isMeuPro = isPerfilPro(perfil)
   const [coautores, setCoautores] = useState([])
   const [titularPro, setTitularPro] = useState(false)
   const [showOferta, setShowOferta] = useState(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
   const isExclusiva = !!obra?.is_exclusive
 
   useEffect(() => {
@@ -46,7 +50,7 @@ export default function FichaTecnica({ obra, onClose }) {
     async function load() {
       const { data } = await supabase
         .from('coautorias')
-        .select('share_pct, perfis(id, nome, nome_artistico, avatar_url, nivel)')
+        .select('share_pct, perfis(id, nome, nome_artistico, avatar_url, nivel, plano, status_assinatura)')
         .eq('obra_id', obra.id)
       setCoautores(data ?? [])
     }
@@ -99,15 +103,6 @@ export default function FichaTecnica({ obra, onClose }) {
                 Exclusiva
               </span>
             )}
-            {titularPro && (
-              <span style={{
-                marginLeft: 6, padding: '2px 8px', borderRadius: 99,
-                background: '#0C447C', color: '#fff', fontSize: 11, fontWeight: 700,
-                letterSpacing: 0.4,
-              }}>
-                PRO
-              </span>
-            )}
           </div>
           <div className="dc-modal-nome">{obra.nome}</div>
         </div>
@@ -135,8 +130,12 @@ export default function FichaTecnica({ obra, onClose }) {
                   </div>
                   <div className="dc-modal-comp-info">
                     <div className="dc-modal-comp-nome"
-                         style={perfilId ? { color: '#0C447C', textDecoration: 'underline' } : undefined}>
+                         style={{
+                           ...(perfilId ? { color: '#0C447C', textDecoration: 'underline' } : {}),
+                           display: 'inline-flex', alignItems: 'center',
+                         }}>
                       {c.perfis?.nome_artistico || c.perfis?.nome}
+                      <SeloPro ativo={isPerfilPro(c.perfis)} size="sm" />
                     </div>
                     <div className="dc-modal-comp-nivel">{c.perfis?.nivel}</div>
                   </div>
@@ -164,18 +163,33 @@ export default function FichaTecnica({ obra, onClose }) {
                 style={{ width: '100%' }}
                 onClick={() => { onClose(); navigate(`/comprar/${obra.id}`) }}
               >
-                Comprar pelo valor cheio
+                Licenciar Composição
               </button>
               {isInterprete && (
                 <button
-                  onClick={() => setShowOferta(true)}
+                  data-testid="btn-fazer-oferta"
+                  onClick={() => {
+                    if (isMeuPro) setShowOferta(true)
+                    else setShowUpgrade(true)
+                  }}
                   style={{
                     width: '100%', padding: '11px 16px', borderRadius: 8,
                     background: '#fff', border: '2px solid #0C447C', color: '#0C447C',
                     fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   }}
+                  title={isMeuPro ? '' : 'Disponível para assinantes PRO'}
                 >
                   Fazer oferta
+                  {!isMeuPro && (
+                    <span style={{
+                      padding: '2px 6px', borderRadius: 4,
+                      background: 'linear-gradient(135deg, #0C447C, #378ADD)',
+                      color: '#fff', fontSize: 9, fontWeight: 800, letterSpacing: 0.8,
+                    }}>
+                      PRO
+                    </span>
+                  )}
                 </button>
               )}
             </>
@@ -189,6 +203,13 @@ export default function FichaTecnica({ obra, onClose }) {
           onCriada={() => { setShowOferta(false); navigate('/ofertas') }}
         />
       )}
+      <UpgradeProModal
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        titulo="Fazer ofertas é exclusivo do plano PRO"
+        mensagem="Negocie diretamente com compositores, envie contrapropostas e desbloqueie licenciamento com exclusividade. Tudo a partir de R$ 29,90/mês."
+        ctaLabel="Assinar PRO e fazer ofertas"
+      />
     </div>,
     document.body
   )
