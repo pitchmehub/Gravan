@@ -160,20 +160,6 @@ export default function Landing() {
                 {content.hero.ctaSecondary}
               </a>
             </div>
-            <div className="hero-meta">
-              <div data-testid="stat-compositores">
-                <strong>{statCompositores}</strong>
-                <span>{content.stats.labelCompositores}</span>
-              </div>
-              <div data-testid="stat-obras">
-                <strong>{statObras}</strong>
-                <span>{content.stats.labelObras}</span>
-              </div>
-              <div data-testid="stat-pagos">
-                <strong>{statPago}</strong>
-                <span>{content.stats.labelPago}</span>
-              </div>
-            </div>
           </div>
           <div className="hero-media">
             <img
