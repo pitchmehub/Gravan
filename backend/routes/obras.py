@@ -65,6 +65,33 @@ def criar_obra():
     except (ValueError, TypeError):
         abort(422, description="'preco_cents' deve ser inteiro >= 100.")
 
+    # ── Faixa de preço por plano ────────────────────────────────────
+    # STARTER (grátis):  R$ 500 a R$ 1.000
+    # PRO (assinante):   R$ 500 a R$ 10.000
+    PRECO_MIN_CENTS = 50_000     # R$ 500,00
+    PRECO_MAX_STARTER = 100_000  # R$ 1.000,00
+    PRECO_MAX_PRO = 1_000_000    # R$ 10.000,00
+
+    plano_titular = (perfil.get("plano") or "STARTER").upper()
+    status_ass = perfil.get("status_assinatura") or "inativa"
+    is_pro_titular = plano_titular == "PRO" and status_ass in ("ativa", "cancelada", "past_due")
+
+    if preco_cents < PRECO_MIN_CENTS:
+        abort(422, description="Valor mínimo da obra é R$ 500,00.")
+
+    if is_pro_titular:
+        if preco_cents > PRECO_MAX_PRO:
+            abort(422, description="Valor máximo da obra (PRO) é R$ 10.000,00.")
+    else:
+        if preco_cents > PRECO_MAX_STARTER:
+            abort(
+                402,
+                description=(
+                    "Para precificar obras acima de R$ 1.000, assine o plano "
+                    "PRO e tenha acesso a compradores de alto valor."
+                ),
+            )
+
     try:
         coautorias = json.loads(request.form.get("coautorias", "[]"))
         if not isinstance(coautorias, list): raise ValueError()

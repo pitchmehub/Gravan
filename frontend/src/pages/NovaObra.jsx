@@ -5,6 +5,8 @@ import { api } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import TermosModal from '../components/TermosModal'
 import ContratoEdicaoModal from '../components/ContratoEdicaoModal'
+import UpgradeProModal from '../components/UpgradeProModal'
+import { isPerfilPro } from '../components/SeloPro'
 import { IconSparkles, IconHourglass } from '../components/Icons'
 
 const MAX_BYTES = 10 * 1024 * 1024
@@ -70,6 +72,12 @@ export default function NovaObra() {
  }
  const [showTermos, setShowTermos] = useState(false)
  const [showContrato, setShowContrato] = useState(false)
+ const [showUpgrade, setShowUpgrade] = useState(false)
+
+ // Faixa de preço varia com o plano: Free R$500–R$1.000, PRO R$500–R$10.000
+ const isPro = isPerfilPro(perfil)
+ const PRECO_MIN = 500
+ const PRECO_MAX = isPro ? 10000 : 1000
 
  useEffect(() => {
  if (perfil && !perfil.cadastro_completo) {
@@ -172,9 +180,15 @@ export default function NovaObra() {
  setError('Selecione o gênero da composição.'); return
  }
  const precoNum = Number(preco)
- const precoMax = perfil?.nivel === 'diamante' ? 10000 : 3000
- if (!preco || precoNum < 500) { setError('Preço mínimo: R$ 500,00.'); return }
- if (precoNum > precoMax) { setError(`Preço máximo para seu nível: R$ ${precoMax.toLocaleString('pt-BR')}`); return }
+ if (!preco || precoNum < PRECO_MIN) { setError(`Preço mínimo: R$ ${PRECO_MIN.toLocaleString('pt-BR')},00.`); return }
+ if (precoNum > PRECO_MAX) {
+   if (!isPro) {
+     // Bloqueia + mostra modal de upgrade
+     setShowUpgrade(true)
+     return
+   }
+   setError(`Preço máximo: R$ ${PRECO_MAX.toLocaleString('pt-BR')},00.`); return
+ }
  if (obraEditada === null) { setError('Responda se a obra já foi editada.'); return }
  if (obraEditada === true) {
  if (!editoraTNome.trim()) { setError('Informe o nome da editora terceira.'); return }
@@ -296,15 +310,36 @@ export default function NovaObra() {
  </div>
  <div className="form-group">
  <label className="form-label">Valor da licença (R$) *</label>
- <input className="input" type="number"
- min="500" max={perfil?.nivel === 'diamante' ? 10000 : 3000}
- step="1" placeholder="Ex: 1500"
- value={preco} onChange={e => setPreco(e.target.value)} />
+ <input
+   className="input"
+   type="number"
+   min={PRECO_MIN}
+   max={PRECO_MAX}
+   step="1"
+   placeholder={isPro ? 'Ex: 4500' : 'Ex: 800'}
+   value={preco}
+   onChange={e => {
+     const v = e.target.value
+     setPreco(v)
+     // Detecta tentativa de Free passar do teto enquanto digita → abre modal
+     if (!isPro && Number(v) > PRECO_MAX) {
+       setShowUpgrade(true)
+     }
+   }}
+ />
  <small style={{ color: 'var(--text-muted)', fontSize: 11 }}>
- {perfil?.nivel === 'diamante'
- ? ' Nível Diamante: R$ 500 a R$ 10.000'
- : ' Nível Ouro: R$ 500 a R$ 3.000 (venda 6 obras para desbloquear Diamante)'
- }
+   {isPro
+     ? '✓ Plano PRO: R$ 500 a R$ 10.000'
+     : 'Plano Grátis: R$ 500 a R$ 1.000. Para vender mais caro, '}
+   {!isPro && (
+     <button
+       type="button"
+       onClick={() => setShowUpgrade(true)}
+       style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: 600, cursor: 'pointer', padding: 0, fontSize: 11 }}
+     >
+       assine PRO
+     </button>
+   )}
  </small>
  </div>
  </div>
@@ -578,6 +613,22 @@ export default function NovaObra() {
 
  {showTermos && <TermosModal onClose={() => setShowTermos(false)} />}
  {showContrato && <ContratoEdicaoModal onClose={() => setShowContrato(false)} />}
+ <UpgradeProModal
+   open={showUpgrade}
+   onClose={() => setShowUpgrade(false)}
+   titulo="Para precificar acima de R$ 1.000, assine o PRO"
+   mensagem="O plano Grátis permite obras de R$ 500 a R$ 1.000. Com o PRO, você precifica até R$ 10.000 e ainda paga só 15% de comissão."
+   contexto={{
+     obra: {
+       nome,
+       letra,
+       genero,
+       preco,
+       coautores: coautores.map(c => ({ perfil_id: c.perfil_id, nome: c.nome })),
+     },
+   }}
+ />
+ 
  </div>
  )
 }
