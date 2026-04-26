@@ -150,7 +150,7 @@ function AnalyticsPaywall() {
             fontSize: 11, fontWeight: 700, letterSpacing: 1.5,
             marginBottom: 16,
           }}>
-            APENAS R$ 29,90/MÊS
+            APENAS R$ 49,90/MÊS
           </div>
           <h2 style={{
             fontSize: 'clamp(20px, 3vw, 26px)',

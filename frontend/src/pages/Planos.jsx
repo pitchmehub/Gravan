@@ -126,7 +126,7 @@ export default function Planos() {
  <span style={tagStyle('var(--brand)', '#fff')}>RECOMENDADO</span>
  </div>
  <h2 style={planName}>PRO</h2>
- <p style={priceStyle}>R$ 29,90<span style={priceSuffix}>/mês</span></p>
+ <p style={priceStyle}>R$ 49,90<span style={priceSuffix}>/mês</span></p>
  <ul style={listStyle}>
  <li>Tudo do Starter</li>
  <li><b style={{ color: 'var(--brand)' }}>Taxa reduzida de 15%</b> (economize 5%)</li>

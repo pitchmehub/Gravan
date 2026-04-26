@@ -17,9 +17,10 @@ import stripe
 from db.supabase_client import get_supabase
 
 
-PRO_PRICE_CENTS  = 2990  # R$ 29,90
+PRO_PRICE_CENTS  = 4990  # R$ 49,90
 PRO_CURRENCY     = "brl"
 PRO_PRODUCT_NAME = "Gravan PRO"
+PRO_LOOKUP_KEY   = "gravan_pro_monthly_4990"  # nova lookup_key p/ refletir o preço atual
 
 
 def _ensure_stripe_key():
@@ -39,22 +40,22 @@ def get_or_create_pro_price() -> str:
     if cached:
         return cached
 
-    # Procura um price recorrente já existente com esse nickname
-    prices = stripe.Price.list(active=True, limit=100, lookup_keys=["gravan_pro_monthly"])
+    # Procura um price recorrente já existente com a lookup_key atual
+    prices = stripe.Price.list(active=True, limit=100, lookup_keys=[PRO_LOOKUP_KEY])
     if prices.data:
         price_id = prices.data[0].id
         os.environ["GRAVAN_PRO_PRICE_ID"] = price_id
         return price_id
 
-    # Cria produto + price
+    # Cria produto + price com o valor atual (R$ 49,90/mês)
     product = stripe.Product.create(name=PRO_PRODUCT_NAME)
     price = stripe.Price.create(
         product=product.id,
         unit_amount=PRO_PRICE_CENTS,
         currency=PRO_CURRENCY,
         recurring={"interval": "month"},
-        lookup_key="gravan_pro_monthly",
-        nickname="Gravan PRO — Mensal",
+        lookup_key=PRO_LOOKUP_KEY,
+        nickname=f"Gravan PRO — Mensal R$ {PRO_PRICE_CENTS/100:.2f}".replace(".", ","),
     )
     os.environ["GRAVAN_PRO_PRICE_ID"] = price.id
     return price.id

@@ -204,7 +204,7 @@ export default function FichaTecnica({ obra, onClose }) {
         open={showUpgrade}
         onClose={() => setShowUpgrade(false)}
         titulo="Fazer ofertas é exclusivo do plano PRO"
-        mensagem="Negocie diretamente com compositores, envie contrapropostas e desbloqueie licenciamento com exclusividade. Tudo a partir de R$ 29,90/mês."
+        mensagem="Negocie diretamente com compositores, envie contrapropostas e desbloqueie licenciamento com exclusividade. Tudo a partir de R$ 49,90/mês."
         ctaLabel="Assinar PRO e fazer ofertas"
       />
     </div>,

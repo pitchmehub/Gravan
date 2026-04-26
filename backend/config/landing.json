@@ -69,33 +69,43 @@
     "items": [
       {
         "label": "01 / UPLOAD",
-        "text": "Upload rápido, validação de metadata e preview instantâneo no player.",
-        "title": "MP3 até 10MB"
+        "text": "Upload de MP3 com validação de metadata, capa e preview instantâneo no player global.",
+        "title": "Catálogo profissional"
       },
       {
         "label": "02 / PAGAMENTOS",
-        "text": "Checkout em BRL e USD. Repasse automático e relatórios fiscais.",
-        "title": "Stripe"
+        "text": "Checkout via Stripe em BRL. Saques sem limite de quantidade ou valor — basta ter saldo.",
+        "title": "Stripe Connect"
       },
       {
         "label": "03 / SEGURANÇA",
-        "text": "CPF/RG criptografados, RLS no banco e logs de auditoria em tempo real.",
-        "title": "Criptografia de ponta"
+        "text": "Saques com confirmação por OTP no e-mail e janela de 24 h para cancelamento. RLS no banco e logs de auditoria.",
+        "title": "Confirmação por OTP"
       },
       {
         "label": "04 / COAUTORIA",
-        "text": "Divida receitas com coautores direto no cadastro da obra.",
+        "text": "Divida receitas com coautores e editoras diretamente no cadastro da obra. Splits automáticos no recebimento.",
         "title": "Split automático"
       },
       {
-        "label": "05 / ANALYTICS",
-        "text": "Vendas, plays, origem do tráfego e performance por obra.",
+        "label": "05 / EDITORAS",
+        "text": "Cadastro de editoras agregadoras, convites com termo jurídico, contratos trilaterais e painel próprio para gestão de catálogo.",
+        "title": "Painel para editoras"
+      },
+      {
+        "label": "06 / OFERTAS & CONTRATOS",
+        "text": "Sistema de ofertas, contrapropostas e contratos eletrônicos com assinatura registrada por IP, data e hora.",
+        "title": "Contratos eletrônicos"
+      },
+      {
+        "label": "07 / ANALYTICS",
+        "text": "Vendas, plays, curtidas, origem do tráfego e performance por obra (exclusivo PRO).",
         "title": "Dashboard completo"
       },
       {
-        "label": "06 / SUPORTE",
-        "text": "Equipe dedicada e base de conhecimento aberta 24/7.",
-        "title": "Humano, quando precisa"
+        "label": "08 / NOTIFICAÇÕES",
+        "text": "Push, e-mail e central de notificações em tempo real para vendas, ofertas, contratos e saques.",
+        "title": "Acompanhamento em tempo real"
       }
     ],
     "title": "Recursos construídos para escalar."
@@ -141,7 +151,7 @@
       ],
       "label": "PRO",
       "price": "Jogue pra ganhar",
-      "priceUnit": "R$29,90 / mês",
+      "priceUnit": "R$ 49,90 / mês",
       "ribbon": ""
     },
     "title": "Preço honesto. Sem pegadinhas."
