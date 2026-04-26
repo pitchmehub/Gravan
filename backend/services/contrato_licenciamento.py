@@ -51,12 +51,16 @@ III. Disponibilizar a obra em plataformas de streaming, incluindo, mas não se l
 IV. Utilizar a obra em redes sociais e plataformas digitais;
 V. Sincronizar a obra com conteúdos audiovisuais.
 
-CLÁUSULA 3 — TERRITÓRIO E PRAZO
+CLÁUSULA 3 — TERRITÓRIO, PRAZO E NÃO EXCLUSIVIDADE
 
 A presente autorização é concedida:
 - Em caráter mundial;
-- Pelo prazo integral de proteção legal dos direitos autorais, conforme a Lei nº 9.610/98;
-sendo considerada definitiva, irrevogável e irretratável.
+- Em caráter NÃO EXCLUSIVO, podendo o(s) AUTOR(ES) licenciar a mesma obra a terceiros;
+- Pelo prazo de 5 (cinco) anos, contados da data de emissão deste instrumento.
+
+Parágrafo Único: Findo o prazo acima, o contrato poderá ser renovado mediante acordo
+escrito entre as partes. A não renovação não impede o LICENCIADO de continuar
+explorando as gravações realizadas durante o período contratual.
 
 CLÁUSULA 4 — GARANTIA DE TITULARIDADE
 
@@ -589,10 +593,14 @@ obra; (ii) ter ciência e concordância com o presente licenciamento;
 (iii) responsabilizar-se pela distribuição dos valores cabíveis ao(s)
 AUTOR(ES) nos termos do contrato de edição existente entre as partes.
 
-CLÁUSULA 5 — TERRITÓRIO E PRAZO
+CLÁUSULA 5 — TERRITÓRIO, PRAZO E NÃO EXCLUSIVIDADE
 
-Autorização mundial, pelo prazo integral de proteção dos direitos autorais
-(Lei 9.610/98), em caráter definitivo, irrevogável e irretratável.
+Autorização mundial, em caráter NÃO EXCLUSIVO, pelo prazo de 5 (cinco) anos
+contados da data de emissão deste instrumento.
+
+Parágrafo Único: Findo o prazo, o contrato poderá ser renovado mediante acordo
+escrito entre as partes. A não renovação não impede o LICENCIADO de continuar
+explorando as gravações realizadas durante o período contratual.
 
 CLÁUSULA 6 — ROYALTIES AUTORAIS (EXECUÇÃO PÚBLICA)
 

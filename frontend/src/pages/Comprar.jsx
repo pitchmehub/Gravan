@@ -230,9 +230,9 @@ export default function Comprar() {
  <span>
  Declaro que li e concordo com os termos do <b>Contrato de Autorização para
  Gravação e Exploração de Obra Musical</b>, autorizando o licenciamento da
- obra <b>{obra.nome}</b> nas condições apresentadas (splits, royalties ECAD
- 80/10/10, fonograma 2%, foro Rio de Janeiro). Ao clicar em "Pagar", minha
- assinatura eletrônica será registrada (MP 2.200-2/2001 e Lei 14.063/2020).
+ obra <b>{obra.nome}</b> nas condições apresentadas (não exclusivo, vigência
+ 5 anos, royalties ECAD 85/10/5, foro Rio de Janeiro). Ao clicar em "Pagar",
+ minha assinatura eletrônica será registrada (MP 2.200-2/2001 e Lei 14.063/2020).
  </span>
  </label>
  <div style={{ marginTop: 10, paddingLeft: 26 }}>
