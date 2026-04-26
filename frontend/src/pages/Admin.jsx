@@ -39,23 +39,48 @@ function StatCard({ label, value, sublabel, color = 'var(--brand)', big = false 
 export default function Admin() {
  const [aba, setAba] = useState('analiticos')
  const [resumo, setResumo] = useState(null)
+ const [extras, setExtras] = useState(null)
  const [saques, setSaques] = useState([])
  const [saqueLoading, setSaqueLoading] = useState(false)
  const [generos, setGeneros] = useState([])
  const [audit, setAudit] = useState([])
  const [volume, setVolume] = useState([])
  const [loading, setLoading] = useState(true)
+ const [reloadingExtras, setReloadingExtras] = useState(false)
+
+ async function carregarBase() {
+   const [r, e, g, a, v] = await Promise.all([
+     api.get('/admin/bi/resumo').catch(() => null),
+     api.get('/admin/bi/extras').catch(() => null),
+     api.get('/admin/bi/generos').catch(() => []),
+     api.get('/admin/bi/auditoria?per_page=30').catch(() => []),
+     api.get('/admin/bi/volume?dias=30').catch(() => []),
+   ])
+   setResumo(r); setExtras(e); setGeneros(g); setAudit(a); setVolume(v)
+ }
+
+ async function reloadExtras() {
+   setReloadingExtras(true)
+   try {
+     const [r, e] = await Promise.all([
+       api.get('/admin/bi/resumo').catch(() => null),
+       api.get('/admin/bi/extras').catch(() => null),
+     ])
+     if (r) setResumo(r)
+     if (e) setExtras(e)
+   } finally { setReloadingExtras(false) }
+ }
 
  useEffect(() => {
- Promise.all([
- api.get('/admin/bi/resumo').catch(() => null),
- api.get('/admin/bi/generos').catch(() => []),
- api.get('/admin/bi/auditoria?per_page=30').catch(() => []),
- api.get('/admin/bi/volume?dias=30').catch(() => []),
- ]).then(([r, g, a, v]) => {
- setResumo(r); setGeneros(g); setAudit(a); setVolume(v)
- }).finally(() => setLoading(false))
+   carregarBase().finally(() => setLoading(false))
  }, [])
+
+ // Auto-refresh dos analíticos a cada 15s enquanto a aba estiver aberta
+ useEffect(() => {
+   if (aba !== 'analiticos') return
+   const intv = setInterval(() => { reloadExtras() }, 15000)
+   return () => clearInterval(intv)
+ }, [aba])
 
  async function loadSaques() {
  setSaqueLoading(true)
@@ -119,41 +144,7 @@ export default function Admin() {
 
  {/* ── ANALÍTICOS ── */}
  {aba === 'analiticos' && resumo && (
- <div>
- <div style={{
- display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
- gap: 14, marginBottom: 24,
- }}>
- <StatCard label="Composições cadastradas" value={resumo.total_obras} sublabel={`${resumo.obras_publicadas} publicadas`} big color="var(--brand)" />
- <StatCard label="Vendas confirmadas" value={resumo.total_vendas} big color="var(--success)" />
- <StatCard label="Compositores" value={resumo.total_compositores} sublabel={`de ${resumo.total_usuarios} usuários`} />
- <StatCard label="Intérpretes" value={resumo.total_interpretes} />
- <StatCard label="Ofertas pendentes" value={resumo.ofertas_pendentes} color="var(--warning)" />
- </div>
-
- <div className="card" style={{ background: 'linear-gradient(135deg, #083257, #09090B)', border: 'none', color: '#fff', marginBottom: 16, boxShadow: '0 8px 32px rgba(12,68,124,.25)' }}>
- <h2 style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,.7)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
- Receita total da plataforma
- </h2>
- <div style={{ fontSize: 42, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
- {fmt(resumo.receita_bruta_cents)}
- </div>
- <div style={{ display: 'flex', gap: 24, marginTop: 16 }}>
- <div>
- <div style={{ fontSize: 11, color: 'rgba(255,255,255,.5)' }}>RETIDO PELA PLATAFORMA</div>
- <div style={{ fontSize: 22, fontWeight: 700, color: '#34D399', marginTop: 4 }}>
- {fmt(resumo.receita_plataforma_cents)}
- </div>
- </div>
- <div>
- <div style={{ fontSize: 11, color: 'rgba(255,255,255,.5)' }}>PAGO AOS COMPOSITORES</div>
- <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', marginTop: 4 }}>
- {fmt(resumo.receita_compositores_cents)}
- </div>
- </div>
- </div>
- </div>
- </div>
+ <AnaliticosPanel resumo={resumo} extras={extras} reloadingExtras={reloadingExtras} reloadExtras={reloadExtras} />
  )}
 
  {/* ── RECEITA ── */}
@@ -746,6 +737,231 @@ function SecurityPanel() {
  )}
  </div>
  )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PAINEL DE ANALÍTICOS (admin)
+// Visão consolidada da plataforma: usuários, receita, ofertas e a
+// economia gerada pela assinatura PRO. Auto-refresh a cada 15s.
+// ═══════════════════════════════════════════════════════════════════
+function AnaliticosPanel({ resumo, extras, reloadingExtras, reloadExtras }) {
+  const u  = extras?.usuarios || {}
+  const r  = extras?.receita  || {}
+  const a  = extras?.assinatura || {}
+  const o  = extras?.ofertas  || {}
+  const lt = extras?.licenciamento_terceiros || {}
+  const ob = extras?.obras?.por_status || {}
+  const papel = u.por_papel || {}
+
+  const atualizadoEm = extras?.atualizado_em
+    ? new Date(extras.atualizado_em).toLocaleTimeString('pt-BR', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      })
+    : '—'
+
+  return (
+    <div>
+      {/* Topo: hora da última atualização + botão manual */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 16, flexWrap: 'wrap', gap: 8,
+      }}>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+          Atualização automática a cada 15s · última leitura: <strong style={{ color: 'var(--text-primary)' }}>{atualizadoEm}</strong>
+          {reloadingExtras && <span style={{ marginLeft: 8, color: 'var(--brand)' }}>atualizando…</span>}
+        </div>
+        <button className="btn-secondary" onClick={reloadExtras} disabled={reloadingExtras}
+          style={{ fontSize: 12, padding: '6px 14px' }}>
+          {reloadingExtras ? 'Atualizando…' : '↻ Atualizar agora'}
+        </button>
+      </div>
+
+      {/* Linha 1 — Receita destaque */}
+      <div className="card" style={{
+        background: 'linear-gradient(135deg, #083257, #09090B)', border: 'none',
+        color: '#fff', marginBottom: 16, boxShadow: '0 8px 32px rgba(12,68,124,.25)',
+      }}>
+        <h2 style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,.7)',
+          marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
+          Receita total da plataforma
+        </h2>
+        <div style={{ fontSize: 42, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+          {fmt(resumo.receita_bruta_cents)}
+        </div>
+        <div style={{ display: 'flex', gap: 24, marginTop: 16, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.5)' }}>RETIDO PELA PLATAFORMA</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#34D399', marginTop: 4 }}>
+              {fmt(resumo.receita_plataforma_cents)}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.5)' }}>PAGO AOS COMPOSITORES</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginTop: 4 }}>
+              {fmt(resumo.receita_compositores_cents)}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.5)' }}>ÚLTIMOS 30 DIAS</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginTop: 4 }}>
+              {fmt(r.ultimos_30d_cents || 0)}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.5)' }}>ÚLTIMOS 7 DIAS</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginTop: 4 }}>
+              {fmt(r.ultimos_7d_cents || 0)}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.5)' }}>TICKET MÉDIO</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginTop: 4 }}>
+              {fmt(r.ticket_medio_cents || 0)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Linha 2 — Economia gerada pela assinatura PRO */}
+      <div className="card" style={{
+        background: 'linear-gradient(135deg, #16653f, #022c22)',
+        border: 'none', color: '#fff', marginBottom: 16,
+        boxShadow: '0 8px 32px rgba(16,185,129,.25)',
+      }}>
+        <h2 style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,.75)',
+          marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
+          Economia acumulada dos assinantes PRO
+        </h2>
+        <div style={{ fontSize: 38, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
+          {fmt(a.economia_total_cents || 0)}
+        </div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)', marginBottom: 14 }}>
+          Quanto os assinantes pouparam ao pagar 15% (PRO) em vez de 20% (STARTER) sobre suas vendas.
+        </div>
+        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.55)' }}>NOS ÚLTIMOS 30 DIAS</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#A7F3D0', marginTop: 4 }}>
+              {fmt(a.economia_30d_cents || 0)}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.55)' }}>ASSINANTES PRO ATIVOS</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginTop: 4 }}>
+              {a.pro_ativos || 0}
+              {a.pro_past_due ? <span style={{ fontSize: 12, color: '#FCA5A5', marginLeft: 8 }}>+{a.pro_past_due} em atraso</span> : null}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.55)' }}>RECEITA MENSAL DE ASSINATURA (estim.)</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginTop: 4 }}>
+              {fmt(a.receita_mensal_cents || 0)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Linha 3 — Stat cards principais */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gap: 14, marginBottom: 16,
+      }}>
+        <StatCard label="Composições cadastradas" value={resumo.total_obras}
+          sublabel={`${resumo.obras_publicadas} publicadas`} big color="var(--brand)" />
+        <StatCard label="Vendas confirmadas" value={r.transacoes_total ?? resumo.total_vendas}
+          sublabel={`${r.transacoes_30d || 0} em 30 dias`} big color="var(--success)" />
+        <StatCard label="Pago aos artistas (saques)" value={fmt(r.pago_artistas_cents || 0)}
+          sublabel="Saques liquidados" />
+        <StatCard label="Ofertas em aberto" value={o.pendentes ?? resumo.ofertas_pendentes}
+          color="var(--warning)" sublabel={`${o.total || 0} no total`} />
+      </div>
+
+      {/* Linha 4 — Painel de Usuários */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12,
+          textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-secondary)' }}>
+          Usuários da plataforma
+        </h3>
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12,
+        }}>
+          <StatCard label="Total de usuários" value={u.total ?? resumo.total_usuarios}
+            sublabel={`+${u.novos_30d || 0} em 30 dias`} big color="var(--brand)" />
+          <StatCard label="Compositores" value={papel.compositor || 0} />
+          <StatCard label="Intérpretes" value={papel.interprete || 0} />
+          <StatCard label="Editoras" value={papel.publisher || 0} />
+          <StatCard label="Agregadores" value={papel.agregador || 0} />
+          <StatCard label="Administradores" value={papel.administrador || 0} />
+          <StatCard label="Assinantes PRO" value={a.pro_ativos || 0}
+            sublabel={`${a.pro_past_due || 0} em atraso`} color="var(--success)" />
+          <StatCard label="Plano STARTER" value={u.starter || 0} />
+          <StatCard label="Novos (7 dias)" value={u.novos_7d || 0} color="var(--brand)" />
+        </div>
+      </div>
+
+      {/* Linha 5 — Ofertas (catálogo) */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 4,
+          textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-secondary)' }}>
+          Ofertas de catálogo (intérpretes → compositores)
+        </h3>
+        <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 12 }}>
+          Total negociado em ofertas aceitas: <strong style={{ color: 'var(--success)' }}>{fmt(o.total_negociado_cents || 0)}</strong>
+          {' · '}Ticket médio: <strong>{fmt(o.ticket_medio_cents || 0)}</strong>
+          {' · '}Taxa de aceite: <strong>{o.taxa_aceite_pct || 0}%</strong>
+        </div>
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12,
+        }}>
+          <StatCard label="Total de ofertas" value={o.total || 0} big />
+          <StatCard label="Pendentes" value={o.pendentes || 0} color="var(--warning)" />
+          <StatCard label="Aceitas" value={o.aceitas || 0} color="var(--success)" />
+          <StatCard label="Recusadas" value={o.recusadas || 0} color="var(--danger)" />
+          <StatCard label="Canceladas/expiradas" value={o.canceladas || 0} />
+          <StatCard label="Exclusividade" value={o.exclusividade || 0} color="var(--brand)" />
+        </div>
+      </div>
+
+      {/* Linha 6 — Licenciamento de terceiros + obras por status */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14,
+      }}>
+        <div className="card">
+          <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12,
+            textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-secondary)' }}>
+            Licenciamento por terceiros (editoras)
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+            <StatCard label="Total" value={lt.total || 0} />
+            <StatCard label="Em andamento" value={lt.em_andamento || 0} color="var(--warning)" />
+            <StatCard label="Concluídas" value={lt.concluidas || 0} color="var(--success)" />
+          </div>
+        </div>
+        <div className="card">
+          <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12,
+            textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-secondary)' }}>
+            Obras por status
+          </h3>
+          {Object.keys(ob).length === 0 ? (
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Nenhum dado disponível.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {Object.entries(ob).sort((a,b) => b[1]-a[1]).map(([st, qtd]) => (
+                <div key={st} style={{
+                  display: 'flex', justifyContent: 'space-between',
+                  padding: '8px 12px', background: 'var(--bg-elevated)',
+                  borderRadius: 6, fontSize: 13,
+                }}>
+                  <span style={{ textTransform: 'capitalize' }}>{st.replace(/_/g, ' ')}</span>
+                  <strong>{qtd}</strong>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ═══════════════════════════════════════════════════════════════════

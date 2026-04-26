@@ -64,6 +64,203 @@ def resumo_geral():
     }), 200
 
 
+@admin_bp.route("/bi/extras", methods=["GET"])
+@require_auth
+def bi_extras():
+    """
+    Analíticos globais complementares: usuários (por papel, novos cadastros,
+    plano PRO/STARTER), economia gerada pela assinatura PRO, receita por
+    janela (7d / 30d / total), receita de assinatura, e ofertas (catálogo
+    + licenciamento de terceiros) em todos os status. Pensado para popular
+    o cabeçalho do painel Analíticos do admin com auto-refresh.
+    """
+    _check_admin()
+    sb = get_supabase()
+
+    from datetime import datetime, timedelta, timezone
+    agora = datetime.now(timezone.utc)
+    iso_7d  = (agora - timedelta(days=7)).isoformat()
+    iso_30d = (agora - timedelta(days=30)).isoformat()
+
+    # ── 1. Usuários por papel + novos cadastros ────────────────────
+    perfis = (sb.table("perfis")
+                .select("id, role, plano, status_assinatura, "
+                        "assinatura_inicio, created_at")
+                .execute()).data or []
+
+    por_role = {}
+    for p in perfis:
+        r = p.get("role") or "sem_papel"
+        por_role[r] = por_role.get(r, 0) + 1
+
+    novos_7d  = sum(1 for p in perfis if (p.get("created_at") or "") >= iso_7d)
+    novos_30d = sum(1 for p in perfis if (p.get("created_at") or "") >= iso_30d)
+
+    pro_ativos     = sum(1 for p in perfis
+                         if p.get("plano") == "PRO"
+                         and p.get("status_assinatura") == "ativa")
+    pro_past_due   = sum(1 for p in perfis
+                         if p.get("plano") == "PRO"
+                         and p.get("status_assinatura") == "past_due")
+    starter_total  = sum(1 for p in perfis if p.get("plano") != "PRO")
+
+    # ── 2. Transações + economia gerada pela assinatura PRO ───────
+    # PRO paga 15% de fee; STARTER paga 20%. Para cada transação confirmada
+    # de um titular PRO, a economia = (20% - 15%) × valor = 5% × valor.
+    # Calculamos comparando o que seria cobrado a 20% vs o que foi cobrado.
+    trans = (sb.table("transacoes")
+               .select("id, valor_cents, plataforma_cents, liquido_cents, "
+                       "status, created_at")
+               .eq("status", "confirmada")
+               .execute()).data or []
+
+    receita_total      = sum(int(t.get("valor_cents") or 0) for t in trans)
+    plataforma_total   = sum(int(t.get("plataforma_cents") or 0) for t in trans)
+    economia_assinatura_total = sum(
+        max(0, int(round((t.get("valor_cents") or 0) * 0.20)) - int(t.get("plataforma_cents") or 0))
+        for t in trans
+    )
+
+    receita_7d = sum(int(t.get("valor_cents") or 0)
+                     for t in trans if (t.get("created_at") or "") >= iso_7d)
+    receita_30d = sum(int(t.get("valor_cents") or 0)
+                      for t in trans if (t.get("created_at") or "") >= iso_30d)
+    economia_30d = sum(
+        max(0, int(round((t.get("valor_cents") or 0) * 0.20)) - int(t.get("plataforma_cents") or 0))
+        for t in trans if (t.get("created_at") or "") >= iso_30d
+    )
+
+    transacoes_total = len(trans)
+    transacoes_30d   = sum(1 for t in trans if (t.get("created_at") or "") >= iso_30d)
+    ticket_medio_cents = int(receita_total / transacoes_total) if transacoes_total else 0
+
+    # ── 3. Receita de assinatura (mensalidades cobradas) ──────────
+    # Estima pelo nº de usuários PRO ativos × preço mensal.
+    try:
+        from services.subscription import PRO_PRICE_CENTS
+    except Exception:
+        PRO_PRICE_CENTS = 4990
+    receita_assinatura_mensal = pro_ativos * PRO_PRICE_CENTS
+
+    # ── 4. Ofertas (catálogo: padrao/exclusividade) ────────────────
+    ofertas_catalogo = []
+    try:
+        ofertas_catalogo = (sb.table("ofertas")
+                              .select("id, status, valor_cents, tipo, created_at")
+                              .order("created_at", desc=True)
+                              .limit(2000)
+                              .execute()).data or []
+    except Exception:
+        pass
+
+    of_pendentes = sum(1 for o in ofertas_catalogo if o.get("status") == "pendente")
+    of_aceitas   = sum(1 for o in ofertas_catalogo if o.get("status") == "aceita")
+    of_recusadas = sum(1 for o in ofertas_catalogo if o.get("status") == "recusada")
+    of_canceladas = sum(1 for o in ofertas_catalogo
+                        if o.get("status") in ("cancelada", "expirada"))
+    of_total_negociado = sum(int(o.get("valor_cents") or 0)
+                             for o in ofertas_catalogo if o.get("status") == "aceita")
+    of_ticket_medio = (int(of_total_negociado / of_aceitas)
+                       if of_aceitas else 0)
+    taxa_aceite = (round(of_aceitas / (of_aceitas + of_recusadas) * 100, 1)
+                   if (of_aceitas + of_recusadas) > 0 else 0)
+    of_exclusividade = sum(1 for o in ofertas_catalogo
+                           if (o.get("tipo") or "").lower() == "exclusividade")
+
+    # ── 5. Ofertas de licenciamento (editoras terceiras) ──────────
+    ofertas_lic = []
+    try:
+        ofertas_lic = (sb.table("ofertas_licenciamento")
+                         .select("id, status, valor_cents, created_at")
+                         .order("created_at", desc=True)
+                         .limit(2000)
+                         .execute()).data or []
+    except Exception:
+        pass
+
+    lic_total          = len(ofertas_lic)
+    lic_em_andamento   = sum(1 for o in ofertas_lic
+                             if o.get("status") in (
+                                 "aguardando_editora",
+                                 "aguardando_assinaturas",
+                             ))
+    lic_concluidas     = sum(1 for o in ofertas_lic
+                             if o.get("status") in ("aceita", "concluida", "concluído"))
+
+    # ── 6. Saques pagos (saídas reais para os artistas) ────────────
+    total_pago_artistas = 0
+    try:
+        saques_pagos = (sb.table("saques")
+                          .select("valor_cents")
+                          .eq("status", "pago")
+                          .execute()).data or []
+        total_pago_artistas = sum(int(s.get("valor_cents") or 0)
+                                  for s in saques_pagos)
+    except Exception:
+        pass
+
+    # ── 7. Obras: status detalhado ─────────────────────────────────
+    obras_por_status = {}
+    try:
+        obras_rows = (sb.table("obras").select("status").execute()).data or []
+        for o in obras_rows:
+            st = o.get("status") or "rascunho"
+            obras_por_status[st] = obras_por_status.get(st, 0) + 1
+    except Exception:
+        pass
+
+    return jsonify({
+        "atualizado_em": agora.isoformat(),
+        "usuarios": {
+            "total":           len(perfis),
+            "por_papel":       por_role,   # ex: {"compositor": 12, "interprete": 4, "publisher": 2, "administrador": 1}
+            "novos_7d":        novos_7d,
+            "novos_30d":       novos_30d,
+            "pro_ativos":      pro_ativos,
+            "pro_past_due":    pro_past_due,
+            "starter":         starter_total,
+        },
+        "receita": {
+            "total_cents":            receita_total,
+            "ultimos_7d_cents":       receita_7d,
+            "ultimos_30d_cents":      receita_30d,
+            "plataforma_total_cents": plataforma_total,
+            "ticket_medio_cents":     ticket_medio_cents,
+            "transacoes_total":       transacoes_total,
+            "transacoes_30d":         transacoes_30d,
+            "pago_artistas_cents":    total_pago_artistas,
+        },
+        "assinatura": {
+            "preco_pro_cents":        PRO_PRICE_CENTS,
+            "pro_ativos":             pro_ativos,
+            "receita_mensal_cents":   receita_assinatura_mensal,
+            "economia_total_cents":   economia_assinatura_total,
+            "economia_30d_cents":     economia_30d,
+            "fee_starter_pct":        20,
+            "fee_pro_pct":            15,
+        },
+        "ofertas": {
+            "total":               len(ofertas_catalogo),
+            "pendentes":           of_pendentes,
+            "aceitas":             of_aceitas,
+            "recusadas":           of_recusadas,
+            "canceladas":          of_canceladas,
+            "exclusividade":       of_exclusividade,
+            "total_negociado_cents": of_total_negociado,
+            "ticket_medio_cents":  of_ticket_medio,
+            "taxa_aceite_pct":     taxa_aceite,
+        },
+        "licenciamento_terceiros": {
+            "total":         lic_total,
+            "em_andamento":  lic_em_andamento,
+            "concluidas":    lic_concluidas,
+        },
+        "obras": {
+            "por_status": obras_por_status,
+        },
+    }), 200
+
+
 @admin_bp.route("/bi/generos", methods=["GET"])
 @require_auth
 def generos_populares():
