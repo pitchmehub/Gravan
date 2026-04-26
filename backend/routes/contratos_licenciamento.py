@@ -14,6 +14,7 @@ from services.contrato_licenciamento import (
     _endereco,
     _cidade_uf,
     _decrypt,
+    _info_plano,
 )
 from services.contrato_pdf import gerar_pdf_contrato
 from services.dossie_licenca import gerar_zip_dossie_licenca
@@ -139,14 +140,12 @@ def preview():
             editora.get("endereco_cidade"), editora.get("endereco_uf"),
         ])) or "Não informado"
         clausula_split_editora = (
-            "\n\nNos termos do contrato de agregação vigente entre AUTOR(ES) e EDITORA, "
-            "a GRAVAN, na qualidade de plataforma intermediária, fica autorizada e "
-            "obrigada a creditar automaticamente, em cada licenciamento desta obra, "
-            "o percentual de 10% (dez por cento) do valor pago pelo LICENCIADO "
-            "diretamente à EDITORA, sendo o saldo remanescente, deduzida a taxa de "
-            "intermediação da GRAVAN, distribuído ao(s) AUTOR(ES) conforme o split "
-            "declarado na Cláusula 7."
+            "\n\nParágrafo Terceiro: O percentual de 10% (dez por cento) destinado à "
+            "EDITORA, conforme item 3.1 acima, decorre do contrato de agregação vigente "
+            "entre AUTOR(ES) e EDITORA, ficando a GRAVAN autorizada e obrigada a creditá-lo "
+            "automaticamente, em cada licenciamento desta obra, diretamente à EDITORA."
         )
+        info = _info_plano(titular)
         conteudo = (TEMPLATE_TRILATERAL
             .replace("{{autores_bloco}}",          autores_bloco)
             .replace("{{editora_razao}}",          editora.get("razao_social") or editora.get("nome_completo") or editora.get("nome") or "—")
@@ -165,11 +164,18 @@ def preview():
             .replace("{{obra_letra}}",             (obra.get("letra") or "").strip() or "—")
             .replace("{{valor_buyout_extenso}}",   _moeda(valor_cents))
             .replace("{{split_lista}}",            split_lista)
+            .replace("{{plataforma_pct}}",         str(info["plataforma_pct"]))
+            .replace("{{plataforma_pct_extenso}}", info["plataforma_pct_extenso"])
+            .replace("{{plano_titular_label}}",    info["plano_titular_label"])
+            .replace("{{editora_pct}}",            str(info["editora_pct"]))
+            .replace("{{editora_pct_extenso}}",    info["editora_pct_extenso"])
+            .replace("{{liquido_autores_pct_trilateral}}", str(info["liquido_autores_pct_trilateral"]))
             .replace("{{clausula_split_editora}}", clausula_split_editora)
             .replace("{{data_emissao}}",           datetime.utcnow().strftime("%d/%m/%Y às %H:%M UTC"))
         )
         tipo = "trilateral"
     else:
+        info = _info_plano(titular)
         conteudo = (TEMPLATE_LICENCIAMENTO
             .replace("{{autores_bloco}}",            autores_bloco)
             .replace("{{interprete_nome}}",          buyer.get("nome_completo") or buyer.get("nome") or "—")
@@ -183,6 +189,10 @@ def preview():
             .replace("{{isrc}}",                     obra.get("isrc") or "a definir após lançamento")
             .replace("{{iswc}}",                     obra.get("iswc") or "a definir após lançamento")
             .replace("{{split_lista}}",              split_lista)
+            .replace("{{plataforma_pct}}",           str(info["plataforma_pct"]))
+            .replace("{{plataforma_pct_extenso}}",   info["plataforma_pct_extenso"])
+            .replace("{{plano_titular_label}}",      info["plano_titular_label"])
+            .replace("{{liquido_autores_pct}}",      str(info["liquido_autores_pct"]))
             .replace("{{data_emissao}}",             datetime.utcnow().strftime("%d/%m/%Y às %H:%M UTC"))
         )
         tipo = "bilateral"
@@ -228,6 +238,7 @@ def preview_oferta(token):
         editora.get("endereco_cidade"), editora.get("endereco_uf"),
     ])) if editora else ""
 
+    info = _info_plano(titular)
     conteudo = (TEMPLATE_TRILATERAL
         .replace("{{autores_bloco}}",          autores_bloco)
         .replace("{{editora_razao}}",          editora.get("razao_social") or of.get("editora_terceira_nome") or "(razão social da sua editora)")
@@ -246,6 +257,12 @@ def preview_oferta(token):
         .replace("{{obra_letra}}",             (obra.get("letra") or "").strip() or "—")
         .replace("{{valor_buyout_extenso}}",   _moeda(of.get("valor_cents") or 0))
         .replace("{{split_lista}}",            split_lista)
+        .replace("{{plataforma_pct}}",         str(info["plataforma_pct"]))
+        .replace("{{plataforma_pct_extenso}}", info["plataforma_pct_extenso"])
+        .replace("{{plano_titular_label}}",    info["plano_titular_label"])
+        .replace("{{editora_pct}}",            str(info["editora_pct"]))
+        .replace("{{editora_pct_extenso}}",    info["editora_pct_extenso"])
+        .replace("{{liquido_autores_pct_trilateral}}", str(info["liquido_autores_pct_trilateral"]))
         .replace("{{clausula_split_editora}}", "")
         .replace("{{data_emissao}}",           datetime.utcnow().strftime("%d/%m/%Y às %H:%M UTC"))
     )

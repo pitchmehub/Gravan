@@ -186,6 +186,55 @@ function OfertasPendentes() {
  )
 }
 
+function CartaoSaque() {
+ const [wallet, setWallet] = useState(null)
+
+ useEffect(() => {
+   api.get('/perfis/me/wallet').then(setWallet).catch(() => setWallet({ saldo_cents: 0, saques: [] }))
+ }, [])
+
+ const saldo = wallet?.saldo_cents ?? 0
+ const saques = wallet?.saques ?? []
+ const reservado = saques
+   .filter(x => ['pendente_otp', 'aguardando_liberacao', 'processando', 'solicitado'].includes(x.status))
+   .reduce((s, x) => s + x.valor_cents, 0)
+ const totalSacado = saques.filter(x => x.status === 'pago').reduce((s, x) => s + x.valor_cents, 0)
+ const disponivel = Math.max(0, saldo - reservado)
+
+ return (
+   <div style={{
+     padding: 24, marginBottom: 28,
+     background: 'linear-gradient(135deg,#083257,#09090B)',
+     borderRadius: 16, color: '#fff',
+   }}>
+     <div style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,.7)', letterSpacing: 1, textTransform: 'uppercase' }}>
+       Saldo da editora disponível para saque
+     </div>
+     <div style={{ fontSize: 38, fontWeight: 800, marginTop: 6 }}>{fmt(disponivel)}</div>
+     <div style={{ display: 'flex', gap: 24, marginTop: 16, fontSize: 12, flexWrap: 'wrap' }}>
+       <div>
+         <div style={{ color: 'rgba(255,255,255,.6)' }}>SALDO TOTAL</div>
+         <div style={{ fontSize: 16, fontWeight: 700, marginTop: 2 }}>{fmt(saldo)}</div>
+       </div>
+       <div>
+         <div style={{ color: 'rgba(255,255,255,.6)' }}>RESERVADO</div>
+         <div style={{ fontSize: 16, fontWeight: 700, marginTop: 2 }}>{fmt(reservado)}</div>
+       </div>
+       <div>
+         <div style={{ color: 'rgba(255,255,255,.6)' }}>JÁ SACADO</div>
+         <div style={{ fontSize: 16, fontWeight: 700, marginTop: 2 }}>{fmt(totalSacado)}</div>
+       </div>
+     </div>
+     <div style={{ marginTop: 18 }}>
+       <Link to="/saques" className="btn btn-primary"
+             style={{ background: '#fff', color: '#083257', borderColor: '#fff' }}>
+         Solicitar saque
+       </Link>
+     </div>
+   </div>
+ )
+}
+
 export default function PublisherDashboard() {
  const [data, setData] = useState(null)
  const [erro, setErro] = useState('')
@@ -203,6 +252,8 @@ export default function PublisherDashboard() {
  <h1 style={{ fontSize: 24, fontWeight: 700 }}>Dashboard da Editora</h1>
  <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Visão geral de obras, contratos e faturamento.</p>
  </header>
+
+ <CartaoSaque />
 
  <OfertasPendentes />
 

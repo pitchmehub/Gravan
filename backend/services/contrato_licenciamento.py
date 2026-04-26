@@ -75,9 +75,15 @@ CLÁUSULA 5 — REMUNERAÇÃO
 
 5.1 — BUYOUT (VENDA DA COMPOSIÇÃO)
 
-O LICENCIADO pagará ao(s) AUTOR(ES) o valor de {{valor_buyout_extenso}} referente à aquisição da composição por meio da plataforma GRAVAN.
+O LICENCIADO pagará o valor bruto de {{valor_buyout_extenso}} referente à aquisição da composição por meio da plataforma GRAVAN.
 
-5.2 — ROYALTIES AUTORAIS (EXECUÇÃO PÚBLICA)
+5.2 — TAXA DE INTERMEDIAÇÃO DA PLATAFORMA GRAVAN
+
+Sobre o valor bruto pago pelo LICENCIADO incidirá uma taxa de intermediação devida à plataforma GRAVAN, no percentual de {{plataforma_pct}}% ({{plataforma_pct_extenso}}), correspondente ao plano de assinatura vigente do AUTOR PRINCIPAL na data deste licenciamento ({{plano_titular_label}}). O saldo remanescente, equivalente a {{liquido_autores_pct}}% do valor bruto, será distribuído entre o(s) AUTOR(ES) na proporção declarada na CLÁUSULA 10 (SPLIT).
+
+Parágrafo Único: Os percentuais aplicados pela plataforma são: 20% (vinte por cento) para titular no plano GRÁTIS e 15% (quinze por cento) para titular no plano PRO ativo na data da venda.
+
+5.3 — ROYALTIES AUTORAIS (EXECUÇÃO PÚBLICA)
 
 Os rendimentos provenientes de execução pública arrecadados pelo ECAD serão distribuídos da seguinte forma:
 - 85% (oitenta e cinco por cento) para o(s) AUTOR(ES) e coautores;
@@ -156,6 +162,30 @@ def _cidade_uf(p: dict) -> str:
     uf = p.get("endereco_uf")
     if c and uf: return f"{c}/{uf}"
     return c or uf or "Não informado"
+
+
+def _info_plano(titular: dict) -> dict:
+    """Retorna labels e percentuais aplicáveis ao plano do titular para uso em
+    cláusulas dos contratos (taxa Gravan e líquido autores)."""
+    from services.finance import fee_rate_for_plano, EDITORA_RATE
+    plano = (titular or {}).get("plano", "STARTER")
+    status_ass = (titular or {}).get("status_assinatura", "inativa")
+    is_pro = (plano == "PRO" and status_ass in ("ativa", "cancelada", "past_due"))
+    rate = fee_rate_for_plano("PRO" if is_pro else "STARTER")
+    plataforma_pct = int(round(float(rate) * 100))
+    plano_label = "Plano PRO" if is_pro else "Plano GRÁTIS"
+    extenso = {15: "quinze por cento", 20: "vinte por cento"}.get(plataforma_pct, f"{plataforma_pct} por cento")
+    editora_pct = int(round(float(EDITORA_RATE) * 100))
+    editora_extenso = {10: "dez por cento"}.get(editora_pct, f"{editora_pct} por cento")
+    return {
+        "plataforma_pct": plataforma_pct,
+        "plataforma_pct_extenso": extenso,
+        "plano_titular_label": plano_label,
+        "editora_pct": editora_pct,
+        "editora_pct_extenso": editora_extenso,
+        "liquido_autores_pct": 100 - plataforma_pct,
+        "liquido_autores_pct_trilateral": 100 - plataforma_pct - editora_pct,
+    }
 
 
 def _decrypt(val: str) -> str:
@@ -257,6 +287,7 @@ def gerar_contrato_licenciamento(transacao_id: str, ip_remote: str | None = None
             f"- {p.get('nome_completo') or p.get('nome') or '—'}: {float(c['share_pct']):.2f}%"
         )
 
+    info = _info_plano(titular)
     conteudo = (TEMPLATE_LICENCIAMENTO
         .replace("{{autores_bloco}}",          "\n".join(autores_bloco_partes).strip())
         .replace("{{interprete_nome}}",        buyer.get("nome_completo") or buyer.get("nome") or "—")
@@ -270,6 +301,10 @@ def gerar_contrato_licenciamento(transacao_id: str, ip_remote: str | None = None
         .replace("{{isrc}}",                   obra.get("isrc") or "a definir após lançamento")
         .replace("{{iswc}}",                   obra.get("iswc") or "a definir após lançamento")
         .replace("{{split_lista}}",            "\n".join(split_lista_partes))
+        .replace("{{plataforma_pct}}",         str(info["plataforma_pct"]))
+        .replace("{{plataforma_pct_extenso}}", info["plataforma_pct_extenso"])
+        .replace("{{plano_titular_label}}",    info["plano_titular_label"])
+        .replace("{{liquido_autores_pct}}",    str(info["liquido_autores_pct"]))
         .replace("{{data_emissao}}",           datetime.utcnow().strftime("%d/%m/%Y às %H:%M UTC"))
     )
 
@@ -397,18 +432,16 @@ def gerar_contrato_trilateral_agregado(
         editora.get("endereco_cidade"), editora.get("endereco_uf"),
     ])) or "Não informado"
 
-    # Cláusula adicional para o caso AGREGADO: 10% creditado automaticamente
-    # à editora-mãe diretamente pela GRAVAN.
+    # Cláusula adicional para o caso AGREGADO: reforça o vínculo de agregação
+    # já refletido na Cláusula 3.1 (split do buyout).
     clausula_split_editora = (
-        "\n\nNos termos do contrato de agregação vigente entre AUTOR(ES) e EDITORA, "
-        "a GRAVAN, na qualidade de plataforma intermediária, fica autorizada e "
-        "obrigada a creditar automaticamente, em cada licenciamento desta obra, "
-        "o percentual de 10% (dez por cento) do valor pago pelo LICENCIADO "
-        "diretamente à EDITORA, sendo o saldo remanescente, deduzida a taxa de "
-        "intermediação da GRAVAN, distribuído ao(s) AUTOR(ES) conforme o split "
-        "declarado na Cláusula 7."
+        "\n\nParágrafo Terceiro: O percentual de 10% (dez por cento) destinado à "
+        "EDITORA, conforme item 3.1 acima, decorre do contrato de agregação vigente "
+        "entre AUTOR(ES) e EDITORA, ficando a GRAVAN autorizada e obrigada a creditá-lo "
+        "automaticamente, em cada licenciamento desta obra, diretamente à EDITORA."
     )
 
+    info = _info_plano(titular)
     conteudo = (TEMPLATE_TRILATERAL
         .replace("{{autores_bloco}}",          "\n".join(autores_bloco).strip())
         .replace("{{editora_razao}}",          editora.get("razao_social") or editora.get("nome_completo") or editora.get("nome") or "—")
@@ -427,6 +460,12 @@ def gerar_contrato_trilateral_agregado(
         .replace("{{obra_letra}}",             (obra.get("letra") or "").strip() or "—")
         .replace("{{valor_buyout_extenso}}",   _moeda(tx["valor_cents"]))
         .replace("{{split_lista}}",            "\n".join(split_lista))
+        .replace("{{plataforma_pct}}",         str(info["plataforma_pct"]))
+        .replace("{{plataforma_pct_extenso}}", info["plataforma_pct_extenso"])
+        .replace("{{plano_titular_label}}",    info["plano_titular_label"])
+        .replace("{{editora_pct}}",            str(info["editora_pct"]))
+        .replace("{{editora_pct_extenso}}",    info["editora_pct_extenso"])
+        .replace("{{liquido_autores_pct_trilateral}}", str(info["liquido_autores_pct_trilateral"])) 
         .replace("{{clausula_split_editora}}", clausula_split_editora)
         .replace("{{data_emissao}}",           datetime.utcnow().strftime("%d/%m/%Y às %H:%M UTC"))
     )
@@ -581,10 +620,20 @@ GRAVAN, parte integrante e indissociável deste Contrato:
 
 CLÁUSULA 3 — VALOR E ESCROW
 
-O LICENCIADO pagará pelo licenciamento o valor de {{valor_buyout_extenso}},
+O LICENCIADO pagará pelo licenciamento o valor bruto de {{valor_buyout_extenso}},
 retido em escrow pela GRAVAN até a assinatura eletrônica de todas as partes.
-A liberação do valor ocorre após a assinatura final, sendo distribuído conforme
-contratos prévios entre AUTOR(ES) e EDITORA.{{clausula_split_editora}}
+A liberação do valor ocorre após a assinatura final.
+
+3.1 — DISTRIBUIÇÃO DO VALOR DO BUYOUT
+
+Sobre o valor bruto pago pelo LICENCIADO incidirá:
+- {{plataforma_pct}}% ({{plataforma_pct_extenso}}) de taxa de intermediação devida à plataforma GRAVAN, conforme o plano de assinatura vigente do AUTOR PRINCIPAL na data deste licenciamento ({{plano_titular_label}});
+- {{editora_pct}}% ({{editora_pct_extenso}}) destinados à EDITORA TERCEIRA, na qualidade de detentora dos direitos editoriais sobre a composição;
+- {{liquido_autores_pct_trilateral}}% remanescentes, distribuídos entre o(s) AUTOR(ES) na proporção declarada na CLÁUSULA 7 (SPLIT).
+
+Parágrafo Primeiro: A taxa da plataforma GRAVAN segue a tabela: 20% (vinte por cento) para titular no plano GRÁTIS e 15% (quinze por cento) para titular no plano PRO ativo na data da venda.
+
+Parágrafo Segundo: O percentual de 10% (dez por cento) destinado à EDITORA é fixo e independe do plano de assinatura do AUTOR PRINCIPAL.{{clausula_split_editora}}
 
 CLÁUSULA 4 — DECLARAÇÃO DA EDITORA TERCEIRA
 
@@ -687,6 +736,7 @@ def gerar_contrato_trilateral(oferta_id: str) -> dict | None:
         editora_t.get("endereco_cidade"), editora_t.get("endereco_uf"),
     ])) or "Não informado"
 
+    info = _info_plano(titular)
     conteudo = (TEMPLATE_TRILATERAL
         .replace("{{autores_bloco}}",          "\n".join(autores_bloco).strip())
         .replace("{{editora_razao}}",          editora_t.get("razao_social") or of["editora_terceira_nome"])
@@ -705,6 +755,12 @@ def gerar_contrato_trilateral(oferta_id: str) -> dict | None:
         .replace("{{obra_letra}}",             (obra.get("letra") or "").strip() or "—")
         .replace("{{valor_buyout_extenso}}",   _moeda(of["valor_cents"]))
         .replace("{{split_lista}}",            "\n".join(split_lista))
+        .replace("{{plataforma_pct}}",         str(info["plataforma_pct"]))
+        .replace("{{plataforma_pct_extenso}}", info["plataforma_pct_extenso"])
+        .replace("{{plano_titular_label}}",    info["plano_titular_label"])
+        .replace("{{editora_pct}}",            str(info["editora_pct"]))
+        .replace("{{editora_pct_extenso}}",    info["editora_pct_extenso"])
+        .replace("{{liquido_autores_pct_trilateral}}", str(info["liquido_autores_pct_trilateral"]))
         .replace("{{clausula_split_editora}}", "")
         .replace("{{data_emissao}}",           datetime.utcnow().strftime("%d/%m/%Y às %H:%M UTC"))
     )
