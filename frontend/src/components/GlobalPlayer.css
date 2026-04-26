@@ -701,21 +701,26 @@
   .gp-time    { display: none; }
   .gp-queue-info { display: none; }
 
-  /* Minimizado: full width logo acima da barra de menu inferior */
+  /* Minimizado: full width acima da barra de menu inferior.
+     Altura da barra: 8 (top) + 56 (item) + 8 (bottom) + safe-area = 72 + safe-area.
+     Adicionamos 12px de respiro para que o miniplayer não encoste na barra
+     nem fique atrás do botão central elevado (Descoberta). */
   .gp-mini {
-    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 12px);
     left: 0; right: 0;
     max-width: none; min-width: 0;
     border-radius: 0;
     border-left: none;
     border-right: none;
+    border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
-    box-shadow: 0 -2px 8px rgba(9,9,11,.06);
+    box-shadow: 0 -4px 16px rgba(9,9,11,.10);
   }
 
-  /* Player barra no mobile: também fica acima da barra de navegação */
+  /* Player barra no mobile: também fica acima da barra de navegação,
+     com o mesmo respiro do miniplayer. */
   .gp-root {
-    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 12px);
   }
 
   /* Expanded: capa um pouco menor */

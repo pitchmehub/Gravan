@@ -64,6 +64,31 @@ def _editora_para_termo(perfil_editora: dict) -> dict:
     return out
 
 
+def _artista_para_termo(perfil_artista: dict) -> dict:
+    """Decripta CPF/RG do artista (se possível) para uso no termo."""
+    out = dict(perfil_artista or {})
+    for orig, dest in (("cpf", "cpf_display"), ("rg", "rg_display")):
+        v = (perfil_artista or {}).get(orig)
+        if v:
+            try:
+                out[dest] = decrypt_pii(v)
+            except Exception:
+                out[dest] = ""
+    return out
+
+
+def _carregar_perfil_completo(sb, perfil_id: str) -> dict | None:
+    """Busca o perfil completo (incl. PII e endereço) para gerar/re-gerar termo."""
+    if not perfil_id:
+        return None
+    r = sb.table("perfis").select(
+        "id,email,nome_completo,nome_artistico,cpf,rg,"
+        "endereco_rua,endereco_numero,endereco_compl,endereco_bairro,"
+        "endereco_cidade,endereco_uf,endereco_cep,publisher_id,is_ghost,role"
+    ).eq("id", perfil_id).maybe_single().execute()
+    return r.data if r else None
+
+
 def _client_ip() -> str:
     return request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
 
@@ -172,10 +197,19 @@ def cadastrar_agregado():
     }
     sb.table("perfis").insert(perfil_payload).execute()
 
-    # 3. Gera termo e cria convite
+    # 3. Gera termo e cria convite — usa dados REAIS recém-cadastrados pela editora
     artista_termo = {
         "nome_completo":   perfil_payload["nome_completo"],
         "nome_artistico":  perfil_payload["nome_artistico"],
+        "cpf_display":     data["cpf"].strip(),
+        "rg_display":      data["rg"].strip(),
+        "endereco_rua":    perfil_payload.get("endereco_rua"),
+        "endereco_numero": perfil_payload.get("endereco_numero"),
+        "endereco_compl":  perfil_payload.get("endereco_compl"),
+        "endereco_bairro": perfil_payload.get("endereco_bairro"),
+        "endereco_cidade": perfil_payload.get("endereco_cidade"),
+        "endereco_uf":     perfil_payload.get("endereco_uf"),
+        "endereco_cep":    perfil_payload.get("endereco_cep"),
     }
     termo_html = gerar_termo_html(
         editora=_editora_para_termo(editora),
@@ -271,12 +305,12 @@ def adicionar_agregado():
     if not editora:
         abort(403, description="Apenas editoras")
 
-    perfil = sb.table("perfis").select("id,nome_completo,nome_artistico,email,publisher_id,is_ghost,role")\
-               .eq("email", email).maybe_single().execute()
-    if not perfil or not perfil.data:
+    # Busca perfil completo (com PII e endereço) para preencher o termo com dados REAIS
+    perfil_basico = sb.table("perfis").select("id").eq("email", email).maybe_single().execute()
+    if not perfil_basico or not perfil_basico.data:
         abort(404, description='Não encontramos perfil com esse e-mail. Use "Cadastrar agregado" para criá-lo.')
 
-    artista = perfil.data
+    artista = _carregar_perfil_completo(sb, perfil_basico.data["id"]) or {}
     if artista.get("publisher_id") == g.user.id:
         abort(409, description="Esse artista já está agregado à sua editora.")
     if artista.get("publisher_id"):
@@ -293,7 +327,7 @@ def adicionar_agregado():
 
     termo_html = gerar_termo_html(
         editora=_editora_para_termo(editora),
-        artista=artista,
+        artista=_artista_para_termo(artista),
         email_artista=email,
         modo="adicionar",
     )
@@ -504,9 +538,28 @@ def aceitar_convite(cid):
         "is_ghost":       False,  # se era ghost, ativa de vez
     }).eq("id", g.user.id).execute()
 
+    # Re-renderiza o termo com os dados REAIS de cadastro de ambas as partes no momento
+    # do aceite, para que o documento assinado reflita exatamente o que está registrado
+    # na plataforma na data do aceite (editora + artista).
+    termo_final = cv.get("termo_html")
+    try:
+        editora_perfil = sb.table("perfis").select("*").eq("id", cv["editora_id"]).maybe_single().execute()
+        artista_perfil = _carregar_perfil_completo(sb, g.user.id)
+        if editora_perfil and editora_perfil.data and artista_perfil:
+            termo_final = gerar_termo_html(
+                editora=_editora_para_termo(editora_perfil.data),
+                artista=_artista_para_termo(artista_perfil),
+                email_artista=(me.get("email") or "").lower(),
+                modo=cv.get("modo") or "adicionar",
+            )
+    except Exception as e:
+        print(f"[agregados.aceitar] falha ao re-renderizar termo: {e}")
+
     # Marca convite
     sb.table("agregado_convites").update({
         "status":                       "aceito",
+        "termo_html":                   termo_final,
+        "termo_versao":                 VERSAO_ATUAL,
         "termo_aceito_pelo_artista_em": agora,
         "termo_aceito_ip":              _client_ip(),
         "assinatura_artista_nome":      assinatura,

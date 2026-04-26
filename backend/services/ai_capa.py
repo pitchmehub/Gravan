@@ -2,7 +2,11 @@
 Geração de capas de obra via Pollinations.ai (gratuito, sem chave).
 
 Estratégia MVP:
-  • Constrói um prompt em inglês baseado no nome + gênero da obra
+  • Constrói um prompt em inglês baseado no nome + gênero + um conceito
+    contemporâneo de arte (sorteado entre vários movimentos) e uma paleta
+    de cores variada — mantendo neo-minimalismo + minimalismo como base
+    sempre presente, e mesclando UM conceito contemporâneo extra para
+    dar variedade real entre as capas.
   • Gera URL determinística do Pollinations.ai
   • Baixa a imagem e PERSISTE no Supabase Storage (bucket "capas")
   • Salva a URL pública do Supabase em obras.cover_url
@@ -11,6 +15,7 @@ Persistência local é necessária porque Pollinations.ai é lento/instável
 (timeouts e respostas vazias frequentes), o que fazia as capas não
 aparecerem no front quando o navegador carregava muitas ao mesmo tempo.
 """
+import hashlib
 import logging
 import urllib.parse
 import requests
@@ -24,68 +29,121 @@ POLLINATIONS_TIMEOUT_S = 60
 POLLINATIONS_RETRIES = 3
 
 # =====================================================================
-# Estética obrigatória: NEO-MINIMALISMO
+# BASE: neo-minimalismo + minimalismo (sempre presente)
 # =====================================================================
-# Toda capa segue a mesma linguagem visual base — neo-minimalista —
-# variando apenas o objeto/símbolo focal, paleta e textura por gênero.
-# Princípios neo-min: muito espaço negativo, único sujeito focal,
-# composição limpa, formas geométricas simples, paleta restrita
-# (2-3 cores), sutileza, calma, elegância gráfica contemporânea.
-# =====================================================================
-
-NEO_MIN_BASE = (
-    "neo-minimalism aesthetic, clean composition, generous negative space, "
-    "single focal subject perfectly centered or rule-of-thirds, "
-    "restrained palette of 2 to 3 colors, geometric simplicity, "
+BASE_AESTHETIC = (
+    "neo-minimalism fused with classic minimalism, clean composition, "
+    "generous negative space, single focal subject, geometric clarity, "
     "subtle paper-like or matte texture, soft directional light, "
     "calm contemplative mood, contemporary editorial art print quality"
 )
 
-# Cada gênero contribui apenas com: objeto/símbolo focal + paleta sugerida.
-# A linguagem neo-min é mantida intacta em todos eles.
-GENERO_STYLE = {
-    "Sertanejo": "single distant horizon line with one small silhouette of a horse or "
-                 "lone tree on a vast plain, warm sand and dusty terracotta palette with cream",
-    "MPB":       "one stylized tropical leaf or simple bossa-style geometric wave shape "
-                 "floating in negative space, muted sage green and warm cream palette",
-    "Funk":      "one bold neon circle or single chrome sphere on a flat dark surface, "
-                 "deep matte black with one electric magenta or cyan accent",
-    "Samba":     "one single feather or one geometric round shape suggesting a tambourine, "
-                 "warm cream background with one rich crimson and one mustard accent",
-    "Rock":      "one cracked geometric shape or single broken circle on flat surface, "
-                 "bone white background with deep charcoal and a single muted red accent",
-    "Pop":       "one perfect glossy sphere or simple pastel arch on flat ground, "
-                 "soft pastel pink or lilac palette with one vivid accent color",
-    "Gospel":    "one slender vertical light beam or single arch shape in deep silence, "
-                 "off-white and warm gold palette with very soft shadow",
-    "Forró":     "one minimal sun disc above a single horizon line, "
-                 "warm ochre and burnt sienna palette with cream background",
-    "Pagode":    "one simple cavaquinho silhouette or single round drum shape, "
-                 "warm wood tan and cream palette with deep brown accent",
-    "RNB":       "one solitary moon shape or single curved line on dark plane, "
-                 "deep midnight navy palette with one warm amber accent",
-    "RAP":       "one single bold geometric shape or simple concrete block on flat ground, "
-                 "raw concrete grey palette with one sharp neon accent",
-    "OUTROS":    "one abstract geometric symbol or single organic shape in pure negative space, "
-                 "warm neutral palette with one restrained accent color",
+# =====================================================================
+# CONCEITOS CONTEMPORÂNEOS — sorteados por capa para dar variedade.
+# Cada item descreve a "tempera" extra que vai junto da base neo-min.
+# =====================================================================
+CONTEMPORARY_CONCEPTS = [
+    "Bauhaus design influence with primary geometric shapes (circles, squares, triangles)",
+    "Suprematist composition with floating geometric planes and dynamic tension",
+    "Color Field abstraction with large flat planes of pure saturated color",
+    "Hard Edge abstraction with crisp boundaries between flat color zones",
+    "Op Art subtle linework, precise repetition, gentle visual rhythm",
+    "Memphis Group inspired playful pattern accents and bold geometric motifs",
+    "Brutalist concrete texture mood, raw and architectural",
+    "Constructivist diagonal composition, strong asymmetry, modernist energy",
+    "Mid-century modern Scandinavian print aesthetic, organic restraint",
+    "Geometric abstraction with overlapping translucent planes",
+    "Risograph print look with grainy duotone overlay and slight misregistration",
+    "Modernist poster style inspired by Swiss design, clean grid structure",
+    "Postmodern playful collage of one or two simple shapes",
+    "Cubist fragmented planes interpreted in flat minimalist palette",
+    "Concrete art (Arte Concreta) with mathematical proportions and pure forms",
+    "Abstract expressionist single calm gesture in vast empty space",
+    "Japanese Mingei influence, handmade simplicity, wabi-sabi imperfection",
+    "Ukiyo-e inspired flat composition with negative-space horizon",
+    "Op-Pop fusion with one bold optical motif on neutral ground",
+    "De Stijl inspired pure rectangles with restrained primary accent",
+]
+
+# =====================================================================
+# PALETAS DE CORES — sorteadas por capa para evitar a sensação de capas
+# todas iguais. Misturam quentes, frios, monocromos e contrastes.
+# =====================================================================
+COLOR_PALETTES = [
+    "warm terracotta and dusty cream with a single deep ochre accent",
+    "deep midnight navy and ivory with a single warm amber accent",
+    "muted sage green and bone white with a single rust accent",
+    "soft pastel pink and lilac with a single vivid magenta accent",
+    "raw concrete grey and off-white with a single sharp neon-yellow accent",
+    "burnt sienna and warm sand with a single forest green accent",
+    "deep matte black and cream with a single electric cyan accent",
+    "warm wood tan and ivory with a single deep brown accent",
+    "cobalt blue and pale sand with a single white accent",
+    "olive green and mustard yellow with a single off-white accent",
+    "lavender and dusty rose with a single eggplant accent",
+    "charcoal grey and bone white with a single muted crimson accent",
+    "ochre yellow and warm white with a single carbon black accent",
+    "teal blue and cream with a single warm coral accent",
+    "indigo and pearl with a single soft gold accent",
+    "moss green and chalk white with a single burnt orange accent",
+    "burgundy and pale peach with a single ink black accent",
+    "stone beige and ash grey with a single saffron accent",
+    "deep forest green and bone with a single brick red accent",
+    "warm taupe and ivory with a single cobalt accent",
+    "monochrome scale of greys with a single lipstick red accent",
+    "monochrome scale of warm browns with a single buttercream accent",
+    "monochrome blues from pale sky to navy",
+    "duotone palette of dusty plum and pale sand",
+    "duotone palette of soft mint and powder pink",
+]
+
+# =====================================================================
+# MOTIVO FOCAL POR GÊNERO — apenas o objeto/símbolo central. A linguagem
+# visual e a paleta vêm das listas acima (variando por obra).
+# =====================================================================
+GENERO_FOCAL = {
+    "Sertanejo": "single distant horizon line with one small silhouette of a horse, lone tree or rural fence",
+    "MPB":       "one stylized tropical leaf or simple bossa-style geometric wave shape floating in space",
+    "Funk":      "one bold neon circle, single chrome sphere or simple speaker silhouette on flat ground",
+    "Samba":     "one single feather or one geometric round shape suggesting a tambourine",
+    "Rock":      "one cracked geometric shape, single broken circle or minimal lightning bolt",
+    "Pop":       "one perfect glossy sphere, simple pastel arch or balloon silhouette",
+    "Gospel":    "one slender vertical light beam, single arch shape or minimal dove silhouette",
+    "Forró":     "one minimal sun disc above a single horizon line, or one stylized accordion bellows shape",
+    "Pagode":    "one simple cavaquinho silhouette or single round drum shape",
+    "RNB":       "one solitary moon shape, single curved line or minimal vinyl record on dark plane",
+    "RAP":       "one single bold geometric shape, minimal microphone silhouette or simple concrete block",
+    "OUTROS":    "one abstract geometric symbol, single organic shape or minimal circle in pure space",
 }
 
 
-def _build_prompt(nome: str, genero: str) -> str:
+def _rng_index(seed_str: str, n: int) -> int:
+    """Índice determinístico baseado em hash da seed_str — varia por obra."""
+    h = hashlib.sha1(seed_str.encode("utf-8")).digest()
+    return int.from_bytes(h[:4], "big") % max(1, n)
+
+
+def _build_prompt(nome: str, genero: str, seed: int | None) -> str:
     """
-    Prompt obrigatoriamente neo-minimalista em inglês para Pollinations.
-    O nome da música inspira sutilmente o sujeito focal, mas a estética
-    neo-min é mandatória e prevalece sobre qualquer outra direção.
+    Prompt em inglês para Pollinations: base neo-min + minimalismo SEMPRE,
+    combinada com UM movimento contemporâneo + UMA paleta sorteada
+    deterministicamente a partir da seed/nome — para dar real variedade
+    entre as capas mantendo a identidade Gravan.
     """
-    style = GENERO_STYLE.get(genero, GENERO_STYLE["OUTROS"])
+    seed_str = f"{seed or 0}-{nome}-{genero}"
+    concept = CONTEMPORARY_CONCEPTS[_rng_index(seed_str + "-c", len(CONTEMPORARY_CONCEPTS))]
+    palette = COLOR_PALETTES[_rng_index(seed_str + "-p", len(COLOR_PALETTES))]
+    focal   = GENERO_FOCAL.get(genero, GENERO_FOCAL["OUTROS"])
+
     return (
         f"Album cover for the song titled '{nome}'. "
-        f"MANDATORY STYLE — strict neo-minimalism: {NEO_MIN_BASE}. "
-        f"Focal motif inspired by genre: {style}. "
-        f"The neo-minimalist rules above are absolute and override any other "
-        f"interpretation of the title. Square 1:1 format, art print quality, "
-        f"flat or very subtle gradient background, no clutter, no busy details, "
-        f"no realism, no photography, no people faces, no crowded scenes. "
+        f"MANDATORY BASE STYLE: {BASE_AESTHETIC}. "
+        f"Combine the base with this contemporary art concept: {concept}. "
+        f"Focal motif inspired by genre: {focal}. "
+        f"Color palette (strict, only these colors): {palette}. "
+        f"Square 1:1 format, art print quality, flat or very subtle gradient "
+        f"background, no clutter, no busy details, no realism, no photography, "
+        f"no people faces, no crowded scenes. "
         f"Strict negative rules: no text, no letters, no words, no numbers, "
         f"no logo, no watermark, no signature, no caption, no typography "
         f"of any kind anywhere in the image."
@@ -97,7 +155,7 @@ def gerar_url_capa(nome: str, genero: str, seed: int | None = None) -> str:
     Retorna URL pública e estável do Pollinations.ai pra capa da obra.
     A própria URL serve a imagem (CDN do Pollinations).
     """
-    prompt = _build_prompt(nome or "Música", genero or "OUTROS")
+    prompt = _build_prompt(nome or "Música", genero or "OUTROS", seed)
     encoded = urllib.parse.quote(prompt, safe="")
     params = {
         "width":   "768",
@@ -159,7 +217,16 @@ def gerar_e_salvar_capa(obra_id: str, nome: str, genero: str,
     """
     try:
         sb = get_supabase()
-        poll_url = gerar_url_capa(nome, genero, seed=seed)
+        # Garante uma seed estável por obra para variar entre obras mas
+        # ser determinística para a mesma obra — usa o próprio obra_id
+        # quando a seed não é fornecida pelo chamador.
+        seed_efetiva = seed
+        if seed_efetiva is None and obra_id:
+            seed_efetiva = int.from_bytes(
+                hashlib.sha1(obra_id.encode("utf-8")).digest()[:4], "big"
+            )
+
+        poll_url = gerar_url_capa(nome, genero, seed=seed_efetiva)
 
         # 1) Baixa do Pollinations e tenta persistir no Storage
         img_bytes = _baixar_imagem_pollinations(poll_url)
