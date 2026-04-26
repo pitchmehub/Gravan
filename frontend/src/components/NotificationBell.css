@@ -34,37 +34,43 @@
   border: 2px solid #083257;
 }
 
-/* Backdrop com blur — cobre toda a tela e centraliza o painel */
+/* Backdrop com blur forte — cobre toda a tela e centraliza o painel.
+   Estilo "vidro fosco do iOS": forte desfoque do que está atrás. */
 .notif-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(9, 9, 11, .55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(20, 25, 40, .35);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  animation: notifFadeIn .15s ease;
+  animation: notifFadeIn .18s ease;
 }
 @keyframes notifFadeIn { from { opacity: 0 } to { opacity: 1 } }
 
+/* Painel translúcido — vidro fosco também (igual o card do iOS) */
 .notif-panel {
   width: 100%;
   max-width: 420px;
   max-height: 80vh;
   overflow: hidden;
-  background: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 16px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+  background: rgba(255, 255, 255, .78);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 28px;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, .35),
+    inset 0 1px 0 rgba(255, 255, 255, .6);
   display: flex;
   flex-direction: column;
-  animation: notifSlideUp .2s ease;
+  animation: notifSlideUp .22s cubic-bezier(.2,.9,.3,1.2);
 }
 @keyframes notifSlideUp {
-  from { opacity: 0; transform: scale(.96) translateY(8px); }
+  from { opacity: 0; transform: scale(.94) translateY(12px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
@@ -72,10 +78,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 18px;
-  border-bottom: 1px solid #eee;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, .06);
   font-size: 15px;
   gap: 12px;
+  background: transparent;
 }
 .notif-header-actions {
   display: flex;
@@ -105,27 +112,28 @@
 
 .notif-tabs {
   display: flex;
-  border-bottom: 1px solid #eee;
-  background: #fafafa;
+  border-bottom: 1px solid rgba(0, 0, 0, .06);
+  background: rgba(255, 255, 255, .25);
 }
 .notif-tab {
   flex: 1;
   background: none;
   border: none;
-  padding: 8px 12px;
+  padding: 10px 12px;
   font-size: 12px;
   font-weight: 600;
-  color: #888;
+  color: #6b6b6b;
   cursor: pointer;
   font-family: inherit;
   border-bottom: 2px solid transparent;
+  transition: color .15s, background .15s;
 }
 .notif-tab.active {
-  color: #BE123C;
-  border-bottom-color: #BE123C;
-  background: #fff;
+  color: #083257;
+  border-bottom-color: #083257;
+  background: rgba(255, 255, 255, .55);
 }
-.notif-tab:hover:not(.active) { color: #444; }
+.notif-tab:hover:not(.active) { color: #2c2c2a; }
 
 .notif-list { overflow-y: auto; flex: 1; }
 
@@ -139,14 +147,16 @@
 .notif-item {
   display: flex;
   gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(0, 0, 0, .05);
   cursor: pointer;
   transition: background .15s;
   align-items: flex-start;
+  background: transparent;
 }
-.notif-item:hover { background: #fafafa; }
-.notif-item-unread { background: rgba(190, 18, 57, .04); }
+.notif-item:hover { background: rgba(255, 255, 255, .45); }
+.notif-item-unread { background: rgba(8, 50, 87, .06); }
+.notif-item-unread:hover { background: rgba(8, 50, 87, .10); }
 
 .notif-icon { font-size: 20px; flex-shrink: 0; line-height: 1; }
 .notif-content { flex: 1; min-width: 0; }
@@ -168,20 +178,20 @@
   .notif-panel {
     max-width: 100%;
     max-height: 92vh;
-    border-radius: 16px 16px 0 0;
+    border-radius: 28px 28px 0 0;
   }
 }
 
 .notif-footer {
-  padding: 10px 12px;
-  border-top: 1px solid var(--border, #eee);
+  padding: 12px;
+  border-top: 1px solid rgba(0, 0, 0, .06);
   text-align: center;
-  background: var(--surface, #fff);
+  background: transparent;
 }
 .notif-seeall {
   font-size: 12px;
   font-weight: 600;
-  color: var(--brand, #BE123C);
+  color: #083257;
   text-decoration: none;
 }
 .notif-seeall:hover { text-decoration: underline; }

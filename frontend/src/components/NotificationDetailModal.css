@@ -1,35 +1,48 @@
 .ndm-bg {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .55);
-  z-index: 700;
+  background: rgba(20, 25, 40, .35);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  z-index: 1100;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  animation: ndmFade .15s ease;
+  padding: 24px;
+  animation: ndmFade .18s ease;
 }
 @keyframes ndmFade { from { opacity: 0 } to { opacity: 1 } }
 
 .ndm-box {
-  background: var(--surface, #fff);
+  background: rgba(255, 255, 255, .78);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
   color: var(--text-primary, #111);
-  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 28px;
   width: 100%;
   max-width: 640px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, .35),
+    inset 0 1px 0 rgba(255, 255, 255, .6);
   display: flex;
   flex-direction: column;
+  animation: ndmPop .22s cubic-bezier(.2,.9,.3,1.2);
+}
+@keyframes ndmPop {
+  from { opacity: 0; transform: scale(.94) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .ndm-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 18px 20px 12px;
-  border-bottom: 1px solid var(--border, #eee);
+  padding: 20px 22px 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, .06);
+  background: transparent;
 }
 .ndm-head h3 {
   margin: 0 0 2px;
@@ -82,10 +95,10 @@
 
 .ndm-extra {
   margin-top: 14px;
-  padding: 12px;
-  background: var(--surface-2, #fafafa);
-  border: 1px solid var(--border, #eee);
-  border-radius: 8px;
+  padding: 14px;
+  background: rgba(255, 255, 255, .55);
+  border: 1px solid rgba(0, 0, 0, .06);
+  border-radius: 14px;
 }
 .ndm-status-row {
   display: flex;
@@ -137,17 +150,17 @@
   align-items: center;
   gap: 8px;
   padding: 14px 20px;
-  border-top: 1px solid var(--border, #eee);
-  background: var(--surface, #fff);
+  border-top: 1px solid rgba(0, 0, 0, .06);
+  background: transparent;
   flex-wrap: wrap;
 }
 
 .ndm-confirm {
   margin: 0 20px 16px;
   padding: 14px;
-  background: var(--surface-2, #fafafa);
-  border: 1px solid var(--border, #eee);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, .55);
+  border: 1px solid rgba(0, 0, 0, .06);
+  border-radius: 14px;
 }
 .ndm-confirm.danger {
   background: rgba(239,68,68,.05);
@@ -187,7 +200,7 @@
 .ndm-danger:hover { background: rgba(239,68,68,.08) !important; }
 
 @media (max-width: 540px) {
-  .ndm-box { max-height: 95vh; border-radius: 14px 14px 0 0; align-self: flex-end; }
+  .ndm-box { max-height: 95vh; border-radius: 28px 28px 0 0; align-self: flex-end; }
   .ndm-bg { align-items: flex-end; padding: 0; }
   .ndm-actions { padding: 12px 14px; }
   .ndm-actions .btn { flex: 1; min-width: 110px; }

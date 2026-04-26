@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import {
@@ -108,7 +109,7 @@ export default function NotificationBell() {
         </button>
       </div>
 
-      {open && (
+      {open && createPortal(
         <div className="notif-backdrop" onClick={() => setOpen(false)}>
           <div className="notif-panel" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Notificações">
             <div className="notif-header">
@@ -169,7 +170,8 @@ export default function NotificationBell() {
               </Link>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {selecionada && (

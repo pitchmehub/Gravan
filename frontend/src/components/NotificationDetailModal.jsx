@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
@@ -177,7 +178,7 @@ export default function NotificationDetailModal({ notif, onClose, onChange }) {
     && detalheExtra?.status === 'pendente'
     && detalheExtra?.editora_id !== perfil?.id   // editora não aceita o próprio convite
 
-  return (
+  return createPortal(
     <div className="ndm-bg" onClick={() => { if (!salvando) onClose() }}>
       <div className="ndm-box" onClick={e => e.stopPropagation()}>
         <header className="ndm-head">
@@ -290,6 +291,7 @@ export default function NotificationDetailModal({ notif, onClose, onChange }) {
           </footer>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
