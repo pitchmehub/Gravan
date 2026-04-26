@@ -30,20 +30,17 @@ const NAV_ITEMS = {
  { to: '/notificacoes', Icon: IconBell, label: 'Notificações' },
  { to: '/planos', Icon: IconStar, label: 'Planos' },
  ],
- // ADMINISTRADOR: "Biblioteca" substituída por "Dossiês" conforme spec.
+ // ADMINISTRADOR: tudo sobre a plataforma fica concentrado em "Painel admin".
  administrador: [
  { to: '/admin', Icon: IconShield, label: 'Painel admin', highlight: true },
  { to: '/admin/landing', Icon: IconEdit, label: 'Editar Landing' },
  { to: '/descoberta', Icon: IconCompass, label: 'Descoberta' },
- { to: '/dashboard', Icon: IconGrid, label: 'Dashboard' },
  { to: '/obras', Icon: IconMusic, label: 'Obras' },
  { to: '/obras/nova', Icon: IconPlus, label: 'Nova obra' },
  { to: '/contratos', Icon: IconDocument, label: 'Contratos' },
  { to: '/dossies', Icon: IconFolder, label: 'Dossiês' },
- { to: '/analytics', Icon: IconChart, label: 'Analytics' },
  { to: '/saques', Icon: IconWallet, label: 'Saques' },
  { to: '/admin/editoras', Icon: IconBuilding, label: 'Editoras' },
- { to: '/ofertas', Icon: IconTag, label: 'Ofertas' },
  { to: '/notificacoes', Icon: IconBell, label: 'Notificações' },
  { to: '/planos', Icon: IconStar, label: 'Planos' },
  ],

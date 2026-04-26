@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { usePlayer } from '../contexts/PlayerContext'
 import { IconPlay, IconPause, IconCopy, IconHourglass, IconCheck } from '../components/Icons'
@@ -1145,10 +1146,10 @@ function ContratosPanel() {
          </td>
          <td style={{ padding: '10px' }}>
           {c.tipo === 'licenciamento' && (
-           <a href={`/contratos/licenciamento/${c.id}`}
+           <Link to={`/contratos/licenciamento/${c.id}`}
               style={{ color: 'var(--brand)', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
             ver →
-           </a>
+           </Link>
           )}
          </td>
         </tr>
