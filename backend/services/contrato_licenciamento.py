@@ -558,7 +558,7 @@ def gerar_contrato_trilateral_agregado(
                 f'Um agregado seu vendeu a obra "{obra.get("nome","—")}". '
                 "Como editora vinculada, sua assinatura é necessária."
             ),
-            link=f"/contratos/{contract['id']}",
+            link=f"/contratos/licenciamento/{contract['id']}",
             payload={"contract_id": contract["id"], "obra_id": obra["id"]},
         )
     except Exception:
@@ -873,7 +873,7 @@ def aceitar_contrato(contract_id: str, user_id: str, ip_hash: str | None = None)
             tipo="contrato_assinado",
             titulo="Assinatura registrada",
             mensagem=f'Sua assinatura no contrato da obra "{obra_nome}" foi registrada com sucesso.',
-            link=f"/contratos/{contract_id}",
+            link=f"/contratos/licenciamento/{contract_id}",
             payload={"contract_id": contract_id},
         )
     except Exception:
@@ -920,7 +920,7 @@ def aceitar_contrato(contract_id: str, user_id: str, ip_hash: str | None = None)
                     tipo="licenciamento",
                     titulo="Contrato concluído",
                     mensagem=f'O licenciamento da obra "{obra_nome2}" foi finalizado: todas as partes assinaram.',
-                    link=f"/contratos/{contract_id}",
+                    link=f"/contratos/licenciamento/{contract_id}",
                     payload={"contract_id": contract_id, "obra_id": ctr.get("obra_id")},
                 )
         except Exception:

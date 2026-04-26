@@ -199,7 +199,7 @@ def criar_obra():
                         f"Quando alguém licenciar, você receberá uma nova "
                         f"notificação para aprovar."
                     ),
-                    link=f"/publisher/dashboard",
+                    link="/editora/dashboard",
                     payload={"obra_id": obra["id"], "via": "cadastro_obra"},
                 )
             except Exception as e:

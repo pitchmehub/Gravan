@@ -31,10 +31,36 @@ function fmtCompleto(iso) {
   } catch { return iso }
 }
 
+// Corrige links de notificações antigas que apontavam para rotas inexistentes
+function sanearLink(link, n) {
+  if (!link) return null
+  // /contratos/<uuid> (sem "licenciamento") → /contratos/licenciamento/<uuid>
+  const m = link.match(/^\/contratos\/([0-9a-fA-F-]{8,})$/)
+  if (m) return `/contratos/licenciamento/${m[1]}`
+  // /publisher/dashboard → /editora/dashboard
+  if (link === '/publisher/dashboard') return '/editora/dashboard'
+  // /dashboard padrão antigo
+  if (link === '/dashboard') return '/descoberta'
+  return link
+}
+
 function detalhePadrao(n, navigate) {
-  const ir = (path) => () => navigate(path || n.link || '/dashboard')
+  const ir = (path) => () => {
+    const destino = sanearLink(path, n) || sanearLink(n.link, n) || '/descoberta'
+    navigate(destino)
+  }
 
   switch (n.tipo) {
+    case 'contrato_pendente':
+      return {
+        lead: 'Há um contrato aguardando sua assinatura. Sem ela, o licenciamento não avança.',
+        dicas: [
+          'Leia atentamente as cláusulas antes de assinar.',
+          'A assinatura é eletrônica e fica registrada com data, hora e IP.',
+        ],
+        acoes: [{ label: 'Abrir contrato', kind: 'primary', onClick: ir(n.link || '/contratos') }],
+      }
+
     case 'obra_cadastrada': {
       const obraId = n.payload?.obra_id
       const linkDescoberta = obraId ? `/descoberta?obraId=${obraId}` : '/descoberta'
