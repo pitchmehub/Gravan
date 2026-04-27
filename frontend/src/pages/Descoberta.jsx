@@ -390,20 +390,30 @@ export default function Descoberta() {
  onTouchStart={handleRootTouchStart}
  onTouchEnd={handleRootTouchEnd}
  >
- <div className="dc-topbar">
+ <div className={`dc-topbar ${buscaFocada ? 'dc-topbar-search-active' : ''}`}>
  <div className="dc-topbar-row1">
  <div className="dc-tabs">
- <button className={`dc-tab ${aba === 'catalogo' ? 'dc-tab-active' : ''}`}
- onClick={() => { setAba('catalogo'); setCompositor(null); setBusca('') }}>
- <span className="dc-tab-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg></span> Catálogo
- </button>
  <button className={`dc-tab ${aba === 'biblioteca' ? 'dc-tab-active' : ''}`}
- onClick={() => { setAba('biblioteca'); setCompositor(null); setBusca('') }}>
+ onClick={() => {
+ setAba(aba === 'biblioteca' ? 'catalogo' : 'biblioteca')
+ setCompositor(null)
+ setBusca('')
+ }}>
  <span className="dc-tab-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg></span> Biblioteca
  </button>
  </div>
  </div>
  <div className="dc-search-row">
+ {buscaFocada && (
+ <button
+ type="button"
+ className="dc-search-cancel"
+ onMouseDown={(e) => { e.preventDefault(); setBuscaFocada(false); document.activeElement?.blur() }}
+ aria-label="Cancelar busca"
+ >
+ <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+ </button>
+ )}
  <div className="dc-search-wrap" style={{ position: 'relative' }}>
  <span className="dc-search-icon">⌕</span>
  <input className="dc-search" placeholder="Buscar obras, compositores ou editoras…"

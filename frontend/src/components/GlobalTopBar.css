@@ -7,8 +7,8 @@
   top: 0;
   left: 0;
   right: 0;
-  height: calc(var(--gtb-h, 68px) + env(safe-area-inset-top, 0px));
-  padding-top: env(safe-area-inset-top, 0px);
+  height: var(--gtb-h, 68px);
+  padding-top: 0;
   background: var(--surface-translucent);
   backdrop-filter: blur(14px) saturate(140%);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
@@ -192,7 +192,7 @@
   .gtb {
     padding-left: 14px;
     padding-right: 14px;
-    height: calc(var(--gtb-h-mobile, 64px) + env(safe-area-inset-top, 0px));
+    height: var(--gtb-h-mobile, 64px);
   }
   .gtb-icon-btn,
   .gtb-bell-wrap .notif-btn {

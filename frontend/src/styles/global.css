@@ -460,9 +460,8 @@ select.input {
   .dc-grid { grid-template-columns: 1fr !important; }
 }
 
-@supports (padding: env(safe-area-inset-top)) {
+@supports (padding: env(safe-area-inset-bottom)) {
   body {
-    padding-top:    env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
