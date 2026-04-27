@@ -193,6 +193,8 @@ export default function Descoberta() {
  const [buscaFocada, setBuscaFocada] = useState(false)
  const [buscasRecentes, setBuscasRecentes] = useState([])
  const [mostraFiltro, setMostraFiltro] = useState(false)
+ const [ordem, setOrdem] = useState('recente')
+ const [apenasPro, setApenasPro] = useState(false)
 
  useEffect(() => {
  async function load() {
@@ -200,15 +202,20 @@ export default function Descoberta() {
  try {
  const params = new URLSearchParams({ page: 1, per_page: 40 })
  if (generoFiltro !== 'Todos') params.set('genero', generoFiltro)
+ if (apenasPro) params.set('pro', 'true')
+ if (ordem) params.set('sort', ordem)
  const data = await api.get(`/catalogo/?${params.toString()}`)
- setCatalogo(shuffle(Array.isArray(data) ? data : []))
+ const lista = Array.isArray(data) ? data : []
+ // Mantém a vibe de "descoberta" embaralhando quando a ordem for "recente";
+ // demais ordenações preservam a ordem do servidor.
+ setCatalogo(ordem === 'recente' ? shuffle(lista) : lista)
  } catch (e) {
  console.error('Erro ao carregar catálogo:', e)
  setCatalogo([])
  } finally { setLoadCat(false) }
  }
  load()
- }, [generoFiltro])
+ }, [generoFiltro, ordem, apenasPro])
 
  // Quando vier `?obraId=<id>` (ex.: clique numa notificação),
  // busca a obra e abre a Ficha Técnica automaticamente.
@@ -436,22 +443,60 @@ export default function Descoberta() {
  </div>
  )}
  </div>
- {aba === 'catalogo' && !compositor && (
+ {aba === 'catalogo' && !compositor && (() => {
+ const filtrosAtivos = (generoFiltro !== 'Todos' ? 1 : 0) + (apenasPro ? 1 : 0) + (ordem !== 'recente' ? 1 : 0)
+ const ORDENS = [
+ { key: 'recente',    label: 'Mais recentes' },
+ { key: 'antiga',     label: 'Mais antigas' },
+ { key: 'preco_asc',  label: 'Menor preço' },
+ { key: 'preco_desc', label: 'Maior preço' },
+ { key: 'nome',       label: 'Nome (A–Z)' },
+ ]
+ return (
  <div className="dc-filtro-wrap">
  <button
- className={`dc-filtro-btn ${generoFiltro !== 'Todos' ? 'dc-filtro-btn-active' : ''}`}
+ className={`dc-filtro-btn ${filtrosAtivos > 0 ? 'dc-filtro-btn-active' : ''}`}
  onClick={() => setMostraFiltro(v => !v)}
- aria-label="Filtrar por gênero"
+ aria-label="Filtros e ordenação"
  >
  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
  </svg>
- {generoFiltro !== 'Todos' && <span className="dc-filtro-badge">1</span>}
+ {filtrosAtivos > 0 && <span className="dc-filtro-badge">{filtrosAtivos}</span>}
  </button>
  {mostraFiltro && (
  <>
  <div className="dc-filtro-overlay" onClick={() => setMostraFiltro(false)} />
  <div className="dc-filtro-menu">
+ <button
+ className={`dc-filtro-pro ${apenasPro ? 'dc-filtro-pro-active' : ''}`}
+ onClick={() => setApenasPro(v => !v)}
+ >
+ <span className="dc-filtro-pro-label">
+ <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg>
+ Apenas usuários PRO
+ </span>
+ <span className="dc-filtro-pro-toggle">
+ {apenasPro ? 'Ativo' : 'Off'}
+ </span>
+ </button>
+
+ <div className="dc-filtro-menu-title">Ordenar por</div>
+ {ORDENS.map(o => (
+ <button
+ key={o.key}
+ className={`dc-filtro-opt ${ordem === o.key ? 'dc-filtro-opt-active' : ''}`}
+ onClick={() => { setOrdem(o.key); setMostraFiltro(false) }}
+ >
+ {o.label}
+ {ordem === o.key && (
+ <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+ <polyline points="20 6 9 17 4 12"/>
+ </svg>
+ )}
+ </button>
+ ))}
+
  <div className="dc-filtro-menu-title">Gênero</div>
  {GENEROS.map(g => (
  <button
@@ -471,7 +516,8 @@ export default function Descoberta() {
  </>
  )}
  </div>
- )}
+ )
+ })()}
  </div>
  </div>
 

@@ -67,21 +67,48 @@ def stats_publicas():
 def listar_catalogo():
     genero   = request.args.get("genero")
     busca    = request.args.get("q", "").strip()
+    apenas_pro = request.args.get("pro", "").lower() in ("1", "true", "yes")
+    sort     = (request.args.get("sort") or "recente").lower()
     page     = max(1, int(request.args.get("page", 1)))
     per_page = min(50, int(request.args.get("per_page", 20)))
     offset   = (page - 1) * per_page
 
     sb = get_supabase()
+
+    # Mapeia ordenação aceita
+    sort_map = {
+        "recente":    ("created_at",  True),   # mais recentes primeiro
+        "antiga":     ("created_at",  False),
+        "preco_asc":  ("preco_cents", False),  # mais baratas primeiro
+        "preco_desc": ("preco_cents", True),
+        "nome":       ("nome",        False),
+    }
+    order_col, order_desc = sort_map.get(sort, sort_map["recente"])
+
     query = (
         sb.table("catalogo_publico")
         .select("*")
-        .order("created_at", desc=True)
+        .order(order_col, desc=order_desc)
         .range(offset, offset + per_page - 1)
     )
     if genero:
         query = query.eq("genero", genero)
     if busca:
         query = query.ilike("nome", f"%{busca}%")
+
+    if apenas_pro:
+        # busca ids dos perfis PRO ativos (assinatura vigente)
+        pro_resp = (
+            sb.table("perfis")
+            .select("id")
+            .eq("plano", "PRO")
+            .in_("status_assinatura", ["ativa", "cancelada", "past_due"])
+            .execute()
+        )
+        pro_ids = [p["id"] for p in (pro_resp.data or [])]
+        if not pro_ids:
+            return jsonify([]), 200
+        query = query.in_("titular_id", pro_ids)
 
     resp = query.execute()
     return jsonify(resp.data or []), 200
