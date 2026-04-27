@@ -27,7 +27,7 @@ export default function AdminBI() {
  if (loading) return <p className="text-muted">Carregando BI…</p>
 
  return (
- <div>
+ <div style={{ padding: '32px 20px', maxWidth: 1200, margin: '0 auto' }}>
  <div style={{ marginBottom: 24 }}>
  <h1 style={{ fontSize: 22, fontWeight: 600 }}>Painel de BI</h1>
  <p className="text-muted">Visão consolidada da plataforma</p>

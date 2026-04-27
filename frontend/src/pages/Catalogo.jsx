@@ -56,7 +56,7 @@ export default function Catalogo() {
  }
 
  return (
- <div>
+ <div style={{ padding: '32px 20px', maxWidth: 1100, margin: '0 auto' }}>
  <div style={{ marginBottom: 24 }}>
  <h1 style={{ fontSize: 22, fontWeight: 700 }}>Catálogo de Obras</h1>
  <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Explore composições disponíveis para licenciamento</p>

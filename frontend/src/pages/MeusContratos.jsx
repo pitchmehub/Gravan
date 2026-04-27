@@ -108,12 +108,12 @@ export default function MeusContratos() {
  {loading && <p style={{ color: 'var(--text-muted)' }}>Carregando…</p>}
  {erro && <p style={{ color: '#c0392b' }}> {erro}</p>}
 
- {/* Contratos de Edição (autor ↔ editora) */}
+ {/* Contratos de Edição (autor ⇄ editora) */}
  {edicaoLista.length > 0 && (
  <section style={{ marginBottom: 30 }}>
- <h2 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Edição (autor ↔ editora)</h2>
- <div style={{ border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
- <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+ <h2 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Edição (autor ⇄ editora)</h2>
+ <div style={{ border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', overflowX: 'auto' }}>
+ <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 640 }}>
  <thead style={{ background: 'var(--surface-2, #fafafa)' }}>
  <tr>
  <th style={th}>Contrato</th>
@@ -129,13 +129,15 @@ export default function MeusContratos() {
  return (
  <tr key={c.id} style={{ borderTop: '1px solid var(--border)' }}>
  <td style={td}>
- <div style={{ fontWeight: 600, fontSize: 13 }}>
- Obra <code style={{
+ <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+ <span>Obra</span>
+ <code title={c.obra_id} style={{
  fontFamily: 'monospace', fontSize: 11.5,
  background: 'var(--surface)', padding: '2px 6px',
  borderRadius: 4, border: '1px solid var(--border)',
- }}>{c.obra_id}</code>
-</div>
+ whiteSpace: 'nowrap',
+ }}>{c.obra_id ? `${c.obra_id.slice(0, 8)}…` : '—'}</code>
+ </div>
  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
  {c.created_at && new Date(c.created_at).toLocaleDateString('pt-BR')}
  </div>
@@ -179,8 +181,8 @@ export default function MeusContratos() {
  {contratos.length > 0 && (
  <section>
  <h2 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Contratos da plataforma</h2>
- <div style={{ border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
- <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+ <div style={{ border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', overflowX: 'auto' }}>
+ <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 640 }}>
  <thead style={{ background: 'var(--surface-2, #fafafa)' }}>
  <tr>
  <th style={th}>Obra</th><th style={th}>Versão</th>

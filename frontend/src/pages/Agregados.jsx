@@ -130,8 +130,8 @@ export default function Agregados() {
  : lista.length === 0 ? (
    <div style={empty}>Nenhum artista agregado ainda. Use "Cadastrar" ou "Adicionar" acima.</div>
  ) : (
- <div style={card}>
- <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+ <div style={{ ...card, padding: 0, overflowX: 'auto' }}>
+ <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 640 }}>
  <thead style={{ background: 'var(--surface-2, #fafafa)' }}>
  <tr>
  <th style={th}>Nome</th>
@@ -169,8 +169,8 @@ export default function Agregados() {
    convites.length === 0 ? (
      <div style={empty}>Nenhum convite enviado.</div>
    ) : (
-     <div style={card}>
-       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+     <div style={{ ...card, padding: 0, overflowX: 'auto' }}>
+       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 720 }}>
          <thead style={{ background: 'var(--surface-2, #fafafa)' }}>
            <tr>
              <th style={th}>E-mail</th>

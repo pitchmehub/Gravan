@@ -761,7 +761,7 @@ function AnaliticosPanel({ resumo, extras, reloadingExtras, reloadExtras }) {
     : '—'
 
   return (
-    <div>
+    <div style={{ padding: '32px 20px', maxWidth: 1200, margin: '0 auto' }}>
       {/* Topo: hora da última atualização + botão manual */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',

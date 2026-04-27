@@ -70,7 +70,7 @@ export default function Ofertas() {
   if (loading) return <p className="text-muted">Carregando ofertas…</p>
 
   return (
-    <div style={{ maxWidth: 720 }}>
+    <div style={{ padding: '32px 20px', maxWidth: 720, margin: '0 auto' }}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 600 }}>
           {isCompositor ? 'Ofertas Recebidas' : 'Minhas Ofertas'}
