@@ -13,7 +13,7 @@ pyjwt==2.10.1
 redis==5.2.1
 waitress==3.0.2
 reportlab==4.4.10
-holidays==0.59
+holidays>=0.59
 pywebpush==2.3.0
 sentry-sdk[flask]>=2.58.0
 requests>=2.32.0
