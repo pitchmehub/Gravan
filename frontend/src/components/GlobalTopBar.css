@@ -168,11 +168,11 @@
   margin: 4px 4px;
 }
 .gtb-dd-item {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 14px;
   width: 100%;
   background: transparent;
   border: none;
-  padding: 9px 10px;
+  padding: 9px 12px 9px 16px;
   border-radius: 8px;
   color: var(--text-primary);
   font-size: 13px;
@@ -181,6 +181,7 @@
   text-align: left;
   transition: background .12s;
 }
+.gtb-dd-item span { padding-left: 4px; }
 .gtb-dd-item:hover { background: var(--surface-2); }
 .gtb-dd-item svg { color: var(--text-muted); flex-shrink: 0; }
 .gtb-dd-danger { color: var(--error); }
