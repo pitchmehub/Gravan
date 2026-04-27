@@ -76,6 +76,17 @@ Plataforma premium que conecta compositores e compradores de obras musicais com 
   `GET /api/publishers/historico-licenciamentos` lista todas as transações em
   que a editora logada recebeu sua comissão de 10%, com obra, titular agregado,
   comprador e valor. Renderizado no `PublisherDashboard.jsx`.
+- **Fluxo de ofertas/contrapropostas (atualizado abr/2026):**
+  - Ao criar uma oferta, o sistema notifica **compositor titular**, **editoras
+    envolvidas** (publisher_id do titular + editora_terceira_id da obra) **e o
+    próprio intérprete** (confirmação de envio). Implementado em
+    `backend/services/ofertas.py::notificar_compositor_nova_oferta`.
+  - Quando o intérprete responde a uma contraproposta do compositor, o backend
+    notifica compositor + editoras (`notificar_resposta_contraproposta`). Se
+    aceita, o `expires_at` é movido para 72h (janela de pagamento) e a resposta
+    inclui `checkout_redirect=/comprar/<obra>?oferta_id=<id>`. O frontend
+    (`Ofertas.jsx`) navega automaticamente para o checkout com o valor
+    negociado.
 
 ## Arquitetura
 

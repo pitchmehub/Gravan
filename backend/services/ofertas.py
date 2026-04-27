@@ -184,8 +184,9 @@ def _payload_oferta(of: dict, obra: dict, extra: dict | None = None) -> dict:
 
 def notificar_compositor_nova_oferta(of: dict, obra: dict, interprete_nome: str) -> None:
     """
-    Notifica o COMPOSITOR (titular) e as EDITORAS envolvidas na obra
-    (editora-mãe via publisher_id e editora terceira via editora_terceira_id).
+    Notifica o COMPOSITOR (titular), as EDITORAS envolvidas na obra
+    (editora-mãe via publisher_id e editora terceira via editora_terceira_id)
+    e o próprio INTÉRPRETE (confirmação de envio).
     A decisão de aceitar/recusar/contra-propor é exclusiva do compositor;
     a editora apenas acompanha.
     """
@@ -231,6 +232,23 @@ def notificar_compositor_nova_oferta(of: dict, obra: dict, interprete_nome: str)
         except Exception as e:
             log.warning("Falha ao notificar editora %s da oferta %s: %s",
                         pub_id, of.get("id"), e)
+
+    # 3) Intérprete (confirmação da própria oferta enviada)
+    try:
+        notify(
+            perfil_id=of["interprete_id"],
+            tipo="oferta",
+            titulo=f"Oferta enviada: \"{nome_obra}\"",
+            mensagem=(
+                f"Sua oferta de {valor} foi enviada ao compositor. "
+                f"Acompanhe em \"Ofertas → Enviadas\". Você tem até 48h "
+                f"para receber resposta."
+            ),
+            link="/ofertas",
+            payload=payload,
+        )
+    except Exception as e:
+        log.warning("Falha ao notificar intérprete da oferta %s: %s", of.get("id"), e)
 
 
 def notificar_interprete_resposta(of: dict, obra: dict, status: str) -> None:
@@ -305,6 +323,77 @@ def notificar_interprete_resposta(of: dict, obra: dict, status: str) -> None:
             )
         except Exception as e:
             log.warning("Falha ao notificar editora %s da resposta da oferta %s: %s",
+                        pub_id, of.get("id"), e)
+
+
+def notificar_resposta_contraproposta(of: dict, obra: dict, status: str) -> None:
+    """
+    Notifica o COMPOSITOR (titular) e as EDITORAS envolvidas quando o
+    INTÉRPRETE responde a uma contraproposta.
+    status: 'aceita' | 'recusada'
+    O próprio intérprete não recebe notificação (foi ele quem decidiu);
+    o frontend é responsável por dar feedback imediato a ele.
+    """
+    nome_obra = obra.get("nome", "obra")
+    valor = _moeda(of["valor_cents"])
+    payload = _payload_oferta(of, obra, {"status": status})
+
+    titulo_comp_map = {
+        "aceita":   f"Contraproposta aceita pelo intérprete: \"{nome_obra}\"",
+        "recusada": f"Contraproposta recusada: \"{nome_obra}\"",
+    }
+    msg_comp_map = {
+        "aceita": (
+            f"O intérprete aceitou sua contraproposta de {valor} para "
+            f"\"{nome_obra}\". Ele tem 72h para assinar o contrato e pagar."
+        ),
+        "recusada": (
+            f"O intérprete recusou sua contraproposta de {valor} para "
+            f"\"{nome_obra}\". A negociação foi encerrada."
+        ),
+    }
+    titulo_pub_map = {
+        "aceita":   f"Contraproposta aceita: \"{nome_obra}\"",
+        "recusada": f"Contraproposta recusada: \"{nome_obra}\"",
+    }
+    msg_pub_map = {
+        "aceita": (
+            f"O intérprete aceitou a contraproposta de {valor} para "
+            f"\"{nome_obra}\". Aguardando assinatura e pagamento (72h)."
+        ),
+        "recusada": (
+            f"O intérprete recusou a contraproposta de {valor} para "
+            f"\"{nome_obra}\". Negociação encerrada."
+        ),
+    }
+
+    # 1) Compositor titular
+    try:
+        notify(
+            perfil_id=obra["titular_id"],
+            tipo="oferta",
+            titulo=titulo_comp_map.get(status, f"Atualização da contraproposta: \"{nome_obra}\""),
+            mensagem=msg_comp_map.get(status, ""),
+            link="/ofertas",
+            payload=payload,
+        )
+    except Exception as e:
+        log.warning("Falha ao notificar compositor da resposta de contraproposta %s: %s",
+                    of.get("id"), e)
+
+    # 2) Editoras envolvidas (acompanhamento)
+    for pub_id in publishers_da_obra(obra):
+        try:
+            notify(
+                perfil_id=pub_id,
+                tipo="oferta",
+                titulo=titulo_pub_map.get(status, f"Atualização da contraproposta: \"{nome_obra}\""),
+                mensagem=msg_pub_map.get(status, ""),
+                link="/ofertas",
+                payload=payload,
+            )
+        except Exception as e:
+            log.warning("Falha ao notificar editora %s da resposta de contraproposta %s: %s",
                         pub_id, of.get("id"), e)
 
 

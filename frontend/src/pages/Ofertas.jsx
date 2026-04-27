@@ -70,7 +70,8 @@ export default function Ofertas() {
   async function responder(oferta, status) {
     setRespondendo(oferta.id)
     try {
-      const url = oferta.aguardando_resposta_de === 'interprete'
+      const isContra = oferta.aguardando_resposta_de === 'interprete'
+      const url = isContra
         ? `/catalogo/ofertas/${oferta.id}/responder-contraproposta`
         : `/catalogo/ofertas/${oferta.id}/responder`
       const updated = await api.patch(url, { status })
@@ -78,6 +79,15 @@ export default function Ofertas() {
       setRecebidas(prev => merge(prev))
       setEnviadas(prev => merge(prev))
       setEditora(prev => merge(prev))
+
+      // Ao aceitar uma contraproposta, leva o intérprete direto ao checkout
+      // com o valor negociado. O backend devolve `checkout_redirect`.
+      if (isContra && status === 'aceita') {
+        const dest = updated?.checkout_redirect
+          || `/comprar/${oferta.obra_id}?oferta_id=${oferta.id}`
+        navigate(dest)
+        return
+      }
     } catch (e) {
       alert(e.message)
     } finally {

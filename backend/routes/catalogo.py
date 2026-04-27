@@ -192,6 +192,7 @@ from services.ofertas import (
     validar_nova_oferta,
     notificar_compositor_nova_oferta,
     notificar_interprete_resposta,
+    notificar_resposta_contraproposta,
     expirar_pendentes,
     _expirar_se_vencida,
     _expires_at_iso,
@@ -420,32 +421,30 @@ def responder_contraproposta(oferta_id):
     if of["interprete_id"] != g.user.id:
         abort(403, description="Apenas o intérprete que recebeu a contraproposta pode respondê-la.")
 
-    upd = sb.table("ofertas").update({
+    update_payload = {
         "status": novo_status,
         "responded_at": datetime.now(timezone.utc).isoformat(),
-    }).eq("id", oferta_id).execute().data[0]
+    }
+    # Quando aceita, abre janela de pagamento de 72h (mesma regra do
+    # aceite feito pelo compositor em uma oferta normal).
+    if novo_status == "aceita":
+        update_payload["expires_at"] = deadline_pagamento_iso()
+
+    upd = sb.table("ofertas").update(update_payload).eq("id", oferta_id).execute().data[0]
 
     obra = sb.table("obras").select(
-        "id, nome, titular_id"
+        "id, nome, titular_id, editora_terceira_id"
     ).eq("id", of["obra_id"]).single().execute().data or {}
 
-    # Notifica o compositor (titular)
-    try:
-        from services.notificacoes import notify
-        notify(
-            perfil_id=obra["titular_id"],
-            tipo="oferta",
-            titulo=("Contraproposta aceita pelo intérprete!"
-                    if novo_status == "aceita"
-                    else "Contraproposta recusada"),
-            mensagem=(f"Em \"{obra.get('nome','obra')}\" (R$ {upd['valor_cents']/100:.2f})."),
-            link="/ofertas",
-            payload={"oferta_id": upd["id"], "obra_id": obra["id"], "status": novo_status},
-        )
-    except Exception:
-        pass
+    # Notifica compositor titular + editoras envolvidas (intérprete não recebe;
+    # frontend já dá feedback imediato a ele).
+    notificar_resposta_contraproposta(upd, obra, novo_status)
 
-    return jsonify(upd), 200
+    # Quando aceita, devolve o caminho do checkout para o frontend redirecionar.
+    resp = dict(upd)
+    if novo_status == "aceita":
+        resp["checkout_redirect"] = f"/comprar/{obra['id']}?oferta_id={upd['id']}"
+    return jsonify(resp), 200
 
 
 @catalogo_bp.route("/ofertas/recebidas", methods=["GET"])
