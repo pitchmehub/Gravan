@@ -6,6 +6,7 @@ import SideMenu      from './components/SideMenu'
 import GlobalPlayer  from './components/GlobalPlayer'
 import PWAInstaller  from './components/PWAInstaller'
 import PWAInstall    from './components/PWAInstall'
+import PushAutoEnable from './components/PushAutoEnable'
 import Landing       from './pages/Landing'
 import Login         from './pages/Login'
 import Dashboard     from './pages/Dashboard'
@@ -133,6 +134,7 @@ function AppShell({ children }) {
       </main>
       <GlobalPlayer />
       <PWAInstall />
+      <PushAutoEnable />
     </div>
   )
 }
