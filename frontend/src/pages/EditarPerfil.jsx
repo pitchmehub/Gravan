@@ -212,7 +212,7 @@ export default function EditarPerfil() {
  />
  </div>
 
- <div style={{ padding: 20, display: 'flex', alignItems: 'center', gap: 16, marginTop: -50 }}>
+ <div style={{ padding: 20, display: 'flex', alignItems: 'flex-end', gap: 16 }}>
  <div
  onClick={() => avatarFileRef.current?.click()}
  style={{
@@ -222,6 +222,7 @@ export default function EditarPerfil() {
  border: '4px solid #fff',
  boxShadow: '0 4px 12px rgba(0,0,0,.2)',
  display: 'flex', alignItems: 'center', justifyContent: 'center',
+ marginTop: -50,
  }}
  >
  {avatarPreview
@@ -229,7 +230,7 @@ export default function EditarPerfil() {
  : <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--brand, #0C447C)' }}>{iniciais}</div>
  }
  </div>
- <div style={{ flex: 1 }}>
+ <div style={{ flex: 1, minWidth: 0 }}>
  <input
  ref={avatarFileRef}
  type="file"
