@@ -251,6 +251,29 @@ def create_app() -> Flask:
         return jsonify({"status": "ok"}), 200
 
     # ═══════════════════════════════════════════════════════════
+    # SPA FALLBACK (apenas em deploy)
+    # Quando o build do frontend existe (frontend/dist), o próprio
+    # Flask serve o React. Em dev, dist normalmente não existe e o
+    # Vite roda em outra porta — esse trecho não interfere.
+    # ═══════════════════════════════════════════════════════════
+    _here     = os.path.dirname(os.path.abspath(__file__))
+    _dist_dir = os.path.abspath(os.path.join(_here, "..", "frontend", "dist"))
+    if os.path.isdir(_dist_dir) and os.path.isfile(os.path.join(_dist_dir, "index.html")):
+        from flask import send_from_directory
+
+        @app.route("/", defaults={"_spa_path": ""})
+        @app.route("/<path:_spa_path>")
+        @csrf.exempt
+        @limiter.exempt
+        def serve_spa(_spa_path):
+            if _spa_path.startswith("api/"):
+                return jsonify({"error": "Endpoint não encontrado."}), 404
+            full = os.path.join(_dist_dir, _spa_path)
+            if _spa_path and os.path.isfile(full):
+                return send_from_directory(_dist_dir, _spa_path)
+            return send_from_directory(_dist_dir, "index.html")
+
+    # ═══════════════════════════════════════════════════════════
     # HEARTBEAT INTERNO (anti-sleep)
     # ═══════════════════════════════════════════════════════════
     try:
