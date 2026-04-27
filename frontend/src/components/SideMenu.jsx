@@ -74,9 +74,10 @@ function useIsMobile() {
 
 function UserMenu({ perfil, collapsed }) {
  const [open, setOpen] = useState(false)
+ const [imgErro, setImgErro] = useState(false)
  const ref = useRef(null)
  const navigate = useNavigate()
- const { signOut } = useAuth()
+ const { signOut, user } = useAuth()
 
  useEffect(() => {
  function handle(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
@@ -87,12 +88,19 @@ function UserMenu({ perfil, collapsed }) {
  if (!perfil) return null
  const iniciais = perfil.nome?.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase() ?? '?'
  const isPro = perfil.plano === 'PRO' && perfil.status_assinatura && perfil.status_assinatura !== 'inativa'
+ // Fontes de foto: perfil cadastrado → metadados OAuth (Google etc.)
+ const fotoUrl = perfil.avatar_url
+   || user?.user_metadata?.avatar_url
+   || user?.user_metadata?.picture
+   || null
 
  return (
  <div ref={ref} style={{ position: 'relative' }}>
  <div className="sidebar-user-btn" onClick={() => setOpen(o => !o)}>
  <div className="sidebar-avatar">
- {perfil.avatar_url ? <img src={perfil.avatar_url} alt={perfil.nome} /> : iniciais}
+ {fotoUrl && !imgErro
+   ? <img src={fotoUrl} alt={perfil.nome} referrerPolicy="no-referrer" onError={() => setImgErro(true)} />
+   : iniciais}
  </div>
  {!collapsed && (
  <>
@@ -173,7 +181,7 @@ export default function SideMenu({ onCollapse }) {
  const isMobile = useIsMobile()
  const [collapsed, setCollapsed] = useState(false)
  const [mobileOpen, setMobileOpen] = useState(false)
- const { perfil, signOut } = useAuth()
+ const { perfil } = useAuth()
  const navigate = useNavigate()
  const location = useLocation()
  const drawerRef = useRef(null)
@@ -282,20 +290,6 @@ export default function SideMenu({ onCollapse }) {
  </span>
  </NavLink>
  ))}
- <div style={{ height: 1, background: 'var(--border)', margin: '8px 4px' }} />
- <NavLink to="/perfil/editar"
- className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
- onClick={() => setMobileOpen(false)}>
- <span className="sidebar-icon"><IconUser size={18} /></span>
- <span>Editar informações</span>
- </NavLink>
- <button
- className="sidebar-link"
- onClick={() => { setMobileOpen(false); signOut() }}
- style={{ color: 'var(--error)' }}>
- <span className="sidebar-icon"><IconLogout size={18} /></span>
- <span>Sair da conta</span>
- </button>
  </nav>
 
  <div className="sidebar-footer">
@@ -374,24 +368,6 @@ export default function SideMenu({ onCollapse }) {
  )}
  </NavLink>
  ))}
-
- <div style={{ height: 1, background: 'var(--border)', margin: '8px 4px' }} />
-
- <NavLink to="/perfil/editar"
- className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
- title={collapsed ? 'Editar informações' : undefined}>
- <span className="sidebar-icon"><IconUser size={18} /></span>
- {!collapsed && <span>Editar informações</span>}
- </NavLink>
-
- <button
- className="sidebar-link"
- onClick={() => signOut()}
- title={collapsed ? 'Sair da conta' : undefined}
- style={{ color: 'var(--error)' }}>
- <span className="sidebar-icon"><IconLogout size={18} /></span>
- {!collapsed && <span>Sair da conta</span>}
- </button>
  </nav>
 
  <div className="sidebar-footer">
