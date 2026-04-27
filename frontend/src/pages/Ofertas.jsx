@@ -34,7 +34,11 @@ export default function Ofertas() {
   const navigate = useNavigate()
   const isCompositor = perfil?.role === 'compositor'
 
-  const [ofertas, setOfertas] = useState([])
+  // compositor abre em "recebidas"; demais abrem direto em "enviadas"
+  const [aba, setAba] = useState(isCompositor ? 'recebidas' : 'enviadas')
+
+  const [recebidas, setRecebidas] = useState([])
+  const [enviadas, setEnviadas] = useState([])
   const [loading, setLoading] = useState(true)
   const [respondendo, setRespondendo] = useState(null)
   const [contraOferta, setContraOferta] = useState(null)
@@ -42,9 +46,12 @@ export default function Ofertas() {
   async function carregar() {
     setLoading(true)
     try {
-      const endpoint = isCompositor ? '/catalogo/ofertas/recebidas' : '/catalogo/ofertas/enviadas'
-      const data = await api.get(endpoint)
-      setOfertas(data || [])
+      const reqs = []
+      if (isCompositor) {
+        reqs.push(api.get('/catalogo/ofertas/recebidas').then(d => setRecebidas(d || [])))
+      }
+      reqs.push(api.get('/catalogo/ofertas/enviadas').then(d => setEnviadas(d || [])))
+      await Promise.all(reqs)
     } finally {
       setLoading(false)
     }
@@ -59,7 +66,9 @@ export default function Ofertas() {
         ? `/catalogo/ofertas/${oferta.id}/responder-contraproposta`
         : `/catalogo/ofertas/${oferta.id}/responder`
       const updated = await api.patch(url, { status })
-      setOfertas(prev => prev.map(o => o.id === oferta.id ? { ...o, ...updated } : o))
+      const merge = (arr) => arr.map(o => o.id === oferta.id ? { ...o, ...updated } : o)
+      setRecebidas(prev => merge(prev))
+      setEnviadas(prev => merge(prev))
     } catch (e) {
       alert(e.message)
     } finally {
@@ -69,22 +78,68 @@ export default function Ofertas() {
 
   if (loading) return <p className="text-muted">Carregando ofertas…</p>
 
+  const ofertas = aba === 'recebidas' ? recebidas : enviadas
+  const tituloPagina = isCompositor ? 'Ofertas' : 'Minhas Ofertas'
+  const subtituloRecebidas = 'Propostas de intérpretes para suas obras. Você tem 48h para responder.'
+  const subtituloEnviadas = 'Acompanhe suas propostas e contrapropostas. Pague rápido ao serem aceitas.'
+
   return (
     <div style={{ padding: '32px 20px', maxWidth: 720, margin: '0 auto' }}>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 600 }}>
-          {isCompositor ? 'Ofertas Recebidas' : 'Minhas Ofertas'}
-        </h1>
+        <h1 style={{ fontSize: 22, fontWeight: 600 }}>{tituloPagina}</h1>
         <p className="text-muted">
-          {isCompositor
-            ? 'Propostas de intérpretes para suas obras. Você tem 48h para responder.'
-            : 'Acompanhe suas propostas e contrapropostas. Pague rápido ao serem aceitas.'}
+          {aba === 'recebidas' ? subtituloRecebidas : subtituloEnviadas}
         </p>
       </div>
 
+      {isCompositor && (
+        <div style={{
+          display: 'flex', gap: 4, marginBottom: 20,
+          borderBottom: '1px solid var(--border)',
+        }}>
+          {[
+            { key: 'recebidas', label: 'Recebidas', count: recebidas.length },
+            { key: 'enviadas',  label: 'Enviadas',  count: enviadas.length },
+          ].map(t => {
+            const ativo = aba === t.key
+            return (
+              <button
+                key={t.key}
+                onClick={() => setAba(t.key)}
+                style={{
+                  padding: '10px 16px',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: ativo ? '2px solid var(--brand)' : '2px solid transparent',
+                  color: ativo ? 'var(--brand)' : 'var(--text-secondary)',
+                  fontWeight: ativo ? 600 : 500,
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  marginBottom: -1,
+                }}
+              >
+                {t.label}
+                <span style={{
+                  marginLeft: 8, padding: '1px 8px', borderRadius: 99,
+                  background: ativo ? 'var(--brand)' : 'var(--surface-2)',
+                  color: ativo ? '#fff' : 'var(--text-secondary)',
+                  fontSize: 11, fontWeight: 700,
+                }}>
+                  {t.count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {ofertas.length === 0 && (
         <div className="card" style={{ textAlign: 'center', padding: 40 }}>
-          <p className="text-muted">Nenhuma oferta encontrada.</p>
+          <p className="text-muted">
+            {aba === 'recebidas'
+              ? 'Nenhuma oferta recebida ainda.'
+              : 'Você ainda não fez nenhuma oferta.'}
+          </p>
         </div>
       )}
 
@@ -95,11 +150,12 @@ export default function Ofertas() {
           const aguardandoCompositor = oferta.aguardando_resposta_de === 'compositor'
           const aguardandoInterprete = oferta.aguardando_resposta_de === 'interprete'
           const isCounter = !!oferta.contraproposta_de_id
+          const ehRecebida = aba === 'recebidas'
 
-          // Decide quais botões mostrar
-          const podeCompositorResponder = isCompositor && oferta.status === 'pendente' && aguardandoCompositor
-          const podeInterpretePagar = !isCompositor && oferta.status === 'aceita'
-          const podeInterpreteResponderContra = !isCompositor && oferta.status === 'pendente' && aguardandoInterprete
+          // Decide quais botões mostrar — sempre baseado na aba (não no role do usuário)
+          const podeResponderRecebida   = ehRecebida && oferta.status === 'pendente' && aguardandoCompositor
+          const podePagarEnviada        = !ehRecebida && oferta.status === 'aceita'
+          const podeResponderContraEnv  = !ehRecebida && oferta.status === 'pendente' && aguardandoInterprete
 
           return (
             <div key={oferta.id} className="card">
@@ -122,7 +178,7 @@ export default function Ofertas() {
                     )}
                   </div>
                   <div className="text-muted" style={{ fontSize: 13 }}>
-                    {isCompositor
+                    {ehRecebida
                       ? `De: ${oferta.perfis?.nome ?? oferta.interprete_id}`
                       : `Preço de catálogo: ${fmt(oferta.obras?.preco_cents)}`}
                     {' · '}
@@ -173,7 +229,7 @@ export default function Ofertas() {
               )}
 
               {/* Ações */}
-              {podeCompositorResponder && (
+              {podeResponderRecebida && (
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <button
                     className="btn btn-primary btn-sm"
@@ -200,7 +256,7 @@ export default function Ofertas() {
                 </div>
               )}
 
-              {podeInterpreteResponderContra && (
+              {podeResponderContraEnv && (
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     className="btn btn-primary btn-sm"
@@ -219,7 +275,7 @@ export default function Ofertas() {
                 </div>
               )}
 
-              {podeInterpretePagar && (
+              {podePagarEnviada && (
                 <button
                   className="btn btn-primary btn-sm"
                   onClick={() => navigate(`/comprar/${oferta.obra_id}?oferta_id=${oferta.id}`)}

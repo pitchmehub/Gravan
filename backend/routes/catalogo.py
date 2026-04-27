@@ -463,7 +463,6 @@ def ofertas_recebidas():
 
 @catalogo_bp.route("/ofertas/enviadas", methods=["GET"])
 @require_auth
-@require_role("interprete")
 def ofertas_enviadas():
     sb = get_supabase()
     expirar_pendentes()
