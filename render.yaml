@@ -37,6 +37,12 @@ services:
         sync: false
       - key: PII_ENCRYPTION_KEY
         sync: false
+      - key: VAPID_PUBLIC_KEY
+        value: BIX8ad_CTXDweiY5NDmI65SBRoWqKwooog849JScD7SgpiFcL2BWiu0RI_pMhkHQvABPSRHdWbIJK2JiAh9EcXM
+      - key: VAPID_SUBJECT
+        value: mailto:contato@gravan.app
+      - key: VAPID_PRIVATE_KEY
+        sync: false
 
   # ─────────────────────────────────────────────────────────────
   # CRON 1 — Processar saques pendentes (libera após janela de 24h)
