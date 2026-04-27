@@ -187,6 +187,8 @@ def deletar_comentario(comentario_id):
 
 from datetime import datetime, timezone
 from services.ofertas import (
+    deadline_pagamento_iso,
+    publishers_da_obra,
     validar_nova_oferta,
     notificar_compositor_nova_oferta,
     notificar_interprete_resposta,
@@ -229,7 +231,7 @@ def criar_oferta(obra_id):
     sb = get_supabase()
 
     obra_resp = sb.table("obras").select(
-        "id, nome, preco_cents, status, titular_id, is_exclusive"
+        "id, nome, preco_cents, status, titular_id, is_exclusive, editora_terceira_id"
     ).eq("id", obra_id).single().execute()
     obra = obra_resp.data
     if not obra:
@@ -300,15 +302,21 @@ def responder_oferta(oferta_id):
         abort(409, description="Esta oferta aguarda resposta do intérprete.")
 
     obra = sb.table("obras").select(
-        "id, nome, titular_id"
+        "id, nome, titular_id, editora_terceira_id"
     ).eq("id", of["obra_id"]).single().execute().data or {}
     if obra.get("titular_id") != g.user.id:
         abort(403, description="Apenas o titular da obra pode responder esta oferta.")
 
-    upd = sb.table("ofertas").update({
+    update_payload = {
         "status": novo_status,
         "responded_at": datetime.now(timezone.utc).isoformat(),
-    }).eq("id", oferta_id).execute().data[0]
+    }
+    # Ao aceitar, abre janela de 72h para o comprador assinar/pagar
+    # (substitui o expires_at original de 48h da fase de negociação).
+    if novo_status == "aceita":
+        update_payload["expires_at"] = deadline_pagamento_iso()
+
+    upd = sb.table("ofertas").update(update_payload).eq("id", oferta_id).execute().data[0]
 
     notificar_interprete_resposta(upd, obra, novo_status)
     return jsonify(upd), 200
@@ -350,7 +358,7 @@ def contra_propor_oferta(oferta_id):
         abort(409, description="Esta oferta aguarda resposta do intérprete.")
 
     obra = sb.table("obras").select(
-        "id, nome, preco_cents, titular_id, is_exclusive"
+        "id, nome, preco_cents, titular_id, is_exclusive, editora_terceira_id"
     ).eq("id", of["obra_id"]).single().execute().data or {}
     if obra.get("titular_id") != g.user.id:
         abort(403, description="Apenas o titular da obra pode contra-propor.")
@@ -383,6 +391,7 @@ def contra_propor_oferta(oferta_id):
     }).execute().data[0]
 
     notificar_interprete_resposta(nova, obra, "contra_proposta")
+    # Notifica também o intérprete (já feito acima) — editoras já entram pela função
     return jsonify(nova), 201
 
 
@@ -470,6 +479,53 @@ def ofertas_enviadas():
         sb.table("ofertas")
         .select("*, obras(nome, preco_cents, is_exclusive)")
         .eq("interprete_id", g.user.id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return jsonify(resp.data or []), 200
+
+
+@catalogo_bp.route("/ofertas/editora", methods=["GET"])
+@require_auth
+def ofertas_editora():
+    """
+    Ofertas em obras que o usuário (editora) edita — seja como editora-mãe
+    (perfis.publisher_id dos compositores agregados) ou como editora terceira
+    (obras.editora_terceira_id).
+
+    Visão somente leitura: a editora acompanha mas não decide; quem aceita,
+    recusa ou contra-propõe é o compositor titular.
+    """
+    sb = get_supabase()
+    expirar_pendentes()
+    me = g.user.id
+
+    # 1) IDs de obras onde sou editora-mãe (titular agregado)
+    agregados = sb.table("perfis").select("id").eq("publisher_id", me).execute().data or []
+    agregados_ids = [a["id"] for a in agregados]
+
+    obras_ids: set[str] = set()
+    if agregados_ids:
+        obras_agreg = (
+            sb.table("obras").select("id")
+            .in_("titular_id", agregados_ids).execute().data or []
+        )
+        obras_ids.update(o["id"] for o in obras_agreg)
+
+    # 2) IDs de obras onde sou editora terceira
+    obras_terc = (
+        sb.table("obras").select("id")
+        .eq("editora_terceira_id", me).execute().data or []
+    )
+    obras_ids.update(o["id"] for o in obras_terc)
+
+    if not obras_ids:
+        return jsonify([]), 200
+
+    resp = (
+        sb.table("ofertas")
+        .select("*, obras(nome, preco_cents, is_exclusive, titular_id), perfis!interprete_id(nome, avatar_url)")
+        .in_("obra_id", list(obras_ids))
         .order("created_at", desc=True)
         .execute()
     )

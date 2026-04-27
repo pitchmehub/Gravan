@@ -33,13 +33,17 @@ export default function Ofertas() {
   const { perfil } = useAuth()
   const navigate = useNavigate()
   const isCompositor = perfil?.role === 'compositor'
+  const isPublisher  = perfil?.role === 'publisher'
 
-  // compositor abre em "recebidas"; demais abrem direto em "enviadas"
-  const [aba, setAba] = useState(isCompositor ? 'recebidas' : 'enviadas')
+  // Aba inicial: compositor → recebidas; editora → editora; demais → enviadas
+  const [aba, setAba] = useState(
+    isCompositor ? 'recebidas' : isPublisher ? 'editora' : 'enviadas'
+  )
 
   const [recebidas, setRecebidas] = useState([])
-  const [enviadas, setEnviadas] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [enviadas, setEnviadas]   = useState([])
+  const [editora, setEditora]     = useState([])
+  const [loading, setLoading]     = useState(true)
   const [respondendo, setRespondendo] = useState(null)
   const [contraOferta, setContraOferta] = useState(null)
 
@@ -50,6 +54,10 @@ export default function Ofertas() {
       if (isCompositor) {
         reqs.push(api.get('/catalogo/ofertas/recebidas').then(d => setRecebidas(d || [])))
       }
+      if (isPublisher) {
+        reqs.push(api.get('/catalogo/ofertas/editora').then(d => setEditora(d || [])))
+      }
+      // Enviadas: qualquer usuário pode ter feito ofertas
       reqs.push(api.get('/catalogo/ofertas/enviadas').then(d => setEnviadas(d || [])))
       await Promise.all(reqs)
     } finally {
@@ -57,7 +65,7 @@ export default function Ofertas() {
     }
   }
 
-  useEffect(() => { carregar() }, [isCompositor])
+  useEffect(() => { carregar() }, [isCompositor, isPublisher])
 
   async function responder(oferta, status) {
     setRespondendo(oferta.id)
@@ -69,6 +77,7 @@ export default function Ofertas() {
       const merge = (arr) => arr.map(o => o.id === oferta.id ? { ...o, ...updated } : o)
       setRecebidas(prev => merge(prev))
       setEnviadas(prev => merge(prev))
+      setEditora(prev => merge(prev))
     } catch (e) {
       alert(e.message)
     } finally {
@@ -78,29 +87,35 @@ export default function Ofertas() {
 
   if (loading) return <p className="text-muted">Carregando ofertas…</p>
 
-  const ofertas = aba === 'recebidas' ? recebidas : enviadas
-  const tituloPagina = isCompositor ? 'Ofertas' : 'Minhas Ofertas'
-  const subtituloRecebidas = 'Propostas de intérpretes para suas obras. Você tem 48h para responder.'
-  const subtituloEnviadas = 'Acompanhe suas propostas e contrapropostas. Pague rápido ao serem aceitas.'
+  const listas = { recebidas, enviadas, editora }
+  const ofertas = listas[aba] || []
+
+  const tabs = []
+  if (isCompositor) tabs.push({ key: 'recebidas', label: 'Recebidas', count: recebidas.length })
+  if (isPublisher)  tabs.push({ key: 'editora',   label: 'Como editora', count: editora.length })
+  tabs.push({ key: 'enviadas', label: 'Enviadas', count: enviadas.length })
+
+  const subtitulo = {
+    recebidas: 'Propostas de compradores para suas obras. Você tem 48h para aceitar, recusar ou contra-propor — a editora não decide, apenas acompanha.',
+    enviadas:  'Acompanhe suas propostas. Quando o compositor aceitar, você terá 72h para assinar o contrato e pagar.',
+    editora:   'Ofertas em obras que você edita. Visualização somente: a decisão é do compositor titular. Você é notificada de cada etapa.',
+  }[aba]
+
+  const tituloPagina = isCompositor || isPublisher ? 'Ofertas' : 'Minhas Ofertas'
 
   return (
     <div style={{ padding: '32px 20px', maxWidth: 720, margin: '0 auto' }}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 600 }}>{tituloPagina}</h1>
-        <p className="text-muted">
-          {aba === 'recebidas' ? subtituloRecebidas : subtituloEnviadas}
-        </p>
+        <p className="text-muted">{subtitulo}</p>
       </div>
 
-      {isCompositor && (
+      {tabs.length > 1 && (
         <div style={{
-          display: 'flex', gap: 4, marginBottom: 20,
+          display: 'flex', gap: 4, marginBottom: 20, flexWrap: 'wrap',
           borderBottom: '1px solid var(--border)',
         }}>
-          {[
-            { key: 'recebidas', label: 'Recebidas', count: recebidas.length },
-            { key: 'enviadas',  label: 'Enviadas',  count: enviadas.length },
-          ].map(t => {
+          {tabs.map(t => {
             const ativo = aba === t.key
             return (
               <button
@@ -136,9 +151,9 @@ export default function Ofertas() {
       {ofertas.length === 0 && (
         <div className="card" style={{ textAlign: 'center', padding: 40 }}>
           <p className="text-muted">
-            {aba === 'recebidas'
-              ? 'Nenhuma oferta recebida ainda.'
-              : 'Você ainda não fez nenhuma oferta.'}
+            {aba === 'recebidas' && 'Nenhuma oferta recebida ainda.'}
+            {aba === 'enviadas'  && 'Você ainda não fez nenhuma oferta.'}
+            {aba === 'editora'   && 'Nenhuma oferta nas obras que você edita.'}
           </p>
         </div>
       )}
@@ -150,18 +165,22 @@ export default function Ofertas() {
           const aguardandoCompositor = oferta.aguardando_resposta_de === 'compositor'
           const aguardandoInterprete = oferta.aguardando_resposta_de === 'interprete'
           const isCounter = !!oferta.contraproposta_de_id
-          const ehRecebida = aba === 'recebidas'
 
-          // Decide quais botões mostrar — sempre baseado na aba (não no role do usuário)
-          const podeResponderRecebida   = ehRecebida && oferta.status === 'pendente' && aguardandoCompositor
-          const podePagarEnviada        = !ehRecebida && oferta.status === 'aceita'
-          const podeResponderContraEnv  = !ehRecebida && oferta.status === 'pendente' && aguardandoInterprete
+          // Apenas a aba "Recebidas" do compositor tem ações decisórias.
+          // A aba "Como editora" é somente leitura — editora não decide.
+          const podeResponderRecebida   = aba === 'recebidas' && oferta.status === 'pendente' && aguardandoCompositor
+          const podePagarEnviada        = aba === 'enviadas'  && oferta.status === 'aceita'
+          const podeResponderContraEnv  = aba === 'enviadas'  && oferta.status === 'pendente' && aguardandoInterprete
+
+          const labelExpiracao = aba === 'enviadas' && oferta.status === 'aceita'
+            ? 'Janela de pagamento'
+            : 'Janela'
 
           return (
             <div key={oferta.id} className="card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     {oferta.obras?.nome ?? '—'}
                     {eExclusiva && (
                       <span style={{
@@ -176,9 +195,15 @@ export default function Ofertas() {
                         padding: '2px 8px', borderRadius: 99, fontWeight: 700,
                       }}>CONTRAPROPOSTA</span>
                     )}
+                    {aba === 'editora' && (
+                      <span style={{
+                        background: '#6B7280', color: '#fff', fontSize: 10,
+                        padding: '2px 8px', borderRadius: 99, fontWeight: 700,
+                      }}>SOMENTE LEITURA</span>
+                    )}
                   </div>
                   <div className="text-muted" style={{ fontSize: 13 }}>
-                    {ehRecebida
+                    {(aba === 'recebidas' || aba === 'editora')
                       ? `De: ${oferta.perfis?.nome ?? oferta.interprete_id}`
                       : `Preço de catálogo: ${fmt(oferta.obras?.preco_cents)}`}
                     {' · '}
@@ -208,9 +233,9 @@ export default function Ofertas() {
                     </div>
                   </div>
                 )}
-                {oferta.status === 'pendente' && oferta.expires_at && (
+                {(oferta.status === 'pendente' || oferta.status === 'aceita') && oferta.expires_at && (
                   <div style={{ marginLeft: 'auto' }}>
-                    <div className="text-muted" style={{ fontSize: 12 }}>Janela</div>
+                    <div className="text-muted" style={{ fontSize: 12 }}>{labelExpiracao}</div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#dc2626' }}>
                       {tempoRestante(oferta.expires_at)}
                     </div>
@@ -230,30 +255,41 @@ export default function Ofertas() {
 
               {/* Ações */}
               {podeResponderRecebida && (
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button
-                    className="btn btn-primary btn-sm"
-                    disabled={respondendo === oferta.id}
-                    onClick={() => responder(oferta, 'aceita')}
-                  >
-                    Aceitar
-                  </button>
-                  <button
-                    className="btn btn-sm"
-                    style={{ background: '#7c3aed', color: '#fff' }}
-                    disabled={respondendo === oferta.id}
-                    onClick={() => setContraOferta(oferta)}
-                  >
-                    Contra-propor
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    disabled={respondendo === oferta.id}
-                    onClick={() => responder(oferta, 'recusada')}
-                  >
-                    Recusar
-                  </button>
-                </div>
+                <>
+                  <div style={{
+                    background: '#FEF3C7', color: '#92400E',
+                    padding: '8px 12px', borderRadius: 6, marginBottom: 10,
+                    fontSize: 12,
+                  }}>
+                    Ao aceitar, abre uma janela de 72h para o comprador
+                    assinar o contrato e pagar. Após esse prazo, a oferta
+                    perde validade automaticamente.
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      disabled={respondendo === oferta.id}
+                      onClick={() => responder(oferta, 'aceita')}
+                    >
+                      Aceitar e gerar contrato
+                    </button>
+                    <button
+                      className="btn btn-sm"
+                      style={{ background: '#7c3aed', color: '#fff' }}
+                      disabled={respondendo === oferta.id}
+                      onClick={() => setContraOferta(oferta)}
+                    >
+                      Contra-propor
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      disabled={respondendo === oferta.id}
+                      onClick={() => responder(oferta, 'recusada')}
+                    >
+                      Recusar
+                    </button>
+                  </div>
+                </>
               )}
 
               {podeResponderContraEnv && (
@@ -280,7 +316,7 @@ export default function Ofertas() {
                   className="btn btn-primary btn-sm"
                   onClick={() => navigate(`/comprar/${oferta.obra_id}?oferta_id=${oferta.id}`)}
                 >
-                  Pagar agora · {fmt(oferta.valor_cents)}
+                  Assinar contrato e pagar · {fmt(oferta.valor_cents)}
                 </button>
               )}
 
