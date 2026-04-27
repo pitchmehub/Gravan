@@ -346,11 +346,16 @@ def gerar_contrato_licenciamento(transacao_id: str, ip_remote: str | None = None
             "role":        "autor" if c["perfil_id"] == titular["id"] else "coautor",
             "share_pct":   float(c["share_pct"]),
         })
+    # Comprador assina no momento do checkout (pagamento = aceite eletrônico).
+    # Não há nova assinatura depois.
     signers.append({
         "contract_id": contract["id"],
         "user_id":     buyer["id"],
         "role":        "interprete",
         "share_pct":   None,
+        "signed":      True,
+        "signed_at":   datetime.now(timezone.utc).isoformat(),
+        "ip_hash":     (ip_remote or "")[:64] or None,
     })
     # INSERT resiliente: cada signer individual (ver explicação no trilateral).
     for s in signers:
@@ -366,12 +371,18 @@ def gerar_contrato_licenciamento(transacao_id: str, ip_remote: str | None = None
             except Exception:
                 pass
 
-    # Log do evento
+    # Log do evento (criação + assinatura do comprador no checkout)
     try:
         sb.table("contract_events").insert({
             "contract_id": contract["id"],
             "event_type":  "created",
             "payload":     {"hash": content_hash, "ip": (ip_remote or "")[:32]},
+        }).execute()
+        sb.table("contract_events").insert({
+            "contract_id": contract["id"],
+            "user_id":     buyer["id"],
+            "event_type":  "signed",
+            "payload":     {"origem": "checkout", "ip": (ip_remote or "")[:32]},
         }).execute()
     except Exception:
         pass
@@ -523,11 +534,15 @@ def gerar_contrato_trilateral_agregado(
         "role":        "editora_agregadora",
         "share_pct":   None,
     })
+    # Comprador assina no checkout (pagamento = aceite eletrônico).
     signers.append({
         "contract_id": contract["id"],
         "user_id":     buyer["id"],
         "role":        "interprete",
         "share_pct":   None,
+        "signed":      True,
+        "signed_at":   datetime.now(timezone.utc).isoformat(),
+        "ip_hash":     (ip_remote or "")[:64] or None,
     })
     # INSERT resiliente: cada signer é inserido individualmente para que um
     # erro em uma linha (ex.: violação de CHECK) não derrube TODOS os signers
@@ -823,11 +838,14 @@ def gerar_contrato_trilateral(oferta_id: str) -> dict | None:
         "role":        "editora_terceira",
         "share_pct":   None,
     })
+    # Comprador assina no checkout (pagamento = aceite eletrônico).
     signers.append({
         "contract_id": contract["id"],
         "user_id":     buyer["id"],
         "role":        "interprete",
         "share_pct":   None,
+        "signed":      True,
+        "signed_at":   datetime.now(timezone.utc).isoformat(),
     })
     # INSERT resiliente: cada signer individual (ver explicação no trilateral).
     for s in signers:

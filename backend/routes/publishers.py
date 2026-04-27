@@ -170,11 +170,11 @@ def dashboard():
     if not me.data or me.data.get("role") != "publisher":
         abort(403, description="Apenas editoras.")
 
+    # Obras vinculadas à editora — agregados (publisher_id) OU editora terceira
     obras = (sb.table("obras")
-               .select("id,nome,status,created_at")
-               .eq("publisher_id", g.user.id)
+               .select("id,nome,status,created_at,publisher_id,editora_terceira_id")
+               .or_(f"publisher_id.eq.{g.user.id},editora_terceira_id.eq.{g.user.id}")
                .execute())
-    obras_ids = [o["id"] for o in (obras.data or [])]
 
     agregados = (sb.table("perfis")
                    .select("id,nome_completo,nome_artistico")
@@ -190,17 +190,28 @@ def dashboard():
     contratos_pendentes = [c for c in contratos_data
                            if c["status"] in ("pendente", "assinado_parcial")]
 
+    # ── Faturamento ─────────────────────────────────────────────────
+    # Fonte canônica: pagamentos_compositores (linha por crédito de wallet).
+    # Cobre tanto agregados (publisher_id_override do titular) quanto
+    # editora terceira (publisher_id_override da oferta trilateral).
     faturamento_cents = 0
-    if obras_ids:
-        try:
+    comissao_cents = 0
+    try:
+        pagamentos = (sb.table("pagamentos_compositores")
+                        .select("transacao_id,valor_cents")
+                        .eq("perfil_id", g.user.id)
+                        .execute()).data or []
+        comissao_cents = sum(p.get("valor_cents", 0) for p in pagamentos)
+        tx_ids = list({p["transacao_id"] for p in pagamentos if p.get("transacao_id")})
+        if tx_ids:
             tx = (sb.table("transacoes")
                     .select("valor_cents,status")
-                    .in_("obra_id", obras_ids)
-                    .eq("status", "pago")
-                    .execute())
-            faturamento_cents = sum(t.get("valor_cents", 0) for t in (tx.data or []))
-        except Exception:
-            pass
+                    .in_("id", tx_ids)
+                    .in_("status", ["confirmada", "pago"])
+                    .execute()).data or []
+            faturamento_cents = sum(t.get("valor_cents", 0) for t in tx)
+    except Exception:
+        pass
 
     return jsonify({
         "total_obras":          len(obras.data or []),
@@ -210,7 +221,7 @@ def dashboard():
         "contratos_assinados":  len(contratos_assinados),
         "contratos_pendentes":  len(contratos_pendentes),
         "faturamento_cents":    faturamento_cents,
-        "fee_devido_cents":     int(faturamento_cents * 0.05),
+        "comissao_cents":       comissao_cents,
     })
 
 
