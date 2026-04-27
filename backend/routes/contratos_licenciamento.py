@@ -27,7 +27,7 @@ contratos_lic_bp = Blueprint("contratos_lic", __name__)
 
 
 def _user_tem_acesso(sb, contract_id: str, user_id: str) -> dict | None:
-    """Retorna o contrato se o usuário é parte; None caso contrário."""
+    """Retorna o contrato se o usuário é parte (ou administrador); None caso contrário."""
     c = sb.table("contracts").select("*").eq("id", contract_id).single().execute().data
     if not c:
         return None
@@ -37,6 +37,13 @@ def _user_tem_acesso(sb, contract_id: str, user_id: str) -> dict | None:
     s = sb.table("contract_signers").select("id").eq("contract_id", contract_id).eq("user_id", user_id).limit(1).execute().data
     if s:
         return c
+    # Administrador da plataforma tem acesso de leitura a qualquer contrato
+    try:
+        adm = sb.table("perfis").select("role").eq("id", user_id).single().execute()
+        if ((adm.data or {}).get("role")) == "administrador":
+            return c
+    except Exception:
+        pass
     return None
 
 
