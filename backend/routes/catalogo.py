@@ -199,7 +199,6 @@ from services.ofertas import (
 
 @catalogo_bp.route("/<obra_id>/ofertas", methods=["POST"])
 @require_auth
-@require_role("interprete")
 def criar_oferta(obra_id):
     """
     Body:
@@ -389,7 +388,6 @@ def contra_propor_oferta(oferta_id):
 
 @catalogo_bp.route("/ofertas/<oferta_id>/responder-contraproposta", methods=["PATCH"])
 @require_auth
-@require_role("interprete")
 def responder_contraproposta(oferta_id):
     """
     Intérprete responde a uma contraproposta do compositor.
