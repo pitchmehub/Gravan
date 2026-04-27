@@ -40,10 +40,15 @@ export default function PushToggle() {
   async function handleTest() {
     setLoading(true)
     try {
-      await sendTestPush()
-      showMsg('Notificação de teste enviada! Verifique seu dispositivo.')
+      const r = await sendTestPush()
+      const n = Number(r?.enviados ?? 0)
+      if (n > 0) {
+        showMsg(`Notificação de teste enviada para ${n} dispositivo${n > 1 ? 's' : ''}. Se não chegar em alguns segundos, verifique se o "Não perturbe" está desligado e se as notificações do navegador estão liberadas no sistema.`)
+      } else {
+        showMsg('O servidor não encontrou nenhum dispositivo cadastrado para esta conta. Desative o botão acima e ative novamente — provavelmente a assinatura precisou ser renovada.', 'err')
+      }
     } catch (e) {
-      showMsg('Falha ao enviar teste.', 'err')
+      showMsg(e?.message || 'Falha ao enviar teste.', 'err')
     } finally {
       setLoading(false)
     }
