@@ -123,7 +123,7 @@ function AppShell({ children }) {
   const [collapsed, setCollapsed] = useState(false)
   const isMobile = useIsMobile()
   const sideW = isMobile ? 0 : (collapsed ? 64 : 240)
-  const topbarH = isMobile ? 52 : 56
+  const topbarH = isMobile ? 64 : 68
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
       <SideMenu onCollapse={setCollapsed} />
@@ -132,7 +132,7 @@ function AppShell({ children }) {
         marginLeft: sideW, flex: 1,
         transition: 'margin-left .2s ease',
         minWidth: 0, background: 'var(--bg)',
-        paddingTop: topbarH,
+        paddingTop: `calc(${topbarH}px + env(safe-area-inset-top, 0px))`,
         paddingBottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom, 0px))' : 0,
       }}>
         {children}

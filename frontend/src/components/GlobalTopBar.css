@@ -7,7 +7,8 @@
   top: 0;
   left: 0;
   right: 0;
-  height: var(--gtb-h, 56px);
+  height: calc(var(--gtb-h, 68px) + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
   background: var(--surface-translucent);
   backdrop-filter: blur(14px) saturate(140%);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
@@ -15,7 +16,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding-left: 20px;
+  padding-right: 20px;
   z-index: 90;
   transition: left .2s ease, background .25s ease, border-color .25s ease;
 }
@@ -188,12 +190,13 @@
 /* ── Mobile ── */
 @media (max-width: 767px) {
   .gtb {
-    padding: 0 14px;
-    height: var(--gtb-h-mobile, 64px);
+    padding-left: 14px;
+    padding-right: 14px;
+    height: calc(var(--gtb-h-mobile, 64px) + env(safe-area-inset-top, 0px));
   }
   .gtb-icon-btn,
   .gtb-bell-wrap .notif-btn {
-    width: 38px; height: 38px;
+    width: 40px; height: 40px;
   }
   .gtb-profile-trigger { padding: 3px 8px 3px 3px; gap: 5px; }
   .gtb-avatar { width: 30px; height: 30px; }

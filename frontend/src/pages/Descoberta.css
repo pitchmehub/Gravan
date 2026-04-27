@@ -16,18 +16,18 @@
 .dc-topbar {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 28px 12px;
+  gap: 8px;
+  padding: 6px 28px 8px;
   background: var(--surface-translucent);
   position: sticky;
-  top: var(--gtb-h, 56px);
+  top: calc(var(--gtb-h, 68px) + env(safe-area-inset-top, 0px));
   z-index: 50;
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(12px) saturate(140%);
   -webkit-backdrop-filter: blur(12px) saturate(140%);
 }
 @media (max-width: 767px) {
-  .dc-topbar { top: var(--gtb-h-mobile, 52px); }
+  .dc-topbar { top: calc(var(--gtb-h-mobile, 64px) + env(safe-area-inset-top, 0px)); }
 }
 
 .dc-topbar-row1 {
@@ -462,7 +462,7 @@
 /* ── RESPONSIVO ──────────────────────────── */
 @media (max-width: 767px) {
   /* Topbar compacta */
-  .dc-topbar      { padding: 8px 12px; gap: 8px; }
+  .dc-topbar      { padding: 4px 12px 6px; gap: 6px; }
   .dc-topbar-row1 { gap: 8px; }
   .dc-tabs        { flex: 1; justify-content: flex-start; gap: 6px; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 0; }
   .dc-tab         { font-size: 12px; padding: 0 12px; height: 36px; flex-shrink: 0; display: flex; align-items: center; }
