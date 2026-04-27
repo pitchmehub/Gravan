@@ -29,9 +29,14 @@
 @media (max-width: 767px) {
   .dc-topbar {
     top: var(--gtb-h-mobile, 64px);
-    padding: 4px 12px 8px;
-    gap: 6px;
+    padding: 6px 12px 8px;
+    gap: 8px;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
   }
+  .dc-topbar > .dc-topbar-row1 { flex-shrink: 0; }
+  .dc-topbar > .dc-search-row  { flex: 1; min-width: 0; }
 }
 
 .dc-topbar-row1 {
