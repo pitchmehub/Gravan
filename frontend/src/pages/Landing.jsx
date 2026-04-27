@@ -13,16 +13,11 @@ export default function Landing() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
 
-  // Se já está logado, restaura a última rota visitada (ou /descoberta).
-  // Evita ver a Landing por um instante quando o usuário recarrega o site.
+  // Se já está logado, manda SEMPRE para a Descoberta (desktop e mobile).
+  // Não restaura a última rota — o pós-login é único e previsível.
   useEffect(() => {
     if (loading || !user) return
-    let destino = '/descoberta'
-    try {
-      const ultima = localStorage.getItem('gravan_last_route')
-      if (ultima && ultima !== '/' && ultima !== '/login') destino = ultima
-    } catch { /* noop */ }
-    navigate(destino, { replace: true })
+    navigate('/descoberta', { replace: true })
   }, [user, loading, navigate])
 
   // Carrega conteúdo editável da Landing (fallback para defaults)
