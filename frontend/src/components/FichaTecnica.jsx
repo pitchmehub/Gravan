@@ -32,7 +32,8 @@ const grad = id => GRADIENTS[(id?.charCodeAt(0) ?? 0) % GRADIENTS.length]
 export default function FichaTecnica({ obra, onClose }) {
   const navigate = useNavigate()
   const { perfil } = useAuth()
-  const isInterprete = perfil?.role === 'interprete'
+  // Qualquer usuário logado (intérprete OU compositor) pode licenciar
+  // ou fazer oferta em obras de terceiros — só o próprio titular é bloqueado.
   const isMeuPro = isPerfilPro(perfil)
   const [coautores, setCoautores] = useState([])
   const [titularPro, setTitularPro] = useState(false)
