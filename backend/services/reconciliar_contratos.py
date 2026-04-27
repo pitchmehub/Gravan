@@ -1,11 +1,12 @@
 """
 Reconciliação de contratos de edição faltantes.
 
-Varre as obras que têm `publisher_id` setado e gera um contrato de edição
-para cada uma que ainda não possui registro em `contracts_edicao`. Útil
-quando alguma obra foi cadastrada num período em que o cliente Supabase
-estava com problema (URL inválida, indisponibilidade, etc.) e o contrato
-não chegou a ser criado.
+Varre as obras que estão vinculadas a uma editora — seja por
+`obras.publisher_id` (vínculo direto da obra) ou por `perfis.publisher_id`
+do titular (artista que se cadastrou debaixo de uma editora) — e gera um
+contrato de edição para cada par (obra, autor) que ainda não possui registro
+em `contracts_edicao`. Útil quando algum cadastro falhou silenciosamente
+(por exemplo, durante uma indisponibilidade do Supabase).
 
 Idempotente: a função `gerar_contrato_edicao` já evita duplicação.
 """
@@ -26,10 +27,31 @@ def reconciliar(notificar: bool = True) -> dict:
     """
     sb = get_supabase()
 
-    # Obras com publisher_id (de agregado ou via editora terceira já cadastrada)
-    obras_q = sb.table("obras").select("id, titular_id, publisher_id, nome") \
-        .not_.is_("publisher_id", "null").execute()
-    obras = obras_q.data or []
+    # 1) Obras com vínculo direto à editora (publisher_id setado na própria obra)
+    obras_diretas = sb.table("obras").select("id, titular_id, publisher_id, nome") \
+        .not_.is_("publisher_id", "null").execute().data or []
+
+    # 2) Obras cujo titular está vinculado a uma editora (perfis.publisher_id setado)
+    perfis_vinc = sb.table("perfis").select("id, publisher_id") \
+        .not_.is_("publisher_id", "null").execute().data or []
+    perfil_to_pub = {p["id"]: p["publisher_id"] for p in perfis_vinc if p.get("publisher_id")}
+
+    obras_via_perfil = []
+    if perfil_to_pub:
+        obras_via_perfil = sb.table("obras").select("id, titular_id, publisher_id, nome") \
+            .in_("titular_id", list(perfil_to_pub.keys())).execute().data or []
+        # Resolve o publisher_id pelo perfil quando a obra não tiver um
+        for o in obras_via_perfil:
+            if not o.get("publisher_id"):
+                o["publisher_id"] = perfil_to_pub.get(o.get("titular_id"))
+
+    # Une as duas listas, deduplicando por id da obra
+    seen, obras = set(), []
+    for o in (obras_diretas + obras_via_perfil):
+        oid = o.get("id")
+        if oid and oid not in seen:
+            seen.add(oid)
+            obras.append(o)
 
     # Set com (obra_id, autor_id) que já possuem contrato — evita N+1 chamadas
     contratos_q = sb.table("contracts_edicao").select("obra_id, autor_id, publisher_id").execute()
