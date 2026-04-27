@@ -230,14 +230,43 @@
   margin-bottom: 6px;
 }
 
-/* ── Mobile ── */
-@media (max-width: 540px) {
-  .gv-modal-bg  { padding: 16px; }
-  .gv-modal-box { border-radius: 24px; max-height: 88vh; }
-  .gv-modal-head,
+/* ── Mobile: vira BOTTOM SHEET (sobe da base) ── */
+@media (max-width: 767px) {
+  .gv-modal-bg {
+    padding: 0;
+    align-items: flex-end;
+    justify-content: stretch;
+  }
+  .gv-modal-box {
+    border-radius: 22px 22px 0 0;
+    max-height: 92vh;
+    width: 100%;
+    max-width: 100%;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow:
+      0 -12px 40px rgba(0, 0, 0, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.60);
+    animation: gvSheetUp .42s cubic-bezier(.2,.85,.35,1);
+  }
+  /* Drag handle (linhinha indicando que sobe da base) */
+  .gv-modal-box::before {
+    content: '';
+    position: absolute;
+    top: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 38px; height: 4px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.18);
+    z-index: 3;
+  }
+  .gv-modal-head { padding-top: 26px; padding-left: 18px; padding-right: 18px; }
   .gv-modal-body,
-  .gv-modal-footer { padding-left: 16px; padding-right: 16px; }
+  .gv-modal-footer { padding-left: 18px; padding-right: 18px; }
   .gv-modal-footer { flex-wrap: wrap; }
   .gv-btn-primary,
   .gv-btn-ghost { flex: 1; justify-content: center; }
+}
+@keyframes gvSheetUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0); }
 }

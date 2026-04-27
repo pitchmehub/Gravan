@@ -77,8 +77,18 @@ export default function FichaTecnica({ obra, onClose }) {
       <div className="dc-modal">
         <button className="dc-modal-close" onClick={onClose}>×</button>
 
-        {/* Capa grande no topo (mesmo formato do card da Descoberta) */}
-        <div className="ft-hero" style={{ background: grad(obra.id) }}>
+        {/* Capa em destaque "cinema": fundo borrado + capa nítida flutuando */}
+        <div
+          className="ft-hero"
+          style={obra.cover_url ? undefined : { background: grad(obra.id) }}
+        >
+          {obra.cover_url && (
+            <div
+              className="ft-hero-bg"
+              style={{ backgroundImage: `url("${obra.cover_url}")` }}
+              aria-hidden="true"
+            />
+          )}
           {obra.cover_url ? (
             <img
               src={obra.cover_url}
