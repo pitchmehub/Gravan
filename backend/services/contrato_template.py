@@ -106,7 +106,7 @@ CNPJ: {{plataforma_cnpj}}
 (EDITORA)
 """
 
-CONTRATO_VERSAO = "v2.7 - Abr/2026"
+CONTRATO_VERSAO = "v2.8 - Abr/2026"
 
 CONTRATO_PUBLISHER_TEMPLATE = """CONTRATO DE EDIÇÃO DE OBRAS MUSICAIS — EDITORA
 
@@ -144,8 +144,8 @@ CLÁUSULA TERCEIRA — ORIGINALIDADE
 CLÁUSULA QUARTA — REMUNERAÇÃO DO AUTOR
 4.1 A EDITORA pagará ao AUTOR sobre as receitas líquidas relativas à parte do AUTOR na OBRA ({{share_autor_pct}}%, conforme declarado no Considerando):
   (a) Sincronização: 70% AUTOR / 30% EDITORA;
-  (b) Reprodução, distribuição digital, fonomecânicos: 75% AUTOR / 25% EDITORA;
-  (c) Execução pública: 75% AUTOR / 25% EDITORA, paga diretamente ao AUTOR pela sociedade de autores.
+  (b) Reprodução, distribuição digital, fonomecânicos: 75% AUTOR / 20% EDITORA / 5% GRAVAN;
+  (c) Execução pública: 75% AUTOR / 20% EDITORA / 5% GRAVAN — o percentual do AUTOR é pago diretamente ao AUTOR pela sociedade de autores competente; os percentuais da EDITORA e da GRAVAN são distribuídos conforme acordos registrados na plataforma.
 
 Parágrafo Único: Na hipótese de coautoria, os valores acima devidos ao AUTOR correspondem exclusivamente à sua participação igualitária pró-rata de {{share_autor_pct}}% sobre a OBRA (calculada dividindo-se 100% pelo número total de autores). Os demais coautores — igualmente reconhecidos como AUTORES — possuem contratos individuais com suas participações iguais, e cada qual recebe sua parte de forma autônoma e igualitária, conforme divisão registrada na plataforma GRAVAN.
 
