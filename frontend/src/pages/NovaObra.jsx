@@ -189,7 +189,7 @@ export default function NovaObra() {
    }
    setError(`Preço máximo: R$ ${PRECO_MAX.toLocaleString('pt-BR')},00.`); return
  }
- if (obraEditada === null) { setError('Responda se a obra já foi editada.'); return }
+ if (obraEditada === null) { setError('Responda se a obra tem uma editora.'); return }
  if (obraEditada === true) {
  if (!editoraTNome.trim()) { setError('Informe o nome da editora terceira.'); return }
  if (!editoraTEmail.trim()) { setError('Informe o e-mail da editora terceira.'); return }
@@ -403,10 +403,10 @@ export default function NovaObra() {
  {/* Obra já editada? */}
  <div className="card" style={{ marginBottom: 20 }}>
  <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>
- ℹ A obra já foi editada por outra editora? *
+ ℹ Sua obra tem uma editora? *
  </h2>
  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>
- Declare se a composição possui contrato de edição vigente com terceiros.
+ Declare se sua obra já possui contrato de edição com alguma editora.
  </p>
 
  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -420,7 +420,7 @@ export default function NovaObra() {
  onChange={() => setObraEditada(false)}
  style={{ accentColor: 'var(--success)' }} />
  <div>
- <div style={{ fontWeight: 600, fontSize: 13 }}>Obra não editada</div>
+ <div style={{ fontWeight: 600, fontSize: 13 }}>Não tenho editora</div>
  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
  A composição está livre e posso assinar o contrato de edição com a Gravan
  </div>
@@ -437,9 +437,9 @@ export default function NovaObra() {
  onChange={() => setObraEditada(true)}
  style={{ accentColor: 'var(--error)' }} />
  <div>
- <div style={{ fontWeight: 600, fontSize: 13 }}>Obra já editada por outra editora</div>
+ <div style={{ fontWeight: 600, fontSize: 13 }}>Tenho editora</div>
  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
- A obra possui contrato de edição ativo com terceiros
+ Minha obra já possui contrato de edição com outra editora
  </div>
  </div>
  </label>
