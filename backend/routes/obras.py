@@ -341,18 +341,43 @@ def criar_obra():
             "contrato_edicao_id": contrato.data[0]["id"],
         }).eq("id", obra["id"]).execute()
 
+    # ── Gravan Editora Operacional ────────────────────────────────
+    # Vincula a obra à Gravan como Editora Detentora dos Direitos e
+    # gera o contrato de edição auto-aceito (contracts_edicao).
+    # Apenas para autores sem editora parceira já vinculada.
+    publisher_do_autor = perfil.get("publisher_id")
+    if not publisher_do_autor:
+        try:
+            from services.gravan_editora import (
+                vincular_obra_gravan_editora,
+                gerar_contrato_gravan_editora,
+            )
+            vincular_obra_gravan_editora(obra["id"])
+            gerar_contrato_gravan_editora(
+                obra_id    = obra["id"],
+                autor_id   = g.user.id,
+                perfil     = perfil,
+                obra_nome  = nome,
+                obra_letra = letra,
+                coautorias = coautorias,
+                ip_hashed  = ip_hashed,
+                versao     = contrato_versao,
+            )
+        except Exception as _ge:
+            print(f"[obras] falha ao vincular Gravan Editora Operacional: {_ge}")
+
     try:
         from utils.audit import log_event
         log_event("obra.criada", entity_type="obra", entity_id=obra["id"],
                   metadata={"titulo": obra.get("titulo") or obra.get("nome"),
-                            "managed_by_publisher": obra.get("managed_by_publisher", False)})
+                            "managed_by_publisher": not bool(publisher_do_autor),
+                            "gravan_editora_operacional": not bool(publisher_do_autor)})
     except Exception:
         pass
 
     # Se o autor é AGREGADO de uma editora (perfil.publisher_id setado),
     # vincula a obra à editora e gera o contrato de edição autor↔editora.
     # Sem isso, o dashboard da editora nunca mostrava as obras dos agregados.
-    publisher_do_autor = perfil.get("publisher_id")
     if publisher_do_autor:
         try:
             sb.table("obras").update({"publisher_id": publisher_do_autor}).eq("id", obra["id"]).execute()

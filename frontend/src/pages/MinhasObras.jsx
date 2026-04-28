@@ -29,7 +29,7 @@ export default function MinhasObras() {
  try {
  const { data } = await supabase
  .from('coautorias')
- .select('share_pct, is_titular, obras(id, nome, genero, preco_cents, status, audio_path, titular_id, created_at, cover_url)')
+ .select('share_pct, is_titular, obras(id, nome, genero, preco_cents, status, audio_path, titular_id, created_at, cover_url, publisher_id, gravan_editora_id)')
  .eq('perfil_id', perfil.id)
  setObras((data ?? [])
  .filter(c => c.obras)
@@ -153,6 +153,16 @@ export default function MinhasObras() {
  {obra.genero || 'Sem gênero'} · {fmt(obra.preco_cents)} · seu share: {obra.share_pct}%
  {obra.sou_titular && ' · titular'}
  </div>
+ {obra.gravan_editora_id && (
+ <div style={{ fontSize: 11, color: 'var(--brand)', fontWeight: 600, marginTop: 2 }}>
+ Editora: Gravan Editora Musical
+ </div>
+ )}
+ {obra.publisher_id && !obra.gravan_editora_id && (
+ <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+ Editora parceira vinculada
+ </div>
+ )}
  </div>
  <span style={{
  fontSize: 11, fontWeight: 600,
