@@ -66,7 +66,7 @@ def gerar_contrato_edicao(obra_id: str, autor_id: str, publisher_id: str) -> dic
     autor = sb.table("perfis").select("*").eq("id", autor_id).single().execute().data
     publisher = sb.table("perfis").select("*").eq("id", publisher_id).single().execute().data
 
-    coautores_q = sb.table("obras_autores").select("perfil_id,share_pct").eq("obra_id", obra_id).execute()
+    coautores_q = sb.table("coautorias").select("perfil_id,share_pct").eq("obra_id", obra_id).execute()
     coautores_ids = [c["perfil_id"] for c in (coautores_q.data or []) if c["perfil_id"] != autor_id]
     share_autor = next((c["share_pct"] for c in (coautores_q.data or []) if c["perfil_id"] == autor_id), 100)
 

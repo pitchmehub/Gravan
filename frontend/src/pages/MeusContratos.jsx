@@ -137,17 +137,12 @@ export default function MeusContratos() {
            return (
             <tr key={c.id} style={{ borderTop: '1px solid var(--border)' }}>
              <td style={td}>
-              <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-               <span>Obra</span>
-               <code title={c.obra_id} style={{
-                fontFamily: 'monospace', fontSize: 11.5,
-                background: 'var(--surface)', padding: '2px 6px',
-                borderRadius: 4, border: '1px solid var(--border)',
-                whiteSpace: 'nowrap',
-               }}>{c.obra_id ? `${c.obra_id.slice(0, 8)}…` : '—'}</code>
+              <div style={{ fontWeight: 600, fontSize: 13 }}>
+               {c.obra_nome || 'Obra'}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                {c.created_at && new Date(c.created_at).toLocaleDateString('pt-BR')}
+               {' · '}Contrato de Edição Musical
               </div>
              </td>
              <td style={td}>{c.share_pct}%</td>
@@ -246,7 +241,9 @@ export default function MeusContratos() {
       {/* Cabeçalho */}
       <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
        <div>
-        <h2 style={{ fontSize: 15, fontWeight: 700 }}>Contrato de Edição Musical — Texto Integral</h2>
+        <h2 style={{ fontSize: 15, fontWeight: 700 }}>
+         Contrato de Edição Musical{verEdicao?.obra_nome ? ` — ${verEdicao.obra_nome}` : ''}
+        </h2>
         <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
          Leia o contrato completo antes de assinar
         </p>

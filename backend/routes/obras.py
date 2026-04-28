@@ -184,38 +184,56 @@ def criar_obra():
         except Exception:
             pass
 
-        # Notificação imediata pra editora avisando que uma obra dela está
-        # disponível na plataforma (mesmo antes de qualquer oferta)
         if editora_terceira_id:
-            try:
-                from services.notificacoes import notify
-                notify(
-                    perfil_id=editora_terceira_id,
-                    tipo="obra_cadastrada",
-                    titulo="Obra sua foi cadastrada na Gravan",
-                    mensagem=(
-                        f"O compositor cadastrou a obra \"{obra.get('nome')}\" "
-                        f"informando que ela já é editada pela sua editora. "
-                        f"Quando alguém licenciar, você receberá uma nova "
-                        f"notificação para aprovar."
-                    ),
-                    link="/editora/dashboard",
-                    payload={"obra_id": obra["id"], "via": "cadastro_obra"},
-                )
-            except Exception as e:
-                print(f"[obras] notify cadastro falhou: {e}")
-
-            # Vincula a obra à editora e gera o contrato de edição autor↔editora.
-            # Sem isso, a editora nunca recebia o contrato no dashboard dela.
+            # Vincula a obra à editora na tabela obras
             try:
                 sb.table("obras").update({"publisher_id": editora_terceira_id}).eq("id", obra["id"]).execute()
             except Exception as e:
                 print(f"[obras] falha ao vincular publisher_id: {e}")
+
+            # Gera o contrato bilateral AUTOR ↔ EDITORA
+            contrato_gerado = None
             try:
                 from services.contrato_publisher import gerar_contrato_edicao
-                gerar_contrato_edicao(obra["id"], g.user.id, editora_terceira_id)
+                contrato_gerado = gerar_contrato_edicao(obra["id"], g.user.id, editora_terceira_id)
             except Exception as e:
                 print(f"[obras] falha ao gerar contrato de edição (terceiros): {e}")
+
+            # Notifica a EDITORA: contrato gerado, aguarda assinatura dela
+            try:
+                from services.notificacoes import notify
+                notify(
+                    perfil_id=editora_terceira_id,
+                    tipo="contrato_edicao_gerado",
+                    titulo="Novo Contrato de Edição Musical aguarda sua assinatura",
+                    mensagem=(
+                        f"Um Contrato de Edição Musical bilateral foi gerado para a obra "
+                        f"\"{obra.get('nome')}\", cadastrada pelo compositor. "
+                        f"Acesse seus contratos para ler e assinar."
+                    ),
+                    link="/contratos",
+                    payload={"obra_id": obra["id"], "contrato_id": (contrato_gerado or {}).get("id"), "via": "contrato_bilateral"},
+                )
+            except Exception as e:
+                print(f"[obras] notify editora contrato falhou: {e}")
+
+            # Notifica o ARTISTA: contrato gerado, aguarda assinatura dele também
+            try:
+                from services.notificacoes import notify
+                notify(
+                    perfil_id=g.user.id,
+                    tipo="contrato_edicao_gerado",
+                    titulo="Contrato de Edição Musical gerado — assine agora",
+                    mensagem=(
+                        f"Sua obra \"{obra.get('nome')}\" está vinculada à sua editora. "
+                        f"Um Contrato de Edição Musical bilateral foi gerado entre você e sua editora. "
+                        f"Acesse \"Meus Contratos\" para ler e assinar."
+                    ),
+                    link="/contratos",
+                    payload={"obra_id": obra["id"], "contrato_id": (contrato_gerado or {}).get("id"), "via": "contrato_bilateral"},
+                )
+            except Exception as e:
+                print(f"[obras] notify artista contrato falhou: {e}")
 
         return jsonify(obra), 201
 

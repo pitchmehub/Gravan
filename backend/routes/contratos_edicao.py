@@ -36,7 +36,21 @@ def listar():
             "id,obra_id,publisher_id,share_pct,status,created_at,signed_by_publisher_at,signed_by_autor_at"
         ).eq("autor_id", g.user.id).order("created_at", desc=True).execute()
 
-    return jsonify(r.data or [])
+    contratos = r.data or []
+
+    # Enriquece com nome da obra (busca em lote para eficiência)
+    obra_ids = list({c["obra_id"] for c in contratos if c.get("obra_id")})
+    obra_map = {}
+    if obra_ids:
+        try:
+            ores = sb.table("obras").select("id,nome").in_("id", obra_ids).execute()
+            obra_map = {o["id"]: o.get("nome") or "" for o in (ores.data or [])}
+        except Exception:
+            pass
+    for c in contratos:
+        c["obra_nome"] = obra_map.get(c.get("obra_id"), "")
+
+    return jsonify(contratos)
 
 
 @contratos_edicao_bp.get("/<cid>")
