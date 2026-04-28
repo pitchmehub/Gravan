@@ -80,14 +80,14 @@ O LICENCIADO pagará o valor bruto de {{valor_buyout_extenso}} referente à aqui
 
 5.2 — TAXA DE INTERMEDIAÇÃO DA PLATAFORMA GRAVAN
 
-Sobre o valor bruto pago pelo LICENCIADO incidirá uma taxa de intermediação devida à plataforma GRAVAN, no percentual de {{plataforma_pct}}% ({{plataforma_pct_extenso}}), correspondente ao plano de assinatura vigente do AUTOR PRINCIPAL na data deste licenciamento ({{plano_titular_label}}). O saldo remanescente, equivalente a {{liquido_autores_pct}}% do valor bruto, será distribuído entre o(s) AUTOR(ES) na proporção declarada na CLÁUSULA 10 (SPLIT).
+Sobre o valor bruto pago pelo LICENCIADO incidirá uma taxa de intermediação devida à plataforma GRAVAN, no percentual de {{plataforma_pct}}% ({{plataforma_pct_extenso}}), correspondente ao plano de assinatura vigente do AUTOR PRINCIPAL na data deste licenciamento ({{plano_titular_label}}). O saldo remanescente, equivalente a {{liquido_autores_pct}}% do valor bruto, será distribuído entre os AUTORES da obra na proporção pró-rata declarada na CLÁUSULA 10 (SPLIT) deste instrumento.
 
 Parágrafo Único: Os percentuais aplicados pela plataforma são: 25% (vinte e cinco por cento) para titular no plano GRÁTIS e 20% (vinte por cento) para titular no plano PRO ativo na data da venda.
 
 5.3 — ROYALTIES AUTORAIS (EXECUÇÃO PÚBLICA)
 
 Os rendimentos provenientes de execução pública arrecadados pelo ECAD serão distribuídos da seguinte forma:
-- 85% (oitenta e cinco por cento) para o(s) AUTOR(ES) e coautores;
+- 85% (oitenta e cinco por cento) para os AUTORES da obra, repartidos entre si na proporção pró-rata declarada na CLÁUSULA 10 (SPLIT) deste instrumento;
 - 10% (dez por cento) para o INTÉRPRETE;
 - 5% (cinco por cento) para a EDITORA GRAVAN.
 
@@ -116,18 +116,18 @@ I. Este contrato obriga as partes e seus sucessores;
 II. Pode ser firmado digitalmente, nos termos da MP nº 2.200-2/2001 e Lei nº 14.063/2020;
 III. Integra as regras da plataforma GRAVAN.
 
-CLÁUSULA 10 — DIVISÃO DE DIREITOS ENTRE COAUTORES (SPLIT)
+CLÁUSULA 10 — AUTORIA E DIVISÃO PRÓ-RATA DE DIREITOS (SPLIT)
 
-Fica estabelecido que a divisão dos direitos autorais entre os coautores é a seguinte:
+Todos os signatários abaixo são reconhecidos como AUTORES da obra, sendo cada um titular de direitos autorais patrimoniais e morais na proporção de sua respectiva participação declarada:
 {{split_lista}}
 
-Parágrafo Primeiro: A divisão acima foi declarada pelos próprios autores na plataforma GRAVAN no momento do cadastro da obra.
+Parágrafo Primeiro: A divisão acima foi declarada pelos próprios autores na plataforma GRAVAN no momento do cadastro da obra, conforme o disposto nos arts. 5º, VIII, e 15 da Lei nº 9.610/1998.
 
-Parágrafo Segundo: Salvo acordo formal em contrário, devidamente registrado por escrito e assinado por todos os coautores, prevalecerá a divisão acima.
+Parágrafo Segundo: Salvo acordo formal em contrário, devidamente registrado por escrito e assinado por todos os autores, prevalecerá a divisão pró-rata acima.
 
-Parágrafo Terceiro: Os valores decorrentes de remuneração, royalties e quaisquer receitas relacionadas à obra serão distribuídos conforme esta proporção.
+Parágrafo Terceiro: Todos os valores decorrentes de remuneração, royalties e quaisquer receitas relacionadas à obra — incluindo, sem limitação, os provenientes de execução pública (ECAD), sincronização, streaming, distribuição digital e o buyout desta transação — serão distribuídos entre os AUTORES na proporção pró-rata acima declarada.
 
-Parágrafo Quarto: Cada coautor declara estar ciente e de acordo com o presente critério de divisão.
+Parágrafo Quarto: Cada autor declara estar ciente e de acordo com o presente critério de divisão, reconhecendo os demais como co-titulares nos percentuais acima indicados.
 
 CLÁUSULA 11 — FORO
 
@@ -688,12 +688,20 @@ CLÁUSULA 6 — ROYALTIES AUTORAIS (EXECUÇÃO PÚBLICA)
 
 Os rendimentos provenientes de execução pública arrecadados pelo ECAD serão
 distribuídos da seguinte forma:
-- 85% (oitenta e cinco por cento) para o(s) AUTOR(ES) e coautores;
+- 85% (oitenta e cinco por cento) para os AUTORES da obra, repartidos entre si na proporção pró-rata declarada na CLÁUSULA 7 (SPLIT) deste instrumento;
 - 10% (dez por cento) para o INTÉRPRETE;
 - 5% (cinco por cento) para a EDITORA GRAVAN.
 
-CLÁUSULA 7 — DIVISÃO DECLARADA (SPLIT) ENTRE AUTORES
+CLÁUSULA 7 — AUTORIA E DIVISÃO PRÓ-RATA DE DIREITOS (SPLIT)
+
+Todos os signatários abaixo são reconhecidos como AUTORES da obra, sendo cada um titular de direitos autorais patrimoniais e morais na proporção de sua respectiva participação declarada:
 {{split_lista}}
+
+Parágrafo Primeiro: A divisão acima foi declarada pelos próprios autores na plataforma GRAVAN no momento do cadastro da obra, conforme o disposto nos arts. 5º, VIII, e 15 da Lei nº 9.610/1998.
+
+Parágrafo Segundo: Todos os valores decorrentes de remuneração, royalties e quaisquer receitas relacionadas à obra — incluindo execução pública (ECAD), sincronização, streaming, distribuição digital e o buyout desta transação — serão distribuídos entre os AUTORES na proporção pró-rata acima declarada.
+
+Parágrafo Terceiro: Cada autor declara estar ciente e de acordo com o presente critério de divisão, reconhecendo os demais como co-titulares nos percentuais acima indicados.
 
 CLÁUSULA 8 — IRREVOGABILIDADE E ASSINATURAS ELETRÔNICAS
 

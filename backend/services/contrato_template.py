@@ -22,8 +22,8 @@ EDITORA: {{plataforma_razao_social}}, inscrita no CNPJ/MF sob o nº {{plataforma
 AUTOR e EDITORA, doravante denominadas, em conjunto, "PARTES" e, individualmente, "PARTE", firmam entre si o presente Contrato de Edição de Obras Musicais e Outras Avenças, doravante denominado "Contrato", mediante as cláusulas e condições a seguir.
 
 CONSIDERANDO QUE:
-(i) o AUTOR é titular de {{share_autor_pct}}% (por cento) dos direitos autorais sobre a obra lítero-musical intitulada "{{obra_nome}}", doravante denominada "OBRA";
-(ii) sendo os demais titulares/coautores: {{coautores_lista}};
+(i) o AUTOR é titular de {{share_autor_pct}}% (por cento) dos direitos autorais sobre a obra lítero-musical intitulada "{{obra_nome}}", doravante denominada "OBRA", sendo todos os coautores reconhecidos como AUTORES da OBRA, cada qual titular pró-rata de sua respectiva participação declarada na plataforma GRAVAN;
+(ii) os demais titulares/coautores (também reconhecidos como AUTORES) são: {{coautores_lista}};
 (iii) a EDITORA, por meio da assinatura deste Contrato, tornar-se-á a editora musical e detentora dos direitos autorais patrimoniais sobre a parte do AUTOR na OBRA, observados os termos aqui previstos, nos moldes da Lei nº 9.610/1998 (Lei de Direitos Autorais).
 
 CLÁUSULA PRIMEIRA — OBJETO
@@ -62,10 +62,12 @@ CLÁUSULA QUINTA — EDIÇÃO
 
 CLÁUSULA SEXTA — REMUNERAÇÃO
 
-6.1 Pelo presente Contrato, a EDITORA obriga-se a pagar ao AUTOR os percentuais abaixo especificados, relativos às receitas líquidas efetivamente recebidas pela EDITORA pela exploração da OBRA, sempre incidentes sobre o percentual de direitos autorais do AUTOR sobre a OBRA, da seguinte forma:
+6.1 Pelo presente Contrato, a EDITORA obriga-se a pagar ao AUTOR os percentuais abaixo especificados, relativos às receitas líquidas efetivamente recebidas pela EDITORA pela exploração da OBRA, sempre incidentes sobre o percentual de direitos autorais do AUTOR sobre a OBRA ({{share_autor_pct}}%, conforme declarado no Considerando), da seguinte forma:
   (a) Direitos de Sincronização e adaptação em produções audiovisuais, publicitárias ou não: 70% (setenta por cento) ao AUTOR e 30% (trinta por cento) à EDITORA;
   (b) Direitos de reprodução gráfica (edição); distribuição de direitos fonomecânicos; venda e locação de gravações sonoras; distribuição mediante meios óticos, cabo, satélites, redes de informação e rede local e/ou mundial de computadores que permitam ao usuário a seleção da obra ou que importe em pagamento pelo usuário; inclusão em base de dados ou qualquer forma de armazenamento; e demais modalidades previstas na Cláusula Segunda: 75% (setenta e cinco por cento) ao AUTOR e 25% (vinte e cinco por cento) à EDITORA;
   (c) Direitos de Execução Pública, observado o disposto na Cláusula 6.2: 75% (setenta e cinco por cento) ao AUTOR e 25% (vinte e cinco por cento) à EDITORA.
+
+Parágrafo Único: Na hipótese de coautoria, os valores acima devidos ao AUTOR correspondem exclusivamente à sua participação pró-rata de {{share_autor_pct}}% sobre a OBRA, sendo que os demais coautores — igualmente reconhecidos como AUTORES — possuem contratos individuais com suas respectivas participações, e cada qual recebe sua parte de forma autônoma, conforme declaração de divisão registrada na plataforma GRAVAN.
 
 6.2 Os direitos de execução pública serão pagos ao AUTOR diretamente pela Sociedade de Autores a que este for filiado, sob sua exclusiva responsabilidade.
 
@@ -104,7 +106,79 @@ CNPJ: {{plataforma_cnpj}}
 (EDITORA)
 """
 
-CONTRATO_VERSAO = "v2.0 - Fev/2026"
+CONTRATO_VERSAO = "v2.2 - Abr/2026"
+
+CONTRATO_PUBLISHER_TEMPLATE = """CONTRATO DE EDIÇÃO DE OBRAS MUSICAIS — EDITORA
+
+Pelo presente instrumento particular, de um lado:
+
+AUTOR: {{autor_nome}}, portador do RG nº {{autor_rg}}, inscrito no CPF/MF sob o nº {{autor_cpf}}, residente e domiciliado em {{autor_endereco}}, e-mail {{autor_email}}, doravante denominado "AUTOR";
+
+e, de outro lado:
+
+EDITORA: {{publisher_razao_social}} (nome fantasia: {{publisher_nome_fantasia}}), inscrita no CNPJ/MF sob o nº {{publisher_cnpj}}, com sede em {{publisher_endereco}}, neste ato representada por seu responsável legal {{publisher_responsavel_nome}}, CPF {{publisher_responsavel_cpf}}, doravante denominada "EDITORA";
+
+AUTOR e EDITORA, em conjunto "PARTES", firmam o presente Contrato de Edição de Obras Musicais, mediante as cláusulas a seguir.
+
+CONSIDERANDO QUE:
+(i) o AUTOR é titular de {{share_autor_pct}}% dos direitos autorais sobre a obra "{{obra_nome}}", doravante "OBRA", sendo todos os coautores reconhecidos como AUTORES da OBRA, cada qual titular pró-rata de sua respectiva participação declarada na plataforma GRAVAN;
+(ii) os demais coautores (também reconhecidos como AUTORES) são: {{coautores_lista}};
+(iii) a OBRA será gerida pela EDITORA por meio da plataforma GRAVAN.
+
+CLÁUSULA PRIMEIRA — OBJETO
+1.1 O AUTOR contrata com a EDITORA a edição musical de sua parte sobre a OBRA, em regime de exclusividade, sem limitação territorial, nos termos da Lei 9.610/1998.
+
+1.2 Para todos os efeitos legais, integra o presente Contrato o CORPO DA OBRA, conforme cadastrado pelo AUTOR na plataforma GRAVAN, transcrito a seguir:
+
+— CORPO DA OBRA "{{obra_nome}}" —
+{{obra_letra}}
+— FIM DO CORPO DA OBRA —
+
+CLÁUSULA SEGUNDA — DIREITOS
+2.1 Ficam sob a égide da EDITORA todos os direitos patrimoniais sobre a parte do AUTOR na OBRA durante o prazo de proteção legal, em todos os países.
+2.2 Ficam reservados ao AUTOR os direitos morais (art. 24 da Lei 9.610/1998).
+
+CLÁUSULA TERCEIRA — ORIGINALIDADE
+3.1 O AUTOR declara que a OBRA é de sua autoria/coautoria, livre de plágio e de contratos prévios.
+
+CLÁUSULA QUARTA — REMUNERAÇÃO DO AUTOR
+4.1 A EDITORA pagará ao AUTOR sobre as receitas líquidas relativas à parte do AUTOR na OBRA ({{share_autor_pct}}%, conforme declarado no Considerando):
+  (a) Sincronização: 70% AUTOR / 30% EDITORA;
+  (b) Reprodução, distribuição digital, fonomecânicos: 75% AUTOR / 25% EDITORA;
+  (c) Execução pública: 75% AUTOR / 25% EDITORA, paga diretamente ao AUTOR pela sociedade de autores.
+
+Parágrafo Único: Na hipótese de coautoria, os valores acima devidos ao AUTOR correspondem exclusivamente à sua participação pró-rata de {{share_autor_pct}}% sobre a OBRA. Os demais coautores — igualmente reconhecidos como AUTORES — possuem contratos individuais com suas respectivas participações, e cada qual recebe sua parte de forma autônoma, em proporção pró-rata, conforme declaração de divisão registrada na plataforma GRAVAN.
+
+CLÁUSULA QUINTA — REMUNERAÇÃO DA PLATAFORMA (FEE DE INTERMEDIAÇÃO EDITORIAL)
+5.1 Em razão da utilização da plataforma GRAVAN e dos serviços de intermediação, gestão e disponibilização de obras musicais, a EDITORA concorda em pagar à GRAVAN o equivalente a 5% (cinco por cento) sobre todos os valores brutos recebidos pela EDITORA decorrentes da exploração econômica das obras cadastradas na plataforma.
+
+Parágrafo Primeiro: O percentual incidirá sobre todas as receitas, incluindo, mas não se limitando a licenciamento, cessão de direitos, sincronização, distribuição digital e execução pública.
+
+Parágrafo Segundo: O pagamento deverá ser realizado no prazo máximo de 30 (trinta) dias corridos contados do recebimento dos valores pela EDITORA.
+
+Parágrafo Terceiro: O pagamento será feito diretamente à conta bancária da GRAVAN:
+  Banco: {{gravan_banco}}
+  Agência: {{gravan_agencia}}
+  Conta: {{gravan_conta}}
+  Titular: {{gravan_titular}}
+  CNPJ: {{gravan_cnpj}}
+
+Parágrafo Quarto: A EDITORA se compromete a manter registros financeiros e fornecer relatórios sempre que solicitado pela GRAVAN.
+
+Parágrafo Quinto: O não pagamento dentro do prazo estipulado poderá resultar na suspensão da conta da EDITORA na plataforma e nas medidas legais cabíveis.
+
+CLÁUSULA SEXTA — RESCISÃO
+6.1 Este Contrato pode ser rescindido por qualquer das PARTES mediante notificação prévia de 90 (noventa) dias.
+
+CLÁUSULA SÉTIMA — FORO
+7.1 Fica eleito o foro da comarca da cidade do Rio de Janeiro/RJ.
+
+ASSINATURAS ELETRÔNICAS
+Este instrumento é firmado eletronicamente, com registro de data, hora, IP anonimizado (SHA-256) e hash de integridade. A aceitação eletrônica por cada parte configura assinatura válida e vinculante (MP 2.200-2/2001; Lei 14.063/2020).
+
+Data de emissão: {{data_emissao}}
+Hash SHA-256: {{conteudo_hash}}
+"""
 
 CONTRATO_EDITORA_DADOS = (
     "GRAVAN EDITORA MUSICAL LTDA., inscrita no CNPJ/MF sob o nº 64.342.514/0001-08, "
@@ -144,10 +218,11 @@ def ensure_contract_seeded(sb=None):
             return
 
         seeds = {
-            "contrato_edicao_template":      CONTRATO_TEMPLATE,
-            "contrato_edicao_versao":        CONTRATO_VERSAO,
-            "contrato_edicao_editora_dados": CONTRATO_EDITORA_DADOS,
-            "contrato_edicao_foro":          CONTRATO_FORO,
+            "contrato_edicao_template":           CONTRATO_TEMPLATE,
+            "contrato_edicao_publisher_template": CONTRATO_PUBLISHER_TEMPLATE,
+            "contrato_edicao_versao":             CONTRATO_VERSAO,
+            "contrato_edicao_editora_dados":      CONTRATO_EDITORA_DADOS,
+            "contrato_edicao_foro":               CONTRATO_FORO,
         }
         for key, valor in seeds.items():
             try:
