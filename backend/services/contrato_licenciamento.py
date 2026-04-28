@@ -116,18 +116,18 @@ I. Este contrato obriga as partes e seus sucessores;
 II. Pode ser firmado digitalmente, nos termos da MP nº 2.200-2/2001 e Lei nº 14.063/2020;
 III. Integra as regras da plataforma GRAVAN.
 
-CLÁUSULA 10 — AUTORIA E DIVISÃO PRÓ-RATA DE DIREITOS (SPLIT)
+CLÁUSULA 10 — AUTORIA E DIVISÃO IGUALITÁRIA PRÓ-RATA DE DIREITOS (SPLIT)
 
-Todos os signatários abaixo são reconhecidos como AUTORES da obra, sendo cada um titular de direitos autorais patrimoniais e morais na proporção de sua respectiva participação declarada:
+Todos os signatários abaixo são reconhecidos como AUTORES da obra, sendo cada um titular de direitos autorais patrimoniais e morais em partes iguais, calculadas pela divisão de 100% (cem por cento) dos direitos pela quantidade total de autores cadastrados na obra:
 {{split_lista}}
 
-Parágrafo Primeiro: A divisão acima foi declarada pelos próprios autores na plataforma GRAVAN no momento do cadastro da obra, conforme o disposto nos arts. 5º, VIII, e 15 da Lei nº 9.610/1998.
+Parágrafo Primeiro: A divisão é calculada automaticamente pela plataforma GRAVAN de forma igualitária e pró-rata — cada AUTOR recebe exatamente 1/N dos direitos, onde N é o número total de autores da obra — conforme o disposto nos arts. 5º, VIII, e 15 da Lei nº 9.610/1998.
 
-Parágrafo Segundo: Salvo acordo formal em contrário, devidamente registrado por escrito e assinado por todos os autores, prevalecerá a divisão pró-rata acima.
+Parágrafo Segundo: Salvo acordo formal em contrário, devidamente registrado por escrito e assinado por todos os autores, prevalecerá a divisão igualitária pró-rata acima.
 
-Parágrafo Terceiro: Todos os valores decorrentes de remuneração, royalties e quaisquer receitas relacionadas à obra — incluindo, sem limitação, os provenientes de execução pública (ECAD), sincronização, streaming, distribuição digital e o buyout desta transação — serão distribuídos entre os AUTORES na proporção pró-rata acima declarada.
+Parágrafo Terceiro: Todos os valores decorrentes de remuneração, royalties e quaisquer receitas relacionadas à obra — incluindo, sem limitação, os provenientes de execução pública (ECAD), sincronização, streaming, distribuição digital e o buyout desta transação — serão distribuídos entre os AUTORES em partes iguais, na proporção pró-rata acima.
 
-Parágrafo Quarto: Cada autor declara estar ciente e de acordo com o presente critério de divisão, reconhecendo os demais como co-titulares nos percentuais acima indicados.
+Parágrafo Quarto: Cada autor declara estar ciente e de acordo com o presente critério de divisão igualitária, reconhecendo os demais como co-titulares em igual proporção pró-rata.
 
 CLÁUSULA 11 — FORO
 
@@ -692,16 +692,16 @@ distribuídos da seguinte forma:
 - 10% (dez por cento) para o INTÉRPRETE;
 - 5% (cinco por cento) para a EDITORA GRAVAN.
 
-CLÁUSULA 7 — AUTORIA E DIVISÃO PRÓ-RATA DE DIREITOS (SPLIT)
+CLÁUSULA 7 — AUTORIA E DIVISÃO IGUALITÁRIA PRÓ-RATA DE DIREITOS (SPLIT)
 
-Todos os signatários abaixo são reconhecidos como AUTORES da obra, sendo cada um titular de direitos autorais patrimoniais e morais na proporção de sua respectiva participação declarada:
+Todos os signatários abaixo são reconhecidos como AUTORES da obra, sendo cada um titular de direitos autorais patrimoniais e morais em partes iguais, calculadas pela divisão de 100% (cem por cento) dos direitos pela quantidade total de autores cadastrados na obra:
 {{split_lista}}
 
-Parágrafo Primeiro: A divisão acima foi declarada pelos próprios autores na plataforma GRAVAN no momento do cadastro da obra, conforme o disposto nos arts. 5º, VIII, e 15 da Lei nº 9.610/1998.
+Parágrafo Primeiro: A divisão é calculada automaticamente pela plataforma GRAVAN de forma igualitária e pró-rata — cada AUTOR recebe exatamente 1/N dos direitos, onde N é o número total de autores da obra — conforme o disposto nos arts. 5º, VIII, e 15 da Lei nº 9.610/1998.
 
-Parágrafo Segundo: Todos os valores decorrentes de remuneração, royalties e quaisquer receitas relacionadas à obra — incluindo execução pública (ECAD), sincronização, streaming, distribuição digital e o buyout desta transação — serão distribuídos entre os AUTORES na proporção pró-rata acima declarada.
+Parágrafo Segundo: Todos os valores decorrentes de remuneração, royalties e quaisquer receitas relacionadas à obra — incluindo execução pública (ECAD), sincronização, streaming, distribuição digital e o buyout desta transação — serão distribuídos entre os AUTORES em partes iguais, na proporção pró-rata acima.
 
-Parágrafo Terceiro: Cada autor declara estar ciente e de acordo com o presente critério de divisão, reconhecendo os demais como co-titulares nos percentuais acima indicados.
+Parágrafo Terceiro: Cada autor declara estar ciente e de acordo com o presente critério de divisão igualitária, reconhecendo os demais como co-titulares em igual proporção pró-rata.
 
 CLÁUSULA 8 — IRREVOGABILIDADE E ASSINATURAS ELETRÔNICAS
 
