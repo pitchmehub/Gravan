@@ -126,8 +126,7 @@ AUTOR e EDITORA, em conjunto "PARTES", firmam o presente Contrato de Edição de
 
 CONSIDERANDO QUE:
 (i) o AUTOR é titular de {{share_autor_pct}}% dos direitos autorais sobre a obra "{{obra_nome}}", doravante "OBRA", sendo todos os coautores igualmente reconhecidos como AUTORES da OBRA, com direitos divididos de forma igualitária e pró-rata — cada AUTOR recebe 1/N dos direitos, onde N é o número total de autores cadastrados;
-(ii) os demais coautores (igualmente reconhecidos como AUTORES) são: {{coautores_lista}};
-(iii) a OBRA será gerida pela EDITORA por meio da plataforma GRAVAN.
+(ii) a OBRA será gerida pela EDITORA por meio da plataforma GRAVAN.
 
 CLÁUSULA PRIMEIRA — OBJETO
 1.1 O AUTOR contrata com a EDITORA a edição musical de sua parte sobre a OBRA, em regime de exclusividade, sem limitação territorial, nos termos da Lei 9.610/1998.
@@ -148,8 +147,8 @@ CLÁUSULA TERCEIRA — ORIGINALIDADE
 CLÁUSULA QUARTA — REMUNERAÇÃO DO AUTOR
 4.1 A EDITORA pagará ao AUTOR sobre as receitas líquidas relativas à parte do AUTOR na OBRA ({{share_autor_pct}}%, conforme declarado no Considerando):
   (a) Sincronização: 70% AUTOR / 30% EDITORA;
-  (b) Reprodução, distribuição digital, fonomecânicos: 75% AUTOR / 20% EDITORA / 5% GRAVAN;
-  (c) Execução pública: 75% AUTOR / 20% EDITORA / 5% GRAVAN — o percentual do AUTOR é pago diretamente ao AUTOR pela sociedade de autores competente; os percentuais da EDITORA e da GRAVAN são distribuídos conforme acordos registrados na plataforma.
+  (b) Reprodução, distribuição digital, fonomecânicos: 75% AUTOR / 25% EDITORA;
+  (c) Execução pública: 75% AUTOR / 25% EDITORA — o percentual do AUTOR é pago diretamente ao AUTOR pela sociedade de autores competente; o percentual da EDITORA é distribuído conforme acordos registrados na plataforma.
 
 Parágrafo Único: Na hipótese de coautoria, os valores acima devidos ao AUTOR correspondem exclusivamente à sua participação igualitária pró-rata de {{share_autor_pct}}% sobre a OBRA (calculada dividindo-se 100% pelo número total de autores). Os demais coautores — igualmente reconhecidos como AUTORES — possuem contratos individuais com suas participações iguais, e cada qual recebe sua parte de forma autônoma e igualitária, conforme divisão registrada na plataforma GRAVAN.
 
