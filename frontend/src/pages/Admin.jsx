@@ -11,6 +11,7 @@ function fmt(cents) {
 const ABAS = [
  { id: 'analiticos', label: 'Analíticos', icon: '' },
  { id: 'receita', label: 'Receita', icon: '' },
+ { id: 'vendas', label: 'Vendas', icon: '' },
  { id: 'obras', label: 'Obras', icon: '' },
  { id: 'generos', label: 'Gêneros mais procurados', icon: '' },
  { id: 'contratos', label: 'Contratos', icon: '' },
@@ -194,6 +195,9 @@ export default function Admin() {
  </div>
  )}
 
+ {/* ── VENDAS ── (histórico completo de transações) */}
+ {aba === 'vendas' && <VendasPanel />}
+
  {/* ── OBRAS ── (lista todas as obras + GERAR / BAIXAR DOSSIÊ) */}
  {aba === 'obras' && <ObrasPanel />}
 
@@ -376,6 +380,181 @@ export default function Admin() {
  </div>
  )
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// PAINEL DE VENDAS (admin)
+// Histórico completo de transações da plataforma com filtros e detalhes.
+// ═══════════════════════════════════════════════════════════════════
+function fmtData(iso) {
+ if (!iso) return '—'
+ try {
+   return new Date(iso).toLocaleString('pt-BR', {
+     day: '2-digit', month: '2-digit', year: 'numeric',
+     hour: '2-digit', minute: '2-digit',
+   })
+ } catch { return iso }
+}
+
+const STATUS_VENDA = {
+ confirmada: { bg: 'rgba(34,197,94,.15)',  cor: '#16a34a', label: '✓ Confirmada' },
+ pendente:   { bg: 'rgba(245,158,11,.15)', cor: '#d97706', label: '⏱ Pendente' },
+ cancelada:  { bg: 'rgba(239,68,68,.15)',  cor: '#dc2626', label: '✕ Cancelada' },
+ estornada:  { bg: 'rgba(107,114,128,.15)', cor: '#6b7280', label: '↩ Estornada' },
+}
+
+function VendasPanel() {
+ const [data, setData] = useState(null)
+ const [erro, setErro] = useState('')
+ const [loading, setLoading] = useState(true)
+ const [filtros, setFiltros] = useState({ status: 'confirmada', dias: 90, limit: 200 })
+ const [expandida, setExpandida] = useState(null)
+
+ async function carregar(f = filtros) {
+   setLoading(true); setErro('')
+   try {
+     const qs = new URLSearchParams(f).toString()
+     const r = await api.get(`/admin/historico-vendas?${qs}`)
+     setData(r)
+   } catch (e) { setErro(e.message); setData(null) }
+   finally { setLoading(false) }
+ }
+
+ useEffect(() => { carregar() }, [])
+
+ function aplicar(novo) {
+   const f = { ...filtros, ...novo }
+   setFiltros(f); carregar(f)
+ }
+
+ const itens = data?.itens || []
+
+ return (
+   <div className="card">
+     <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end', marginBottom: 16 }}>
+       <div>
+         <h2 style={{ fontSize: 15, fontWeight: 700 }}>Histórico de vendas — todos os usuários</h2>
+         {data && (
+           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+             {data.total_transacoes} venda(s) confirmada(s) · Bruta: <strong style={{ color: 'var(--brand)' }}>{fmt(data.total_cents)}</strong> · Plataforma: <strong style={{ color: 'var(--success)' }}>{fmt(data.plataforma_cents)}</strong>
+           </div>
+         )}
+       </div>
+       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+         <label style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+           STATUS
+           <select value={filtros.status} onChange={e => aplicar({ status: e.target.value })}
+             style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 13 }}>
+             <option value="confirmada">Confirmada</option>
+             <option value="pendente">Pendente</option>
+             <option value="cancelada">Cancelada</option>
+             <option value="todas">Todas</option>
+           </select>
+         </label>
+         <label style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+           PERÍODO
+           <select value={filtros.dias} onChange={e => aplicar({ dias: Number(e.target.value) })}
+             style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 13 }}>
+             <option value={7}>7 dias</option>
+             <option value={30}>30 dias</option>
+             <option value={90}>90 dias</option>
+             <option value={365}>1 ano</option>
+             <option value={730}>2 anos</option>
+           </select>
+         </label>
+         <button onClick={() => carregar()} disabled={loading}
+           style={{ background: 'none', border: '1px solid var(--border)', padding: '6px 12px', borderRadius: 8, color: 'var(--brand)', fontSize: 13, cursor: loading ? 'wait' : 'pointer' }}>
+           ↻ {loading ? 'atualizando…' : 'atualizar'}
+         </button>
+       </div>
+     </div>
+
+     {erro && <div style={{ color: '#c0392b', fontSize: 13, marginBottom: 12 }}>{erro}</div>}
+     {loading && !data && <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>Carregando…</div>}
+
+     {data && itens.length === 0 && (
+       <div style={{ padding: 22, fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', border: '1px dashed var(--border)', borderRadius: 10 }}>
+         Nenhuma venda no período / filtro selecionado.
+       </div>
+     )}
+
+     {itens.length > 0 && (
+       <div style={{ overflowX: 'auto' }}>
+         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+           <thead>
+             <tr style={{ borderBottom: '1px solid var(--border)' }}>
+               {['Data', 'Obra', 'Titular', 'Comprador', 'Status', 'Bruto', 'Plataforma', 'Líquido', ''].map(h => (
+                 <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
+               ))}
+             </tr>
+           </thead>
+           <tbody>
+             {itens.map(it => {
+               const s = STATUS_VENDA[it.status] || { bg: 'var(--surface-2)', cor: 'var(--text-muted)', label: it.status }
+               const aberto = expandida === it.id
+               return (
+                 <React.Fragment key={it.id}>
+                   <tr style={{ borderBottom: '1px solid var(--border)', background: aberto ? 'rgba(0,0,0,.02)' : 'transparent' }}>
+                     <td style={{ padding: '10px 12px', whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>{fmtData(it.data)}</td>
+                     <td style={{ padding: '10px 12px', fontWeight: 600 }}>{it.obra?.nome || '—'}</td>
+                     <td style={{ padding: '10px 12px' }}>{it.titular?.nome || '—'}</td>
+                     <td style={{ padding: '10px 12px' }}>{it.comprador?.nome || '—'}</td>
+                     <td style={{ padding: '10px 12px' }}>
+                       <span style={{ fontSize: 11, padding: '3px 9px', background: s.bg, color: s.cor, borderRadius: 99, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                         {s.label}
+                       </span>
+                     </td>
+                     <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>{fmt(it.valor_total_cents)}</td>
+                     <td style={{ padding: '10px 12px', whiteSpace: 'nowrap', color: 'var(--success)' }}>{fmt(it.plataforma_cents)}</td>
+                     <td style={{ padding: '10px 12px', whiteSpace: 'nowrap', color: 'var(--brand)', fontWeight: 700 }}>{fmt(it.liquido_cents)}</td>
+                     <td style={{ padding: '10px 12px', textAlign: 'right' }}>
+                       {it.beneficiarios && it.beneficiarios.length > 0 && (
+                         <button onClick={() => setExpandida(aberto ? null : it.id)}
+                           style={{ background: 'none', border: '1px solid var(--border)', padding: '4px 10px', borderRadius: 8, color: 'var(--brand)', fontSize: 11, cursor: 'pointer' }}>
+                           {aberto ? '▴ ocultar' : `▾ ${it.beneficiarios.length} repasse(s)`}
+                         </button>
+                       )}
+                     </td>
+                   </tr>
+                   {aberto && (
+                     <tr style={{ background: 'rgba(0,0,0,.02)' }}>
+                       <td colSpan={9} style={{ padding: '14px 18px' }}>
+                         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+                           Beneficiários
+                         </div>
+                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                           <thead>
+                             <tr style={{ color: 'var(--text-muted)' }}>
+                               <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 600 }}>Perfil</th>
+                               <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 600 }}>Papel</th>
+                               <th style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 600 }}>Share</th>
+                               <th style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 600 }}>Valor recebido</th>
+                             </tr>
+                           </thead>
+                           <tbody>
+                             {it.beneficiarios.map((b, i) => (
+                               <tr key={i} style={{ borderTop: '1px solid var(--border)' }}>
+                                 <td style={{ padding: '6px 10px', fontWeight: 600 }}>{b.nome || '—'}</td>
+                                 <td style={{ padding: '6px 10px', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{b.role || '—'}</td>
+                                 <td style={{ padding: '6px 10px', textAlign: 'right' }}>{b.share_pct != null ? `${Number(b.share_pct).toFixed(0)}%` : '—'}</td>
+                                 <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--brand)' }}>{fmt(b.valor_cents)}</td>
+                               </tr>
+                             ))}
+                           </tbody>
+                         </table>
+                       </td>
+                     </tr>
+                   )}
+                 </React.Fragment>
+               )
+             })}
+           </tbody>
+         </table>
+       </div>
+     )}
+   </div>
+ )
+}
+
 
 // ═══════════════════════════════════════════════════════════════════
 // PAINEL DE OBRAS (admin)

@@ -288,6 +288,169 @@ def auditoria_splits():
     offset   = (page - 1) * per_page
     return jsonify(sb.table("bi_auditoria_splits").select("*").range(offset, offset + per_page - 1).execute().data or []), 200
 
+@admin_bp.route("/historico-vendas", methods=["GET"])
+@require_auth
+def historico_vendas_admin():
+    """
+    Histórico completo de vendas (todas as transações de todos os usuários).
+
+    Query params:
+      - status: filtra por status da transação (default: confirmada).
+               Use "todas" para não filtrar.
+      - dias:  janela em dias a partir de hoje (default: 90, máx: 730)
+      - limit: máximo de registros (default: 200, máx: 500)
+
+    Cada item:
+      - id, data, status, metodo
+      - valor_total_cents, plataforma_cents, liquido_cents
+      - obra { id, nome }
+      - titular { id, nome }
+      - comprador { id, nome }
+      - beneficiarios: lista de pagamentos relacionados
+        [{ perfil_id, nome, role, valor_cents, share_pct }]
+    """
+    _check_admin()
+    sb = get_supabase()
+
+    from datetime import datetime, timedelta, timezone
+    status = request.args.get("status", "confirmada")
+    dias   = min(max(int(request.args.get("dias", 90)), 1), 730)
+    limit  = min(max(int(request.args.get("limit", 200)), 1), 500)
+    desde  = (datetime.now(timezone.utc) - timedelta(days=dias)).isoformat()
+
+    q = (sb.table("transacoes")
+           .select("id, created_at, confirmed_at, status, metodo, valor_cents, "
+                   "plataforma_cents, liquido_cents, obra_id, comprador_id, "
+                   "obras(id, nome, titular_id), "
+                   "comprador:perfis!comprador_id(id, nome, nome_completo, nome_artistico)")
+           .gte("created_at", desde)
+           .order("created_at", desc=True)
+           .limit(limit))
+    if status and status != "todas":
+        q = q.eq("status", status)
+
+    try:
+        transacoes = q.execute().data or []
+    except Exception:
+        # fallback sem joins
+        base = (sb.table("transacoes")
+                  .select("id, created_at, confirmed_at, status, metodo, valor_cents, "
+                          "plataforma_cents, liquido_cents, obra_id, comprador_id")
+                  .gte("created_at", desde)
+                  .order("created_at", desc=True)
+                  .limit(limit))
+        if status and status != "todas":
+            base = base.eq("status", status)
+        transacoes = base.execute().data or []
+
+    if not transacoes:
+        return jsonify({
+            "itens": [],
+            "total_cents": 0,
+            "total_transacoes": 0,
+            "plataforma_cents": 0,
+        }), 200
+
+    tx_ids = [t["id"] for t in transacoes]
+
+    # Resolve titulares faltantes
+    titular_ids = {(t.get("obras") or {}).get("titular_id")
+                   for t in transacoes if (t.get("obras") or {}).get("titular_id")}
+    titular_map = {}
+    if titular_ids:
+        try:
+            tit = (sb.table("perfis")
+                     .select("id, nome, nome_completo, nome_artistico, role")
+                     .in_("id", list(titular_ids)).execute()).data or []
+            titular_map = {p["id"]: p for p in tit}
+        except Exception:
+            pass
+
+    # Pagamentos relacionados (beneficiários por transação)
+    pag_por_tx = {}
+    perfil_ids_pag = set()
+    try:
+        pag_rows = (sb.table("pagamentos_compositores")
+                      .select("transacao_id, perfil_id, valor_cents, share_pct")
+                      .in_("transacao_id", tx_ids)
+                      .execute()).data or []
+        for p in pag_rows:
+            tid = p.get("transacao_id")
+            pag_por_tx.setdefault(tid, []).append(p)
+            if p.get("perfil_id"):
+                perfil_ids_pag.add(p["perfil_id"])
+    except Exception:
+        pag_rows = []
+
+    perfis_map = dict(titular_map)
+    faltantes = perfil_ids_pag - set(perfis_map.keys())
+    if faltantes:
+        try:
+            extras = (sb.table("perfis")
+                        .select("id, nome, nome_completo, nome_artistico, role")
+                        .in_("id", list(faltantes)).execute()).data or []
+            for p in extras:
+                perfis_map[p["id"]] = p
+        except Exception:
+            pass
+
+    def nome_de(p):
+        return (p or {}).get("nome_artistico") or (p or {}).get("nome_completo") or (p or {}).get("nome")
+
+    itens = []
+    total_cents = 0
+    plataforma_cents = 0
+    for t in transacoes:
+        obra = t.get("obras") or {}
+        comprador = t.get("comprador") or {}
+        titular = titular_map.get(obra.get("titular_id")) or {}
+        beneficiarios = []
+        for p in pag_por_tx.get(t["id"], []):
+            perfil = perfis_map.get(p.get("perfil_id")) or {}
+            beneficiarios.append({
+                "perfil_id":   p.get("perfil_id"),
+                "nome":        nome_de(perfil) or "—",
+                "role":        perfil.get("role"),
+                "valor_cents": int(p.get("valor_cents") or 0),
+                "share_pct":   p.get("share_pct"),
+            })
+        valor = int(t.get("valor_cents") or 0)
+        plat  = int(t.get("plataforma_cents") or 0)
+        if t.get("status") == "confirmada":
+            total_cents += valor
+            plataforma_cents += plat
+        itens.append({
+            "id":                t["id"],
+            "data":              t.get("confirmed_at") or t.get("created_at"),
+            "status":            t.get("status"),
+            "metodo":            t.get("metodo"),
+            "valor_total_cents": valor,
+            "plataforma_cents":  plat,
+            "liquido_cents":     int(t.get("liquido_cents") or 0),
+            "obra": {
+                "id":   obra.get("id") or t.get("obra_id"),
+                "nome": obra.get("nome"),
+            },
+            "titular": {
+                "id":   titular.get("id"),
+                "nome": nome_de(titular),
+            },
+            "comprador": {
+                "id":   comprador.get("id") or t.get("comprador_id"),
+                "nome": nome_de(comprador),
+            },
+            "beneficiarios": beneficiarios,
+        })
+
+    return jsonify({
+        "itens": itens,
+        "total_cents": total_cents,
+        "plataforma_cents": plataforma_cents,
+        "total_transacoes": sum(1 for t in transacoes if t.get("status") == "confirmada"),
+        "filtro": {"status": status, "dias": dias, "limit": limit},
+    }), 200
+
+
 @admin_bp.route("/contratos-edicao/reconciliar", methods=["POST"])
 @require_auth
 def reconciliar_contratos_edicao():

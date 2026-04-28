@@ -23,6 +23,7 @@ import Planos        from './pages/Planos'
 import AssinaturaSucesso from './pages/AssinaturaSucesso'
 import Comprar       from './pages/Comprar'
 import Compras       from './pages/Compras'
+import MinhasVendas  from './pages/MinhasVendas'
 import Saques        from './pages/Saques'
 import ConnectOnboarding from './pages/ConnectOnboarding'
 import Ofertas       from './pages/Ofertas'
@@ -169,6 +170,7 @@ function AppRoutes() {
       <Route path="/connect/sucesso"   element={<PrivateRoute><AppShell><ConnectOnboarding /></AppShell></PrivateRoute>} />
       <Route path="/connect/refresh"   element={<PrivateRoute><AppShell><ConnectOnboarding /></AppShell></PrivateRoute>} />
       <Route path="/compras"       element={<PrivateRoute><AppShell><Compras /></AppShell></PrivateRoute>} />
+      <Route path="/vendas"        element={<PrivateRoute roles={['compositor','administrador','publisher']}><AppShell><MinhasVendas /></AppShell></PrivateRoute>} />
       <Route path="/comprar/:obraId"      element={<PrivateRoute><AppShell><Comprar /></AppShell></PrivateRoute>} />
       <Route path="/pagamento/sucesso"    element={<PrivateRoute><AppShell><PagamentoSucesso /></AppShell></PrivateRoute>} />
       <Route path="/pagamento/cancelado"  element={<PrivateRoute><AppShell><PagamentoCancelado /></AppShell></PrivateRoute>} />
