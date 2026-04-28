@@ -461,7 +461,7 @@ def ofertas_recebidas():
         return jsonify([]), 200
     resp = (
         sb.table("ofertas")
-        .select("*, obras(nome, preco_cents, is_exclusive), perfis!interprete_id(nome, avatar_url)")
+        .select("*, obras!ofertas_obra_id_fkey(nome, preco_cents, is_exclusive), perfis!interprete_id(nome, avatar_url)")
         .in_("obra_id", obras_ids)
         .order("created_at", desc=True)
         .execute()
@@ -472,22 +472,16 @@ def ofertas_recebidas():
 @catalogo_bp.route("/ofertas/enviadas", methods=["GET"])
 @require_auth
 def ofertas_enviadas():
-    import logging
     sb = get_supabase()
     expirar_pendentes()
     resp = (
         sb.table("ofertas")
-        .select("*, obras(nome, preco_cents, is_exclusive)")
+        .select("*, obras!ofertas_obra_id_fkey(nome, preco_cents, is_exclusive)")
         .eq("interprete_id", g.user.id)
         .order("created_at", desc=True)
         .execute()
     )
-    data = resp.data or []
-    logging.warning(
-        "[DEBUG ofertas_enviadas] user_id=%s count=%d ids=%s",
-        g.user.id, len(data), [o.get("id") for o in data],
-    )
-    return jsonify(data), 200
+    return jsonify(resp.data or []), 200
 
 
 @catalogo_bp.route("/ofertas/editora", methods=["GET"])
@@ -529,7 +523,7 @@ def ofertas_editora():
 
     resp = (
         sb.table("ofertas")
-        .select("*, obras(nome, preco_cents, is_exclusive, titular_id), perfis!interprete_id(nome, avatar_url)")
+        .select("*, obras!ofertas_obra_id_fkey(nome, preco_cents, is_exclusive, titular_id), perfis!interprete_id(nome, avatar_url)")
         .in_("obra_id", list(obras_ids))
         .order("created_at", desc=True)
         .execute()
@@ -545,7 +539,7 @@ def detalhe_oferta(oferta_id):
     sb = get_supabase()
     of = (
         sb.table("ofertas")
-        .select("*, obras(id, nome, titular_id, preco_cents, is_exclusive)")
+        .select("*, obras!ofertas_obra_id_fkey(id, nome, titular_id, preco_cents, is_exclusive)")
         .eq("id", oferta_id).single().execute().data
     )
     if not of:
