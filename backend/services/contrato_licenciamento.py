@@ -686,11 +686,11 @@ Parágrafo Terceiro — Prazo (licença EXCLUSIVA): Quando este licenciamento fo
 
 Parágrafo Quarto — Renovação (licença EXCLUSIVA): Findo o prazo de exclusividade, a renovação dependerá de novo acordo formal, escrito e assinado pelas partes. A não renovação não impede o LICENCIADO de continuar explorando as gravações já realizadas durante o período contratual.
 
-CLÁUSULA 6 — ROYALTIES AUTORAIS (EXECUÇÃO PÚBLICA)
+CLÁUSULA 6 — FEE DE PLATAFORMA SOBRE EXECUÇÃO PÚBLICA
 
-Os rendimentos provenientes de execução pública arrecadados pelo ECAD são distribuídos conforme os registros vigentes entre os AUTORES e a EDITORA DETENTORA DOS DIREITOS, sem interferência deste instrumento nesses direitos.
+Os direitos de execução pública desta obra são arrecadados pelas associações de gestão coletiva competentes (ECAD e outras) e distribuídos diretamente à EDITORA DETENTORA DOS DIREITOS e ao(s) AUTOR(ES) conforme os registros vigentes. A GRAVAN não figura como beneficiária direta nessas distribuições para fins desta obra.
 
-A EDITORA DETENTORA DOS DIREITOS compromete-se a repassar à GRAVAN, na qualidade de TERCEIRA BENEFICIÁRIA, 5% (cinco por cento) de todos os valores por ela recebidos a título de execução pública (ECAD) decorrentes da exploração desta obra. Este fee é devido sobre os valores brutos recebidos pela EDITORA, independentemente do valor total distribuído pelo ECAD.
+A EDITORA DETENTORA DOS DIREITOS compromete-se a repassar à GRAVAN, na qualidade de TERCEIRA BENEFICIÁRIA e operadora da plataforma por meio da qual esta obra é gerida e licenciada, o equivalente a 5% (cinco por cento) do valor bruto por ela recebido a título de execução pública, mediante transferência bancária para conta de titularidade da GRAVAN EDITORA MUSICAL LTDA. (CNPJ 64.342.514/0001-08), no prazo máximo de 30 (trinta) dias corridos contados do recebimento de cada distribuição.
 
 CLÁUSULA 7 — AUTORIA E DIVISÃO IGUALITÁRIA PRÓ-RATA DE DIREITOS (SPLIT)
 
