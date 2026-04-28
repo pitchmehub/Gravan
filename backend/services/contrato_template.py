@@ -106,7 +106,7 @@ CNPJ: {{plataforma_cnpj}}
 (EDITORA)
 """
 
-CONTRATO_VERSAO = "v2.3 - Abr/2026"
+CONTRATO_VERSAO = "v2.4 - Abr/2026"
 
 CONTRATO_PUBLISHER_TEMPLATE = """CONTRATO DE EDIÇÃO DE OBRAS MUSICAIS — EDITORA
 
@@ -150,22 +150,22 @@ CLÁUSULA QUARTA — REMUNERAÇÃO DO AUTOR
 Parágrafo Único: Na hipótese de coautoria, os valores acima devidos ao AUTOR correspondem exclusivamente à sua participação igualitária pró-rata de {{share_autor_pct}}% sobre a OBRA (calculada dividindo-se 100% pelo número total de autores). Os demais coautores — igualmente reconhecidos como AUTORES — possuem contratos individuais com suas participações iguais, e cada qual recebe sua parte de forma autônoma e igualitária, conforme divisão registrada na plataforma GRAVAN.
 
 CLÁUSULA QUINTA — REMUNERAÇÃO DA PLATAFORMA (FEE DE INTERMEDIAÇÃO EDITORIAL)
-5.1 Em razão da utilização da plataforma GRAVAN e dos serviços de intermediação, gestão e disponibilização de obras musicais, a EDITORA concorda em pagar à GRAVAN o equivalente a 5% (cinco por cento) sobre os valores brutos recebidos pela EDITORA decorrentes exclusivamente da exploração econômica das obras cadastradas na plataforma GRAVAN.
+5.1 Em razão da utilização da plataforma GRAVAN e dos serviços de intermediação, gestão e disponibilização de obras musicais, a EDITORA concorda em pagar à GRAVAN o equivalente a 5% (cinco por cento) sobre todos os valores brutos recebidos pela EDITORA decorrentes da exploração econômica das obras cadastradas na plataforma.
 
-Parágrafo Único — Escopo: O percentual de 5% incide unicamente sobre as receitas originadas por transações intermediadas pela plataforma GRAVAN (incluindo, mas não se limitando a, licenciamentos e sincronizações realizados por meio da plataforma). Receitas que a EDITORA obtiver por canais próprios, externos à plataforma GRAVAN, não estão sujeitas a este fee editorial. O fee de intermediação de licenciamento, quando aplicável, é calculado e cobrado de forma autônoma e separada, nos termos da tabela de serviços da GRAVAN vigente na data da transação.
+Parágrafo Primeiro: O percentual incidirá sobre todas as receitas, incluindo, mas não se limitando a cessão de direitos, sincronização, distribuição digital e execução pública.
 
-Parágrafo Primeiro: O pagamento deverá ser realizado no prazo máximo de 30 (trinta) dias corridos contados do recebimento dos valores pela EDITORA.
+Parágrafo Segundo: O pagamento deverá ser realizado no prazo máximo de 30 (trinta) dias corridos contados do recebimento dos valores pela EDITORA.
 
-Parágrafo Segundo: O pagamento será feito diretamente à conta bancária da GRAVAN:
+Parágrafo Terceiro: O pagamento será feito diretamente à conta bancária da GRAVAN:
   Banco: {{gravan_banco}}
   Agência: {{gravan_agencia}}
   Conta: {{gravan_conta}}
   Titular: {{gravan_titular}}
   CNPJ: {{gravan_cnpj}}
 
-Parágrafo Terceiro: A EDITORA se compromete a manter registros financeiros relativos às obras cadastradas na plataforma e a fornecer relatórios sempre que solicitado pela GRAVAN.
+Parágrafo Quarto: A EDITORA se compromete a manter registros financeiros e fornecer relatórios sempre que solicitado pela GRAVAN.
 
-Parágrafo Quarto: O não pagamento dentro do prazo estipulado poderá resultar na suspensão da conta da EDITORA na plataforma e nas medidas legais cabíveis.
+Parágrafo Quinto: O não pagamento dentro do prazo estipulado poderá resultar na suspensão da conta da EDITORA na plataforma e nas medidas legais cabíveis.
 
 CLÁUSULA SEXTA — RESCISÃO
 6.1 Este Contrato pode ser rescindido por qualquer das PARTES mediante notificação prévia de 90 (noventa) dias.
