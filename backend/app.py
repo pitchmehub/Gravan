@@ -90,7 +90,13 @@ def create_app() -> Flask:
             r"/api/*": {
                 "origins": allowed,
                 "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-                "allow_headers": ["Authorization", "Content-Type", "X-CSRF-Token"],
+                "allow_headers": [
+                    "Authorization",
+                    "Content-Type",
+                    "X-CSRF-Token",
+                    "X-Keep-Alive",
+                    "x-keep-alive",
+                ],
                 "expose_headers": ["Content-Length", "X-Request-Id"],
             },
         },
