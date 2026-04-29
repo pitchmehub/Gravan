@@ -344,12 +344,45 @@ def webhook():
             # Dispara geração do Contrato de Licenciamento (Cláusulas ECAD/split/etc)
             # IMPORTANTE: as wallets só são creditadas após todas as partes assinarem
             # o contrato (escrow). O crédito ocorre em aceitar_contrato() quando
-            # todos_assinaram=True.
+            # todos_assinaram=True. Se não assinarem em 72h, o contrato é cancelado
+            # e o comprador recebe reembolso integral via Stripe.
+            contrato_gerado = None
             try:
                 from services.contrato_licenciamento import gerar_contrato_licenciamento
-                gerar_contrato_licenciamento(trans["id"])
+                contrato_gerado = gerar_contrato_licenciamento(trans["id"])
             except Exception as _e:
                 logger.warning(f"Falha ao gerar contrato de licenciamento: {_e}")
+
+            # Notifica autores/coautores sobre o prazo de 72h para assinar
+            if contrato_gerado:
+                try:
+                    from services.notificacoes import notify as _notify_autor
+                    _cid = contrato_gerado["id"]
+                    # Busca signatários humanos pendentes (autor/coautor)
+                    _signers = sb.table("contract_signers").select(
+                        "user_id, role, signed"
+                    ).eq("contract_id", _cid).execute().data or []
+                    _obra_n = sb.table("obras").select("nome").eq(
+                        "id", trans["obra_id"]
+                    ).single().execute().data or {}
+                    _nome_obra = _obra_n.get("nome") or "sua obra"
+                    for _s in _signers:
+                        if _s.get("role") in ("autor", "coautor") and not _s.get("signed"):
+                            _notify_autor(
+                                _s["user_id"],
+                                tipo="contrato_pendente",
+                                titulo="Contrato de licenciamento aguarda sua assinatura",
+                                mensagem=(
+                                    f"Um intérprete comprou o licenciamento de \"{_nome_obra}\". "
+                                    f"O contrato está disponível para sua assinatura. "
+                                    f"Você tem 72 horas para assinar — após esse prazo o "
+                                    f"contrato será cancelado e o comprador receberá reembolso."
+                                ),
+                                link=f"/contratos/licenciamento/{_cid}",
+                                payload={"contract_id": _cid, "obra_id": trans["obra_id"]},
+                            )
+                except Exception as _e:
+                    logger.warning("Falha ao notificar autores sobre prazo de assinatura: %s", _e)
 
             # Push/notificação para o compositor e o comprador
             obra_info = {}

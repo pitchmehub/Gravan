@@ -32,6 +32,7 @@ STARTUP_WAIT      = int(os.getenv("WATCHDOG_STARTUP_WAIT", "20"))# segundos para
 BACKEND_PORT      = int(os.getenv("WATCHDOG_PORT", "8000"))
 DUNNING_INTERVAL  = int(os.getenv("WATCHDOG_DUNNING_INTERVAL", "3600"))  # segundos entre rodadas de dunning
 RECONC_INTERVAL   = int(os.getenv("WATCHDOG_RECONC_INTERVAL", "1800"))   # segundos entre rodadas de reconciliação de contratos (default: 30min)
+EXPIRY_INTERVAL   = int(os.getenv("WATCHDOG_EXPIRY_INTERVAL", "3600"))   # segundos entre rodadas de expiração de contratos não assinados (default: 1h)
 BACKEND_DIR       = os.path.dirname(os.path.abspath(__file__))
 GUNICORN_CMD      = [
     sys.executable, "-m", "gunicorn",
@@ -144,6 +145,37 @@ def _run_dunning() -> None:
         logger.warning("Dunning erro inesperado: %s", e)
 
 
+def _run_expirar_contratos() -> None:
+    """
+    Expira contratos de licenciamento não assinados em 72h e emite reembolso Stripe.
+    """
+    logger.info("Rodando expiração de contratos não assinados...")
+    try:
+        result = subprocess.run(
+            [
+                sys.executable, "-c",
+                "from services.expirar_contratos import expirar_contratos_nao_assinados;"
+                "import json, sys;"
+                "sys.stdout.write(json.dumps(expirar_contratos_nao_assinados()))",
+            ],
+            cwd=BACKEND_DIR,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        if result.returncode == 0:
+            logger.info("Expiração contratos OK: %s", (result.stdout or "").strip())
+        else:
+            logger.warning(
+                "Expiração contratos falhou (rc=%s): %s",
+                result.returncode, (result.stderr or "").strip()[:500],
+            )
+    except subprocess.TimeoutExpired:
+        logger.warning("Expiração contratos excedeu timeout de 120s — abortado.")
+    except Exception as e:
+        logger.warning("Expiração contratos erro inesperado: %s", e)
+
+
 def _run_reconciliacao_contratos() -> None:
     """
     Dispara em subprocesso a reconciliação de contratos de edição faltantes.
@@ -217,6 +249,7 @@ def main() -> None:
     consecutive_failures = 0
     last_dunning_run = 0.0  # epoch da última rodada de dunning
     last_reconc_run  = 0.0  # epoch da última rodada de reconciliação
+    last_expiry_run  = 0.0  # epoch da última rodada de expiração de contratos
 
     # Aguarda o backend subir pela primeira vez
     logger.info("Aguardando backend ficar disponível...")
@@ -245,6 +278,9 @@ def main() -> None:
             if RECONC_INTERVAL > 0 and (now - last_reconc_run) >= RECONC_INTERVAL:
                 last_reconc_run = now
                 _run_reconciliacao_contratos()
+            if EXPIRY_INTERVAL > 0 and (now - last_expiry_run) >= EXPIRY_INTERVAL:
+                last_expiry_run = now
+                _run_expirar_contratos()
             continue
 
         consecutive_failures += 1
