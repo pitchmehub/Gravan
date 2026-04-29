@@ -519,16 +519,20 @@ def gerar_contrato_licenciamento(transacao_id: str, ip_remote: str | None = None
     agora_iso = datetime.now(timezone.utc).isoformat()
 
     # Signers: todos os coautores (role autor/coautor) + Gravan (editora detentora, auto-assina) + intérprete
+    #
+    # AUTO-ASSINATURA DE AUTORES: a publicação da obra na plataforma com preço definido
+    # constitui aceite eletrônico prévio de todos os futuros contratos de licenciamento
+    # — equivalente a uma licença-moldura. Não há necessidade de assinatura manual por
+    # venda individual. Isso espelha o modelo padrão de marketplaces digitais de conteúdo.
     signers = []
     for c in ordered:
-        # signed=False EXPLÍCITO: não depender do DEFAULT do banco, que pode
-        # ser TRUE em alguns ambientes → escrow liberaria na hora do INSERT.
         signers.append({
             "contract_id": contract["id"],
             "user_id":     c["perfil_id"],
             "role":        "autor" if c["perfil_id"] == titular["id"] else "coautor",
             "share_pct":   float(c["share_pct"]),
-            "signed":      False,
+            "signed":      True,
+            "signed_at":   agora_iso,
         })
     # Gravan como EDITORA DETENTORA DOS DIREITOS — assina automaticamente na geração
     signers.append({
@@ -728,6 +732,10 @@ def gerar_contrato_trilateral_agregado(
     contract = insert.data[0]
 
     # 6) Signers: coautores + editora-mãe + comprador
+    #
+    # AUTO-ASSINATURA DE AUTORES: publicar a obra para venda = aceite prévio de
+    # todos os futuros licenciamentos. Assinatura manual por venda não é necessária.
+    _agora_iso_tri = datetime.now(timezone.utc).isoformat()
     signers = []
     for c in ordered:
         signers.append({
@@ -735,16 +743,24 @@ def gerar_contrato_trilateral_agregado(
             "user_id":     c["perfil_id"],
             "role":        "autor" if c["perfil_id"] == titular["id"] else "coautor",
             "share_pct":   float(c["share_pct"]),
-            "signed":      False,
+            "signed":      True,
+            "signed_at":   _agora_iso_tri,
         })
     # A editora à qual o compositor é agregado É a Editora Detentora dos Direitos
     # no contrato trilateral — não uma mera "agregadora". Gravan apenas intermedeia.
+    #
+    # AUTO-ASSINATURA: a editora JÁ deu consentimento ao aceitar o Termo de Agregação
+    # com o compositor. Esse aceite cobre todos os futuros licenciamentos das obras
+    # registradas no período de vigência da agregação — o mesmo princípio pelo qual
+    # o comprador auto-assina ao realizar o pagamento (aceite eletrônico).
+    # Portanto, a editora assina automaticamente na geração do contrato.
     editora_signer_payload = {
         "contract_id": contract["id"],
         "user_id":     editora["id"],
         "role":        "editora_detentora",   # role preferencial (fallback → editora_agregadora)
         "share_pct":   None,
-        "signed":      False,
+        "signed":      True,
+        "signed_at":   datetime.now(timezone.utc).isoformat(),
     }
     # Comprador assina no checkout (pagamento = aceite eletrônico).
     signers.append({

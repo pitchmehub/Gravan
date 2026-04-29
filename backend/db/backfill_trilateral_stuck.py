@@ -90,33 +90,52 @@ def run(dry_run: bool = False):
         ]
         editora_unsigned = [s for s in editora_signers if not s.get("signed")]
 
+        # ── NOVA REGRA: editora auto-assina (consentimento dado no Termo de Agregação)
+        # Se a editora está em contract_signers mas ainda não assinou, marca agora.
         if editora_unsigned:
             log.info(
-                "[CONTRATO %s] Editora parceira ainda não assinou. Aguardando assinatura normal.",
-                cid,
+                "[CONTRATO %s] Editora não assinou (signed=False) — "
+                "aplicando auto-assinatura retroativa (%d signer(s)).",
+                cid, len(editora_unsigned),
             )
-            sem_assinatura.append(cid)
-            continue
+            if not dry_run:
+                from datetime import datetime, timezone as _tz
+                agora_iso = datetime.now(_tz.utc).isoformat()
+                for s in editora_unsigned:
+                    try:
+                        sb.table("contract_signers").update({
+                            "signed":    True,
+                            "signed_at": agora_iso,
+                        }).eq("id", s["id"]).execute()
+                        log.info(
+                            "[CONTRATO %s] Editora %s marcada como assinada.",
+                            cid, s["user_id"][:8],
+                        )
+                    except Exception as e:
+                        log.error(
+                            "[CONTRATO %s] Falha ao marcar editora como assinada: %s",
+                            cid, e,
+                        )
+            else:
+                log.info("[CONTRATO %s] [DRY-RUN] Editora seria marcada como assinada.", cid)
 
         if outros_unsigned:
             log.info(
-                "[CONTRATO %s] Outros signers ainda pendentes: %s",
+                "[CONTRATO %s] Outros signers ainda pendentes (compositor/coautor não assinou): %s",
                 cid,
                 [(s["user_id"][:8], s["role"]) for s in outros_unsigned],
             )
             sem_assinatura.append(cid)
             continue
 
-        # Todos assinaram — o contrato está travado pelo detentora_ok antigo
+        # Todos assinaram (ou editora foi retroativamente marcada acima)
         log.info(
-            "[CONTRATO %s] PRESO: todos assinaram (editora role=%s) mas detentora_ok era False. "
-            "Vai desbloquear...",
+            "[CONTRATO %s] Todos assinaram — tentando concluir contrato...",
             cid,
-            [s["role"] for s in editora_signers],
         )
 
         if dry_run:
-            log.info("[CONTRATO %s] [DRY-RUN] Nada alterado.", cid)
+            log.info("[CONTRATO %s] [DRY-RUN] Contrato seria concluído.", cid)
             desbloqueados.append(cid)
             continue
 
