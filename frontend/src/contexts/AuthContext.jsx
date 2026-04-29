@@ -9,10 +9,23 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) { setUser(session.user); fetchPerfil(session.user.id) }
-      else { setUser(null); setLoading(false) }
-    })
+    // Timeout de segurança: se getSession travar, desbloqueia em 8s
+    const safetyTimer = setTimeout(() => {
+      setUser(null)
+      setLoading(false)
+    }, 8000)
+
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        clearTimeout(safetyTimer)
+        if (session?.user) { setUser(session.user); fetchPerfil(session.user.id) }
+        else { setUser(null); setLoading(false) }
+      })
+      .catch(() => {
+        clearTimeout(safetyTimer)
+        setUser(null)
+        setLoading(false)
+      })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
@@ -21,7 +34,7 @@ export function AuthProvider({ children }) {
         setUser(null); setPerfil(null); setLoading(false)
       }
     })
-    return () => subscription.unsubscribe()
+    return () => { subscription.unsubscribe(); clearTimeout(safetyTimer) }
   }, [])
 
   async function fetchPerfil(userId) {
