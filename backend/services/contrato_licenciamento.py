@@ -447,11 +447,14 @@ def gerar_contrato_licenciamento(transacao_id: str, ip_remote: str | None = None
     # Signers: todos os coautores (role autor/coautor) + Gravan (editora detentora, auto-assina) + intérprete
     signers = []
     for c in ordered:
+        # signed=False EXPLÍCITO: não depender do DEFAULT do banco, que pode
+        # ser TRUE em alguns ambientes → escrow liberaria na hora do INSERT.
         signers.append({
             "contract_id": contract["id"],
             "user_id":     c["perfil_id"],
             "role":        "autor" if c["perfil_id"] == titular["id"] else "coautor",
             "share_pct":   float(c["share_pct"]),
+            "signed":      False,
         })
     # Gravan como EDITORA DETENTORA DOS DIREITOS — assina automaticamente na geração
     signers.append({
@@ -658,12 +661,14 @@ def gerar_contrato_trilateral_agregado(
             "user_id":     c["perfil_id"],
             "role":        "autor" if c["perfil_id"] == titular["id"] else "coautor",
             "share_pct":   float(c["share_pct"]),
+            "signed":      False,
         })
     signers.append({
         "contract_id": contract["id"],
         "user_id":     editora["id"],
         "role":        "editora_agregadora",
         "share_pct":   None,
+        "signed":      False,
     })
     # Comprador assina no checkout (pagamento = aceite eletrônico).
     signers.append({
@@ -971,12 +976,14 @@ def gerar_contrato_trilateral(oferta_id: str) -> dict | None:
             "user_id":     c["perfil_id"],
             "role":        "autor" if c["perfil_id"] == titular["id"] else "coautor",
             "share_pct":   float(c["share_pct"]),
+            "signed":      False,
         })
     signers.append({
         "contract_id": contract["id"],
         "user_id":     editora_t["id"],
         "role":        "editora_terceira",
         "share_pct":   None,
+        "signed":      False,
     })
     # Comprador assina no checkout (pagamento = aceite eletrônico).
     signers.append({
