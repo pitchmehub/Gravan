@@ -24,6 +24,7 @@ alter table public.contracts_edicao
 -- 2. agregado_convites
 -- ────────────────────────────────────────────────────────────────
 alter table public.agregado_convites
+  add column if not exists termo_text       text,       -- versão texto puro do termo (para exibição)
   add column if not exists certificado_html text,
   add column if not exists certificado_hash text,
   add column if not exists certificado_at   timestamptz;

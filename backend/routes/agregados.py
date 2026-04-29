@@ -498,7 +498,8 @@ def ver_termo(cid):
     return jsonify({
         "id":           cv["id"],
         "termo_html":   cv["termo_html"],
-        "termo_text":   _html_para_text(cv.get("termo_html", "")),
+        # Prefere o texto armazenado (com certificado); deriva do HTML se ainda não existir
+        "termo_text":   cv.get("termo_text") or _html_para_text(cv.get("termo_html", "")),
         "termo_versao": cv.get("termo_versao"),
         "modo":         cv.get("modo"),
         "status":       cv.get("status"),
@@ -555,22 +556,27 @@ def aceitar_convite(cid):
     # Re-renderiza o termo com os dados REAIS de cadastro de ambas as partes no momento
     # do aceite, para que o documento assinado reflita exatamente o que está registrado
     # na plataforma na data do aceite (editora + artista).
-    termo_final = cv.get("termo_html")
+    termo_final_html = cv.get("termo_html")
+    termo_final_text = None
     try:
         editora_perfil = sb.table("perfis").select("*").eq("id", cv["editora_id"]).maybe_single().execute()
         artista_perfil = _carregar_perfil_completo(sb, g.user.id)
         if editora_perfil and editora_perfil.data and artista_perfil:
-            termo_final = gerar_termo_html(
+            kwargs = dict(
                 editora=_editora_para_termo(editora_perfil.data),
                 artista=_artista_para_termo(artista_perfil),
                 email_artista=(me.get("email") or "").lower(),
                 modo=cv.get("modo") or "adicionar",
             )
+            termo_final_html = gerar_termo_html(**kwargs)
+            termo_final_text = gerar_termo_text(**kwargs)
     except Exception as e:
         print(f"[agregados.aceitar] falha ao re-renderizar termo: {e}")
+    # Mantém compatibilidade com o nome usado abaixo
+    termo_final = termo_final_html
 
-    # Marca convite
-    sb.table("agregado_convites").update({
+    # Marca convite — salva versão texto limpa junto com o HTML
+    update_convite = {
         "status":                       "aceito",
         "termo_html":                   termo_final,
         "termo_versao":                 VERSAO_ATUAL,
@@ -579,7 +585,10 @@ def aceitar_convite(cid):
         "assinatura_artista_nome":      assinatura,
         "artista_id":                   g.user.id,
         "decided_at":                   agora,
-    }).eq("id", cid).execute()
+    }
+    if termo_final_text:
+        update_convite["termo_text"] = termo_final_text
+    sb.table("agregado_convites").update(update_convite).eq("id", cid).execute()
 
     # ── Certificado de Assinaturas Digitais ─────────────────────────────────
     # Gerado imediatamente quando o artista aceita o termo de agregação.

@@ -229,11 +229,35 @@ def creditar_wallets_por_transacao(
     status_ass = titular.get("status_assinatura", "inativa")
     if plano == "PRO" and status_ass not in ("ativa", "cancelada", "past_due"):
         plano = "STARTER"
-    # publisher_id: lê apenas do perfil do titular (editora parceira real).
-    # obras.publisher_id pode ser Gravan (para compositores sem editora), mas
-    # Gravan operacional NÃO recebe 10% como editora — somente editoras parceiras
-    # reais (perfis com role='publisher' e publisher_id setado no perfil do titular).
-    publisher_id = publisher_id_override or titular.get("publisher_id")
+    # publisher_id: fonte de verdade é obras.publisher_id (define a relação editorial
+    # no momento da criação da obra). Gravan operacional é excluída — ela gerencia a
+    # plataforma mas não toma 10% como editora parceira real.
+    #
+    # Ordem de resolução:
+    #   1. publisher_id_override (passado pelo caller, e.g. backfill manual)
+    #   2. obras.publisher_id  — vínculo editorial no momento da criação da obra
+    #   3. perfis.publisher_id — agregação atual do compositor (fallback)
+    # Gravan é excluída em qualquer caso.
+    _GRAVAN_UUID = "e96bd8af-dfb8-4bf1-9ba5-7746207269cd"
+    obra_publisher  = obra.get("publisher_id")
+    perfil_publisher = titular.get("publisher_id")
+
+    if publisher_id_override:
+        publisher_id = publisher_id_override
+    elif obra_publisher and obra_publisher != _GRAVAN_UUID:
+        publisher_id = obra_publisher          # editorial partner set at obra creation
+    elif perfil_publisher and perfil_publisher != _GRAVAN_UUID:
+        publisher_id = perfil_publisher        # current aggregation state (fallback)
+    else:
+        publisher_id = None                    # no external publisher — Gravan doesn't get 10%
+
+    logger.info(
+        "SPLIT PUBLISHER RESOLVE: obra_pub=%s perfil_pub=%s override=%s resolved=%s",
+        (obra_publisher or "")[:12],
+        (perfil_publisher or "")[:12],
+        publisher_id_override,
+        (publisher_id or "none"),
+    )
 
     coaut = sb.table("coautorias").select("perfil_id, share_pct").eq(
         "obra_id", t["obra_id"]

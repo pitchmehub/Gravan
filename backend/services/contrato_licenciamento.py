@@ -238,7 +238,10 @@ GRAVAN_EDITORA_UUID = "e96bd8af-dfb8-4bf1-9ba5-7746207269cd"
 # Se a migration que adiciona 'editora_detentora' ainda não foi rodada no
 # Supabase, o primeiro role falhará na CHECK constraint e o próximo será
 # tentado sem verificar a string do erro (fallback sem string-matching).
-_GRAVAN_ROLES_FALLBACK = ["editora_detentora", "editora_agregadora"]
+_GRAVAN_ROLES_FALLBACK    = ["editora_detentora", "editora_agregadora"]
+# Mesma lista para editoras parceiras reais em trilaterais — 'editora_detentora' é
+# o role correto; 'editora_agregadora' é o fallback enquanto a migration não rodou.
+_EDITORA_ROLES_FALLBACK  = ["editora_detentora", "editora_agregadora"]
 
 
 import logging as _log_mod
@@ -283,6 +286,60 @@ def _inserir_gravan_signer(sb, contract_id: str, base_payload: dict) -> bool:
             "contract_id": contract_id,
             "event_type":  "gravan_signer_error",
             "payload":     {"tentativas": _GRAVAN_ROLES_FALLBACK},
+        }).execute()
+    except Exception:
+        pass
+    return False
+
+
+def _inserir_editora_signer(sb, contract_id: str, base_payload: dict) -> bool:
+    """Insere uma editora parceira em contract_signers com fallback de role.
+
+    Tenta 'editora_detentora' primeiro (semanticamente correto). Se a migration
+    migration_contract_signers_role.sql ainda não foi rodada no Supabase, a
+    CHECK constraint rejeita esse role e o fallback usa 'editora_agregadora'.
+
+    Idempotente: se a editora já estiver na tabela para este contrato, não duplica.
+    """
+    editora_id = base_payload.get("user_id")
+    # Verifica se já existe
+    existe = sb.table("contract_signers").select("id").eq(
+        "contract_id", contract_id
+    ).eq("user_id", editora_id).limit(1).execute()
+    if existe.data:
+        _clt_log.info(
+            "Editora %s já presente em contract_signers (contrato=%s) — não duplica.",
+            (editora_id or "")[:8], contract_id,
+        )
+        return True
+
+    for role in _EDITORA_ROLES_FALLBACK:
+        payload = {**base_payload, "role": role}
+        try:
+            sb.table("contract_signers").insert(payload).execute()
+            _clt_log.info(
+                "Editora parceira inserida em contract_signers (contrato=%s, role=%s, editora=%s)",
+                contract_id, role, (editora_id or "")[:8],
+            )
+            return True
+        except Exception as e:
+            _clt_log.warning(
+                "Editora parceira insert falhou (contrato=%s, role=%s, editora=%s): %s — "
+                "tentando próximo role.",
+                contract_id, role, (editora_id or "")[:8], e,
+            )
+
+    _clt_log.error(
+        "ESCROW RISCO: Editora parceira %s NÃO pôde ser inserida em contract_signers "
+        "(contrato=%s). Contrato não poderá ser concluído até correção manual. "
+        "Execute migration_contract_signers_role.sql no Supabase para resolver.",
+        (editora_id or "")[:8], contract_id,
+    )
+    try:
+        sb.table("contract_events").insert({
+            "contract_id": contract_id,
+            "event_type":  "editora_signer_error",
+            "payload":     {"editora_id": editora_id, "tentativas": _EDITORA_ROLES_FALLBACK},
         }).execute()
     except Exception:
         pass
@@ -682,13 +739,13 @@ def gerar_contrato_trilateral_agregado(
         })
     # A editora à qual o compositor é agregado É a Editora Detentora dos Direitos
     # no contrato trilateral — não uma mera "agregadora". Gravan apenas intermedeia.
-    signers.append({
+    editora_signer_payload = {
         "contract_id": contract["id"],
         "user_id":     editora["id"],
-        "role":        "editora_detentora",
+        "role":        "editora_detentora",   # role preferencial (fallback → editora_agregadora)
         "share_pct":   None,
         "signed":      False,
-    })
+    }
     # Comprador assina no checkout (pagamento = aceite eletrônico).
     signers.append({
         "contract_id": contract["id"],
@@ -702,6 +759,10 @@ def gerar_contrato_trilateral_agregado(
     # INSERT resiliente: cada signer é inserido individualmente para que um
     # erro em uma linha (ex.: violação de CHECK) não derrube TODOS os signers
     # do contrato — bug histórico que fazia editoras ficarem sem acesso.
+    #
+    # Editora parceira: usa _inserir_editora_signer com fallback de role para
+    # garantir inserção mesmo sem a migration_contract_signers_role.sql rodada.
+    _inserir_editora_signer(sb, contract["id"], editora_signer_payload)
     for s in signers:
         try:
             sb.table("contract_signers").insert(s).execute()
@@ -1147,9 +1208,20 @@ def aceitar_contrato(
             s.get("role") == "editora_detentora"
             or (
                 # Gravan antes da migration: inserida como 'editora_agregadora'
+                # Aceita apenas para Gravan em bilateral (escopo mínimo de fallback).
                 s.get("role") == "editora_agregadora"
                 and s.get("user_id") == GRAVAN_EDITORA_UUID
                 and not is_trilateral
+            )
+            or (
+                # Editora parceira ANTES da migration: inserida como 'editora_agregadora'
+                # porque a CHECK constraint ainda não aceitava 'editora_detentora'.
+                # Aceita para QUALQUER não-Gravan em trilateral (fallback temporário).
+                # Após migration_contract_signers_role.sql rodar no Supabase, o role
+                # é corrigido para 'editora_detentora' e este fallback deixa de ser ativado.
+                s.get("role") == "editora_agregadora"
+                and s.get("user_id") != GRAVAN_EDITORA_UUID
+                and is_trilateral
             )
         )
         and s.get("signed")
@@ -1390,3 +1462,109 @@ def aceitar_contrato(
             _clt_log.warning("Bloco de e-mail falhou (contrato=%s): %s", contract_id, _email_err)
 
     return {"todos_assinaram": bool(todos)}
+
+
+def retentar_conclusao_contrato(contract_id: str) -> dict:
+    """
+    Re-avalia se um contrato em 'aguardando_assinaturas' pode ser marcado como
+    'concluído' com a lógica ATUAL de `detentora_ok`.
+
+    Útil para desbloquear contratos que ficaram presos porque:
+      • A editora já assinou (role='editora_agregadora') mas `detentora_ok` era
+        False na versão anterior do código.
+      • A migration `migration_contract_signers_role.sql` ainda não foi rodada,
+        então a editora ficou com role errado, mas o novo `detentora_ok` aceita
+        'editora_agregadora' para editoras parceiras em trilaterais.
+
+    Idempotente: se o contrato já está 'concluído', retorna sem fazer nada.
+    Não altera nenhuma assinatura — apenas avalia o estado atual.
+    """
+    sb = get_supabase()
+
+    # Estado atual do contrato
+    ctr = sb.table("contracts").select(
+        "id, status, trilateral"
+    ).eq("id", contract_id).maybe_single().execute().data
+    if not ctr:
+        return {"erro": "contrato_nao_encontrado"}
+    if ctr.get("status") in ("concluído", "concluido"):
+        return {"status": "ja_concluido"}
+    if ctr.get("status") == "cancelado":
+        return {"status": "cancelado"}
+
+    is_trilateral = bool(ctr.get("trilateral"))
+
+    # Lê signers atuais
+    signers = sb.table("contract_signers").select(
+        "signed, user_id, role"
+    ).eq("contract_id", contract_id).execute().data or []
+
+    todos = bool(signers and all(s.get("signed") for s in signers))
+
+    detentora_ok = any(
+        (
+            s.get("role") == "editora_detentora"
+            or (
+                s.get("role") == "editora_agregadora"
+                and s.get("user_id") == GRAVAN_EDITORA_UUID
+                and not is_trilateral
+            )
+            or (
+                s.get("role") == "editora_agregadora"
+                and s.get("user_id") != GRAVAN_EDITORA_UUID
+                and is_trilateral
+            )
+        )
+        and s.get("signed")
+        for s in signers
+    )
+
+    _clt_log.info(
+        "retentar_conclusao_contrato: contrato=%s trilateral=%s todos=%s detentora_ok=%s",
+        contract_id, is_trilateral, todos, detentora_ok,
+    )
+
+    if not todos:
+        pendentes = [
+            f"{s.get('role')}:{(s.get('user_id') or '')[:8]}"
+            for s in signers if not s.get("signed")
+        ]
+        return {"status": "aguardando_assinaturas", "pendentes": pendentes}
+
+    if not detentora_ok:
+        return {
+            "status": "escrow_bloqueado",
+            "motivo": "editora_detentora_nao_assinou",
+        }
+
+    # Todos assinaram e detentora_ok → conclui o contrato
+    sb.table("contracts").update({
+        "status":       "concluído",
+        "completed_at": datetime.now(timezone.utc).isoformat(),
+    }).eq("id", contract_id).execute()
+
+    _clt_log.info(
+        "retentar_conclusao_contrato: contrato %s marcado como CONCLUÍDO (backfill).",
+        contract_id,
+    )
+
+    # Libera escrow
+    try:
+        c_full = sb.table("contracts").select(
+            "transacao_id, trilateral, oferta_id"
+        ).eq("id", contract_id).single().execute().data or {}
+        is_oferta_trilateral = bool(c_full.get("trilateral") and c_full.get("oferta_id"))
+        if not is_oferta_trilateral and c_full.get("transacao_id"):
+            from services.repasses import creditar_wallets_por_transacao
+            resultado = creditar_wallets_por_transacao(c_full["transacao_id"])
+            _clt_log.info(
+                "retentar_conclusao_contrato: wallets creditadas (contrato=%s): %s",
+                contract_id, resultado,
+            )
+    except Exception as _e:
+        _clt_log.error(
+            "retentar_conclusao_contrato: falha ao creditar wallets (contrato=%s): %s",
+            contract_id, _e,
+        )
+
+    return {"status": "concluido_agora"}

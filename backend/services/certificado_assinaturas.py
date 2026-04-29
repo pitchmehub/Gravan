@@ -492,7 +492,7 @@ def gerar_certificado_agregacao(convite_id: str) -> dict:
     sb = get_supabase()
     try:
         cv = sb.table("agregado_convites").select(
-            "id, editora_id, artista_id, email_artista, termo_html, "
+            "id, editora_id, artista_id, email_artista, termo_html, termo_text, "
             "responsavel_editora_nome, responsavel_editora_cpf_mask, "
             "editora_aceito_em, editora_aceito_ip, "
             "termo_aceito_pelo_artista_em, termo_aceito_ip, "
@@ -645,10 +645,15 @@ def gerar_certificado_agregacao(convite_id: str) -> dict:
         )
 
         novo_html = (cv.get("termo_html") or "") + cert_html
+        # Versão texto puro: usa o texto armazenado (gerado no aceite) e annexa
+        # o bloco de certificado em plain-text; preserva qualidade de exibição no frontend.
+        texto_base = cv.get("termo_text") or ""
+        novo_text = texto_base + cert_txt
         agora = datetime.now(timezone.utc).isoformat()
 
         sb.table("agregado_convites").update({
             "termo_html":       novo_html,
+            "termo_text":       novo_text,
             "certificado_html": cert_html,
             "certificado_hash": doc_hash,
             "certificado_at":   agora,
