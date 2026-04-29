@@ -26,18 +26,32 @@ def _smtp_configured() -> bool:
     return bool(os.environ.get("SMTP_HOST") and os.environ.get("SMTP_FROM"))
 
 
-def send_email(to: str, subject: str, html: str, text: str | None = None) -> bool:
-    """Envia um e-mail. Retorna True se enviado (ou simulado em dev)."""
+def send_email(
+    to: str,
+    subject: str,
+    html: str,
+    text: str | None = None,
+    attachments: list[dict] | None = None,
+) -> bool:
+    """Envia um e-mail. Retorna True se enviado (ou simulado em dev).
+
+    attachments: lista de dicts com chaves:
+        - data (bytes)     : conteúdo do arquivo
+        - filename (str)   : nome do arquivo (ex.: 'contrato.pdf')
+        - maintype (str)   : tipo MIME principal  (ex.: 'application')
+        - subtype  (str)   : subtipo MIME         (ex.: 'pdf')
+    """
     if not to:
         log.warning("send_email: destinatário vazio.")
         return False
 
     if not _smtp_configured():
-        # Modo dev — apenas loga
         log.info("=" * 60)
-        log.info("📧 [DEV — SMTP não configurado] Simulando envio:")
+        log.info("[DEV — SMTP não configurado] Simulando envio:")
         log.info("   PARA:    %s", to)
         log.info("   ASSUNTO: %s", subject)
+        if attachments:
+            log.info("   ANEXOS:  %s", [a.get("filename") for a in attachments])
         log.info("   TEXTO:")
         for ln in (text or html).splitlines():
             log.info("      %s", ln)
@@ -50,6 +64,17 @@ def send_email(to: str, subject: str, html: str, text: str | None = None) -> boo
     msg["To"] = to
     msg.set_content(text or "Veja este e-mail em um cliente compatível com HTML.")
     msg.add_alternative(html, subtype="html")
+
+    for att in (attachments or []):
+        try:
+            msg.add_attachment(
+                att["data"],
+                maintype=att.get("maintype", "application"),
+                subtype=att.get("subtype", "octet-stream"),
+                filename=att.get("filename", "anexo"),
+            )
+        except Exception as e:
+            log.warning("Falha ao anexar %s: %s", att.get("filename"), e)
 
     host = os.environ["SMTP_HOST"]
     port = int(os.environ.get("SMTP_PORT", "587"))
@@ -308,6 +333,77 @@ def render_saque_cancelado_email(nome: str, valor_brl: str, motivo: str) -> tupl
     </ul>
     """
     return _wrap_html("Saque cancelado", body), f"Saque {valor_brl} cancelado. Motivo: {motivo}"
+
+
+def render_licenciamento_concluido_email(
+    nome: str,
+    papel: str,
+    nome_obra: str,
+    valor_brl: str,
+    contract_id: str,
+    frontend_url: str,
+) -> tuple[str, str]:
+    """E-mail enviado a TODAS as partes quando o contrato de licenciamento é concluído.
+    Inclui o PDF como anexo — veja send_email(attachments=...).
+
+    papel: 'autor' | 'coautor' | 'interprete' | 'editora'
+    """
+    papel_label = {
+        "autor":      "compositor(a) titular",
+        "coautor":    "coautor(a)",
+        "interprete": "intérprete/licenciado(a)",
+        "editora":    "editora",
+    }.get(papel, "parte")
+
+    link = f"{frontend_url.rstrip('/')}/contratos/licenciamento/{contract_id}"
+
+    body = f"""
+    <h2 style="margin:0 0 8px">Contrato de licenciamento concluído</h2>
+    <p style="color:#444;font-size:14px">
+      Olá <strong>{nome or papel_label}</strong>, todas as partes assinaram o
+      <strong>Contrato de Autorização para Gravação e Exploração</strong> da obra
+      <strong>"{nome_obra}"</strong>.
+    </p>
+    <p style="color:#444;font-size:14px">
+      O contrato assinado está em anexo neste e-mail (PDF). Guarde este arquivo — ele é
+      sua prova legal da licença.
+    </p>
+    <table style="width:100%;margin:16px 0;border-collapse:collapse">
+      <tr>
+        <td style="padding:8px 12px;background:#F9FAFB;border:1px solid #E5E7EB;font-size:12px;color:#6B7280">Obra</td>
+        <td style="padding:8px 12px;background:#F9FAFB;border:1px solid #E5E7EB;font-size:13px;font-weight:700">{nome_obra}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;border:1px solid #E5E7EB;font-size:12px;color:#6B7280">Valor do licenciamento</td>
+        <td style="padding:8px 12px;border:1px solid #E5E7EB;font-size:13px;font-weight:700;color:#BE123C">{valor_brl}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;background:#F9FAFB;border:1px solid #E5E7EB;font-size:12px;color:#6B7280">Seu papel</td>
+        <td style="padding:8px 12px;background:#F9FAFB;border:1px solid #E5E7EB;font-size:13px">{papel_label.capitalize()}</td>
+      </tr>
+    </table>
+    <div style="text-align:center;margin:24px 0">
+      <a href="{link}" style="display:inline-block;padding:14px 28px;
+         background:#BE123C;color:#fff;text-decoration:none;
+         border-radius:10px;font-weight:700">
+        Ver contrato na plataforma
+      </a>
+    </div>
+    <p style="color:#888;font-size:11px">
+      Validade legal: este contrato foi assinado eletronicamente nos termos da
+      MP 2.200-2/2001 e da Lei 14.063/2020. O hash SHA-256 de integridade consta
+      no documento. Guarde o PDF para seus registros.
+    </p>
+    """
+    text = (
+        f"Gravan — Contrato de licenciamento concluído\n\n"
+        f"Olá {nome or papel_label},\n\n"
+        f"Todas as partes assinaram o contrato de licenciamento da obra "
+        f"\"{nome_obra}\" (valor: {valor_brl}).\n\n"
+        f"O contrato assinado está em anexo neste e-mail (PDF).\n\n"
+        f"Acesse também em: {link}\n"
+    )
+    return _wrap_html(f"Contrato concluído — {nome_obra}", body), text
 
 
 def render_rescisao_exclusividade_email(

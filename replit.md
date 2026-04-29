@@ -1,5 +1,25 @@
 # Gravan — Marketplace de Obras Musicais
 
+### Escrow — Correção de Violação + E-mail com PDF (abr/2026)
+- **Bug corrigido**: o INSERT do signer Gravan usava fallback frágil baseado em string de
+  erro (`"signers_role_check" in str(e)`). Se a string não aparecia exatamente assim,
+  a Gravan ficava ausente da tabela → `todos_assinaram` retornava `True` com apenas
+  [Autor, Comprador] → wallets creditadas antes do autor assinar.
+- **Correção camada 1 (`gerar_contrato_licenciamento`)**: novo helper `_inserir_gravan_signer`
+  tenta cada role de `_GRAVAN_ROLES_FALLBACK = ["editora_detentora", "editora_agregadora"]`
+  sem depender da mensagem de erro. Idempotente (verifica existência antes de inserir).
+  Loga `gravan_signer_error` em `contract_events` se todos os roles falharem.
+- **Correção camada 2 (`aceitar_contrato`)**: guarda de escrow antes de `todos_assinaram`:
+  (a) verifica se Gravan está em `contract_signers`; se não estiver, chama
+  `_inserir_gravan_signer` na hora; (b) após o check, confirma explicitamente que Gravan
+  está `signed=True` — se não estiver, bloqueia a liberação e loga `ESCROW BLOQUEADO`.
+- **E-mail com PDF**: quando `todos_assinaram=True`, `aceitar_contrato` envia e-mail
+  a todas as partes humanas (autores, coautores, intérprete/comprador) com o PDF do
+  contrato assinado em anexo. Usa `services.email_service.send_email(attachments=...)` +
+  `render_licenciamento_concluido_email` (novo template). Falhas são silenciosas
+  (wrapped em try/except) para não bloquear a resposta HTTP de assinatura.
+- **`send_email`** agora aceita `attachments: list[dict]` (data, filename, maintype, subtype).
+
 ### Contratos — Prazo, Rescisão e Exclusividade (abr/2026)
 - Bilateral (CLÁUSULA 3) e trilateral / intermediação (CLÁUSULA 5) agora preveem:
   validade de 5 anos, rescisão por comunicação formal via e-mail com 30 dias de

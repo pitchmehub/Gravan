@@ -231,6 +231,64 @@ def _decrypt(val: str) -> str:
         return val
 
 
+# UUID do usuário phantom Gravan — nunca notificado, assina automaticamente
+GRAVAN_EDITORA_UUID = "00000000-0000-0000-0000-000000000001"
+
+# Roles permitidos para a Gravan no contrato, em ordem de preferência.
+# Se a migration que adiciona 'editora_detentora' ainda não foi rodada no
+# Supabase, o primeiro role falhará na CHECK constraint e o próximo será
+# tentado sem verificar a string do erro (fallback sem string-matching).
+_GRAVAN_ROLES_FALLBACK = ["editora_detentora", "editora_agregadora"]
+
+
+import logging as _log_mod
+_clt_log = _log_mod.getLogger(__name__)
+
+
+def _inserir_gravan_signer(sb, contract_id: str, base_payload: dict) -> bool:
+    """Insere a Gravan em contract_signers tentando cada role da lista até obter
+    sucesso. Retorna True se inserida (ou já existente), False se todos falharam.
+
+    Idempotente: se a Gravan já estiver na tabela para este contrato, não duplica.
+    """
+    # Verifica se já existe
+    existe = sb.table("contract_signers").select("id").eq(
+        "contract_id", contract_id
+    ).eq("user_id", GRAVAN_EDITORA_UUID).limit(1).execute()
+    if existe.data:
+        return True
+
+    for role in _GRAVAN_ROLES_FALLBACK:
+        payload = {**base_payload, "role": role}
+        try:
+            sb.table("contract_signers").insert(payload).execute()
+            _clt_log.info(
+                "Gravan inserida em contract_signers (contrato=%s, role=%s)",
+                contract_id, role,
+            )
+            return True
+        except Exception as e:
+            _clt_log.warning(
+                "Gravan insert falhou (contrato=%s, role=%s): %s — tentando próximo role.",
+                contract_id, role, e,
+            )
+
+    _clt_log.error(
+        "ESCROW RISCO: Gravan NÃO pôde ser inserida em contract_signers (contrato=%s). "
+        "Wallets NÃO serão liberadas até correção manual.",
+        contract_id,
+    )
+    try:
+        sb.table("contract_events").insert({
+            "contract_id": contract_id,
+            "event_type":  "gravan_signer_error",
+            "payload":     {"tentativas": _GRAVAN_ROLES_FALLBACK},
+        }).execute()
+    except Exception:
+        pass
+    return False
+
+
 def gerar_contrato_licenciamento(transacao_id: str, ip_remote: str | None = None) -> dict | None:
     """
     Dispara a criação do contrato de licenciamento para uma transação confirmada.
@@ -384,7 +442,6 @@ def gerar_contrato_licenciamento(transacao_id: str, ip_remote: str | None = None
     }).execute()
     contract = insert.data[0]
 
-    GRAVAN_EDITORA_UUID = "00000000-0000-0000-0000-000000000001"
     agora_iso = datetime.now(timezone.utc).isoformat()
 
     # Signers: todos os coautores (role autor/coautor) + Gravan (editora detentora, auto-assina) + intérprete
@@ -416,31 +473,31 @@ def gerar_contrato_licenciamento(transacao_id: str, ip_remote: str | None = None
         "signed_at":   agora_iso,
         "ip_hash":     (ip_remote or "")[:64] or None,
     })
-    # INSERT resiliente: cada signer individual.
-    # Para a Gravan (editora_detentora): se a constraint do banco ainda não foi
-    # atualizada com a migration_signers_role_editora_detentora.sql, faz fallback
-    # para 'editora_agregadora' (semanticamente equivalente para fins de escrow).
+    # INSERT resiliente: cada signer individualmente para isolar falhas.
+    # Para a Gravan (editora_detentora): se a migration ainda não foi rodada no
+    # Supabase, o role 'editora_detentora' viola a CHECK constraint. Tentamos
+    # os roles em ordem SEM depender da string de erro (frágil). Isso garante
+    # que a Gravan SEMPRE tenha uma linha em contract_signers — essencial para
+    # o escrow (aceitar_contrato só libera wallets quando Gravan assinou).
     for s in signers:
-        try:
-            sb.table("contract_signers").insert(s).execute()
-        except Exception as e:
-            err_str = str(e)
-            # Fallback: constraint não inclui editora_detentora → tenta editora_agregadora
-            if s.get("role") == "editora_detentora" and "signers_role_check" in err_str:
-                try:
-                    s_fallback = {**s, "role": "editora_agregadora"}
-                    sb.table("contract_signers").insert(s_fallback).execute()
-                    continue  # fallback ok, não registra como erro
-                except Exception as e_fb:
-                    err_str = str(e_fb)
+        if s.get("user_id") == GRAVAN_EDITORA_UUID:
+            _inserir_gravan_signer(
+                sb=sb,
+                contract_id=contract["id"],
+                base_payload=s,
+            )
+        else:
             try:
-                sb.table("contract_events").insert({
-                    "contract_id": contract["id"],
-                    "event_type":  "signers_error",
-                    "payload":     {"erro": err_str, "signer": s},
-                }).execute()
-            except Exception:
-                pass
+                sb.table("contract_signers").insert(s).execute()
+            except Exception as e:
+                try:
+                    sb.table("contract_events").insert({
+                        "contract_id": contract["id"],
+                        "event_type":  "signers_error",
+                        "payload":     {"erro": str(e), "signer": s},
+                    }).execute()
+                except Exception:
+                    pass
 
     # Log do evento (criação + assinatura do comprador no checkout)
     try:
@@ -995,9 +1052,58 @@ def aceitar_contrato(contract_id: str, user_id: str, ip_hash: str | None = None)
     except Exception:
         pass
 
+    # ── GUARDA DE ESCROW ────────────────────────────────────────────
+    # Antes de verificar todos_assinaram, garante que a Gravan (assinante
+    # automática) ESTÁ na tabela com signed=True. Se não estiver — porque
+    # o INSERT inicial falhou na CHECK constraint — insere agora.
+    # Sem esta linha, um contrato com apenas [Autor, Comprador] marcaria
+    # todos_assinaram=True assim que o Autor assinasse, liberando o escrow
+    # antes do tempo.
+    try:
+        gravan_row = sb.table("contract_signers").select("signed").eq(
+            "contract_id", contract_id
+        ).eq("user_id", GRAVAN_EDITORA_UUID).limit(1).execute().data
+        if not gravan_row:
+            _clt_log.warning(
+                "ESCROW GUARD: Gravan ausente em contract_signers (contrato=%s). "
+                "Inserindo agora antes de verificar todos_assinaram.",
+                contract_id,
+            )
+            _inserir_gravan_signer(
+                sb=sb,
+                contract_id=contract_id,
+                base_payload={
+                    "contract_id": contract_id,
+                    "user_id":     GRAVAN_EDITORA_UUID,
+                    "share_pct":   None,
+                    "signed":      True,
+                    "signed_at":   datetime.now(timezone.utc).isoformat(),
+                },
+            )
+    except Exception as _ge:
+        _clt_log.error("Falha na guarda de escrow Gravan (contrato=%s): %s", contract_id, _ge)
+
     # Todos assinaram?
-    signers = sb.table("contract_signers").select("signed").eq("contract_id", contract_id).execute().data or []
+    signers_full = sb.table("contract_signers").select("signed, user_id").eq(
+        "contract_id", contract_id
+    ).execute().data or []
+    signers = signers_full
     todos = signers and all(s.get("signed") for s in signers)
+
+    # Verificação extra: Gravan deve estar presente e assinada para concluir
+    # o contrato (impede falso-positivo se insert acima também falhou)
+    gravan_ok = any(
+        s.get("user_id") == GRAVAN_EDITORA_UUID and s.get("signed")
+        for s in signers
+    )
+    if todos and not gravan_ok:
+        _clt_log.error(
+            "ESCROW BLOQUEADO: todos os humanos assinaram mas Gravan NÃO está "
+            "assinada (contrato=%s). Wallets NÃO serão creditadas.",
+            contract_id,
+        )
+        todos = False
+
     if todos:
         sb.table("contracts").update({
             "status":       "concluído",
@@ -1103,5 +1209,100 @@ def aceitar_contrato(contract_id: str, user_id: str, ip_hash: str | None = None)
                 on_contrato_concluido(contract_id)
         except Exception:
             pass
+
+        # ── E-MAIL COM PDF DO CONTRATO ───────────────────────────────
+        # Envia cópia do contrato assinado (PDF em anexo) para todas as
+        # partes humanas (autores, coautores, intérprete/comprador).
+        # Falhas são silenciosas para não bloquear a resposta HTTP.
+        try:
+            from services.email_service import send_email, render_licenciamento_concluido_email
+            from services.contrato_pdf import gerar_pdf_contrato
+            import os as _os
+
+            _frontend_url = _os.getenv("FRONTEND_URL", "https://gravan.vercel.app")
+
+            # Dados do contrato para o PDF + e-mail
+            _ctr_email = sb.table("contracts").select(
+                "id, obra_id, buyer_id, seller_id, valor_cents, contract_text, "
+                "completed_at, created_at"
+            ).eq("id", contract_id).single().execute().data or {}
+            _obra_email = sb.table("obras").select("nome").eq(
+                "id", _ctr_email.get("obra_id")
+            ).maybe_single().execute().data or {}
+            _nome_obra_email = _obra_email.get("nome") or "obra"
+            _valor_brl = (
+                f"R$ {_ctr_email['valor_cents'] / 100:,.2f}"
+                .replace(",", "X").replace(".", ",").replace("X", ".")
+            ) if _ctr_email.get("valor_cents") else "—"
+
+            # Gera PDF uma vez (mesmo padrão do dossie_licenca)
+            _pdf_bytes = None
+            try:
+                _pdf_bytes = gerar_pdf_contrato({
+                    "id":            _ctr_email.get("id", contract_id),
+                    "obra_id":       _ctr_email.get("obra_id", ""),
+                    "versao":        "v1.0",
+                    "assinado_em":   _ctr_email.get("completed_at") or _ctr_email.get("created_at"),
+                    "ip_assinatura": "—",
+                    "dados_titular": {"conteudo_hash": ""},
+                    "conteudo":      _ctr_email.get("contract_text") or "",
+                })
+            except Exception as _pdf_err:
+                _clt_log.warning("Falha ao gerar PDF para e-mail (contrato=%s): %s", contract_id, _pdf_err)
+
+            _pdf_attachment = None
+            if _pdf_bytes:
+                _pdf_attachment = [{
+                    "data":      _pdf_bytes,
+                    "filename":  f"Contrato-Gravan-{contract_id[:8]}.pdf",
+                    "maintype":  "application",
+                    "subtype":   "pdf",
+                }]
+
+            # Coleta signers humanos (exclui Gravan)
+            _signers_email = sb.table("contract_signers").select(
+                "user_id, role"
+            ).eq("contract_id", contract_id).neq(
+                "user_id", GRAVAN_EDITORA_UUID
+            ).execute().data or []
+
+            _enviados = set()
+            for _signer in _signers_email:
+                _uid = _signer.get("user_id")
+                _role = _signer.get("role") or "autor"
+                if not _uid or _uid in _enviados:
+                    continue
+                try:
+                    _perfil_e = sb.table("perfis").select("nome, email").eq(
+                        "id", _uid
+                    ).maybe_single().execute().data or {}
+                    _email_dest = _perfil_e.get("email") or ""
+                    _nome_dest  = _perfil_e.get("nome") or ""
+                    if not _email_dest:
+                        continue
+                    _papel = "interprete" if _role in ("interprete",) else _role
+                    _html_e, _txt_e = render_licenciamento_concluido_email(
+                        nome=_nome_dest,
+                        papel=_papel,
+                        nome_obra=_nome_obra_email,
+                        valor_brl=_valor_brl,
+                        contract_id=contract_id,
+                        frontend_url=_frontend_url,
+                    )
+                    send_email(
+                        to=_email_dest,
+                        subject=f"Contrato concluído — {_nome_obra_email}",
+                        html=_html_e,
+                        text=_txt_e,
+                        attachments=_pdf_attachment,
+                    )
+                    _enviados.add(_uid)
+                except Exception as _ee:
+                    _clt_log.warning(
+                        "Falha ao enviar e-mail para signer %s (contrato=%s): %s",
+                        _uid, contract_id, _ee,
+                    )
+        except Exception as _email_err:
+            _clt_log.warning("Bloco de e-mail falhou (contrato=%s): %s", contract_id, _email_err)
 
     return {"todos_assinaram": bool(todos)}
