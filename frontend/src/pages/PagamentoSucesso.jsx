@@ -90,7 +90,7 @@ export default function PagamentoSucesso() {
  <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>Pagamento confirmado!</h1>
  <p style={{ color: 'var(--text-muted)', marginBottom: 24, lineHeight: 1.6 }}>
  Sua licença de <strong>{dados?.obra_nome}</strong> foi aprovada.<br />
- Os compositores já receberam seus valores na wallet.
+ O valor está retido em escrow até que todas as partes assinem o contrato de licenciamento.
  </p>
 
  {dados?.transacao && (
