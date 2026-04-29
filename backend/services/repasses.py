@@ -221,9 +221,33 @@ def creditar_wallets_por_transacao(
     coaut = sb.table("coautorias").select("perfil_id, share_pct").eq(
         "obra_id", t["obra_id"]
     ).execute()
-    coautorias = coaut.data or [{"perfil_id": titular_id, "share_pct": 100}]
+    coautorias_raw = coaut.data or []
+    if not coautorias_raw:
+        logger.warning(
+            "SPLIT: obra %s não possui coautorias cadastradas — 100%% vai ao titular %s. "
+            "Verifique se as coautorias foram registradas corretamente na tabela 'coautorias'.",
+            t["obra_id"], titular_id,
+        )
+        coautorias = [{"perfil_id": titular_id, "share_pct": 100}]
+    else:
+        coautorias = coautorias_raw
+        logger.info(
+            "SPLIT: obra %s — %d coautoria(s) encontrada(s): %s",
+            t["obra_id"], len(coautorias),
+            [(c["perfil_id"][:8], c["share_pct"]) for c in coautorias],
+        )
 
+    logger.info(
+        "SPLIT CALC: transacao=%s, net=%d, plano=%s, publisher_id=%s, coautorias=%d",
+        transacao_id, net, plano, publisher_id, len(coautorias),
+    )
     split = _calcular_split_sobre_net(net, plano, coautorias, publisher_id=publisher_id)
+    logger.info(
+        "SPLIT RESULT: plataforma=%d, editora=%d, liquido_autores=%d, payouts=%s",
+        split["plataforma_cents"], split.get("editora_cents", 0),
+        split["liquido_autores_cents"],
+        [(p["perfil_id"][:8], p["valor_cents"], p["share_pct"]) for p in split["payouts"]],
+    )
 
     # Crédito automático da editora vinculada (10%), se aplicável.
     creditados_editora = 0

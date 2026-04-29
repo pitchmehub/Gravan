@@ -1135,9 +1135,34 @@ def aceitar_contrato(
 
     # Verificação extra: a Editora Detentora dos Direitos deve estar presente
     # e assinada (Gravan nos bilaterais; editora parceira nos trilaterais).
+    #
+    # Compatibilidade retroativa: se a migration ainda não foi rodada no Supabase,
+    # a Gravan fica inserida com role='editora_agregadora' (fallback de
+    # _inserir_gravan_signer). Aceitamos esse role EXCLUSIVAMENTE para o UUID da
+    # Gravan, para que contratos bilaterais criados antes da migration não fiquem
+    # bloqueados para sempre. Após rodar migration_contract_signers_role.sql, o
+    # role será corrigido para 'editora_detentora' e este fallback nunca disparará.
     detentora_ok = any(
-        s.get("role") == "editora_detentora" and s.get("signed")
+        (
+            s.get("role") == "editora_detentora"
+            or (
+                # Gravan antes da migration: inserida como 'editora_agregadora'
+                s.get("role") == "editora_agregadora"
+                and s.get("user_id") == GRAVAN_EDITORA_UUID
+                and not is_trilateral
+            )
+        )
+        and s.get("signed")
         for s in signers
+    )
+    _clt_log.info(
+        "ESCROW CHECK (contrato=%s, trilateral=%s): todos=%s, detentora_ok=%s | "
+        "signers=[%s]",
+        contract_id, is_trilateral, todos, detentora_ok,
+        ", ".join(
+            f"{s.get('role')}:{s.get('user_id','')[:8]}:signed={s.get('signed')}"
+            for s in signers
+        ),
     )
     if todos and not detentora_ok:
         _clt_log.error(
