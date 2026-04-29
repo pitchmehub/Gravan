@@ -1030,6 +1030,59 @@ def aceitar_contrato(contract_id: str, user_id: str, ip_hash: str | None = None)
         except Exception:
             pass
 
+        # Libera escrow: credita wallets dos autores agora que todos assinaram.
+        # Contratos trilaterais de OFERTA (trilateral=True + oferta_id definido)
+        # têm o crédito gerenciado por on_contrato_concluido (que também captura
+        # o pagamento retido). Para todos os demais contratos (bilateral padrão e
+        # trilateral por publisher agregado) creditamos aqui.
+        try:
+            c_full = sb.table("contracts").select(
+                "transacao_id, trilateral, oferta_id"
+            ).eq("id", contract_id).single().execute().data or {}
+            is_oferta_trilateral = bool(c_full.get("trilateral") and c_full.get("oferta_id"))
+            if not is_oferta_trilateral and c_full.get("transacao_id"):
+                from services.repasses import creditar_wallets_por_transacao
+                resultado = creditar_wallets_por_transacao(c_full["transacao_id"])
+                import logging as _lg
+                _lg.getLogger(__name__).info(
+                    "Wallets creditadas após assinatura final do contrato %s: %s",
+                    contract_id, resultado,
+                )
+        except Exception as _e:
+            import logging as _lg
+            _lg.getLogger(__name__).error(
+                "Falha ao creditar wallets após assinatura final (contrato %s): %s",
+                contract_id, _e,
+            )
+
+        # Notifica sobre liberação do valor
+        try:
+            from services.notificacoes import notify as _nw
+            c_vals = sb.table("contracts").select(
+                "obra_id, seller_id, valor_cents"
+            ).eq("id", contract_id).single().execute().data or {}
+            if c_vals.get("seller_id") and c_vals.get("valor_cents"):
+                valor_reais = (
+                    f"R$ {c_vals['valor_cents'] / 100:,.2f}"
+                    .replace(",", "X").replace(".", ",").replace("X", ".")
+                )
+                obra_nome3 = (sb.table("obras").select("nome").eq(
+                    "id", c_vals["obra_id"]
+                ).maybe_single().execute().data or {}).get("nome") or "obra"
+                _nw(
+                    c_vals["seller_id"],
+                    tipo="pagamento",
+                    titulo="Valor liberado na sua carteira",
+                    mensagem=(
+                        f"O contrato da obra \"{obra_nome3}\" foi concluído. "
+                        f"{valor_reais} foram liberados na sua carteira."
+                    ),
+                    link="/dashboard",
+                    payload={"contract_id": contract_id, "valor_cents": c_vals["valor_cents"]},
+                )
+        except Exception:
+            pass
+
         # Se for trilateral (oferta editora terceira), captura o pagamento.
         try:
             c = sb.table("contracts").select("trilateral, oferta_id").eq("id", contract_id).single().execute().data

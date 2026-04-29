@@ -342,19 +342,14 @@ def webhook():
                 logger.warning("Falha ao processar pós-pagamento de oferta: %s", _e)
 
             # Dispara geração do Contrato de Licenciamento (Cláusulas ECAD/split/etc)
+            # IMPORTANTE: as wallets só são creditadas após todas as partes assinarem
+            # o contrato (escrow). O crédito ocorre em aceitar_contrato() quando
+            # todos_assinaram=True.
             try:
                 from services.contrato_licenciamento import gerar_contrato_licenciamento
                 gerar_contrato_licenciamento(trans["id"])
             except Exception as _e:
                 logger.warning(f"Falha ao gerar contrato de licenciamento: {_e}")
-
-            # Credita wallets dos autores (saque manual via Stripe depois)
-            try:
-                from services.repasses import creditar_wallets_por_transacao
-                resultado = creditar_wallets_por_transacao(trans["id"])
-                logger.info("Wallets creditadas %s: %s", trans["id"], resultado)
-            except Exception as _e:
-                logger.error("Falha ao creditar wallets: %s", _e)
 
             # Push/notificação para o compositor e o comprador
             obra_info = {}
@@ -376,9 +371,9 @@ def webhook():
                         mensagem=(
                             f"{comprador_info.get('nome') or 'Um intérprete'} licenciou "
                             f"\"{obra_info.get('nome','—')}\" por {valor_reais}. "
-                            f"O valor já foi creditado na sua carteira."
+                            f"O valor será liberado na sua carteira após todas as partes assinarem o contrato."
                         ),
-                        link="/dashboard",
+                        link="/contratos",
                         payload={
                             "transacao_id": trans["id"],
                             "obra_id":      trans["obra_id"],
@@ -415,17 +410,19 @@ def webhook():
                 logger.warning("Falha ao notificar comprador da compra: %s", _e)
 
     elif event_type == "payment_intent.succeeded":
-        # Backup: se checkout.session.completed não disparou, garante crédito
+        # Backup: garante que o contrato foi gerado caso checkout.session.completed
+        # não tenha disparado. As wallets SÃO creditadas apenas após todas as partes
+        # assinarem o contrato (em aceitar_contrato). Não creditamos aqui.
         pi_id = obj.get("id") if isinstance(obj, dict) else obj.id
         trans = sb.table("transacoes").select("id").eq(
             "stripe_payment_intent", pi_id
         ).limit(1).execute().data
         if trans:
             try:
-                from services.repasses import creditar_wallets_por_transacao
-                creditar_wallets_por_transacao(trans[0]["id"])
+                from services.contrato_licenciamento import gerar_contrato_licenciamento
+                gerar_contrato_licenciamento(trans[0]["id"])
             except Exception as _e:
-                logger.warning("Backup credito wallet (PI succeeded) falhou: %s", _e)
+                logger.warning("Backup gerar contrato (PI succeeded) falhou: %s", _e)
 
     elif event_type in ("checkout.session.expired", "payment_intent.payment_failed"):
         session_id = obj.get("id") if isinstance(obj, dict) else obj.id
