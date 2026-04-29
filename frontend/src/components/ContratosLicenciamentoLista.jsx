@@ -29,7 +29,8 @@ export default function ContratosLicenciamento() {
  try {
  setLoading(true)
  const d = await api.get('/contratos/licenciamento')
- setItems(d || [])
+ const sorted = [...(d || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+ setItems(sorted)
  } catch (e) { setErro(e.message) }
  finally { setLoading(false) }
  }

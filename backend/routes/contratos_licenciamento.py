@@ -389,6 +389,9 @@ def listar():
         c["meu_papel"] = (mine.get(c["id"]) or {}).get("role")
         c["minha_assinatura"] = bool((mine.get(c["id"]) or {}).get("signed"))
 
+    # Garante ordem global: mais recentes primeiro (coautores extras podem quebrar a ordem)
+    own.sort(key=lambda c: c.get("created_at") or "", reverse=True)
+
     return jsonify(own), 200
 
 
