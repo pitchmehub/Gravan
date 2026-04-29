@@ -307,7 +307,7 @@ export default function SideMenu({ onCollapse }) {
  >
  <div className="sidebar-header sidebar-header-mobile">
  <button className="sidebar-logo-btn" onClick={() => { navigate('/descoberta'); setMobileOpen(false) }}>
- <GravanLogo height={40} />
+ <GravanLogo height={50} />
  </button>
  <button
  className="sidebar-toggle"
@@ -394,7 +394,7 @@ export default function SideMenu({ onCollapse }) {
  <div className="sidebar-header">
  {!collapsed && (
  <button className="sidebar-logo-btn" onClick={() => navigate('/descoberta')}>
- <GravanLogo height={28} />
+ <GravanLogo height={38} />
  </button>
  )}
  <button className="sidebar-toggle" onClick={() => setCollapsed(c => !c)}>
