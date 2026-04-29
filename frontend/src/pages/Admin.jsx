@@ -119,9 +119,23 @@ export default function Admin() {
 
  return (
  <div style={{ padding: 32, maxWidth: 1100 }}>
- <div style={{ marginBottom: 24 }}>
+ <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+ <div>
  <h1 style={{ fontSize: 26, fontWeight: 800 }}>Painel administrador</h1>
  <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Visão consolidada da plataforma Gravan</p>
+ </div>
+ <a
+ href="/admin/landing"
+ style={{
+ display: 'inline-flex', alignItems: 'center', gap: 8,
+ padding: '10px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+ background: 'var(--brand)', color: '#fff', textDecoration: 'none',
+ boxShadow: '0 2px 8px rgba(0,0,0,.15)',
+ whiteSpace: 'nowrap',
+ }}
+ >
+ ✏️ Editar Landing Page
+ </a>
  </div>
 
  <div style={{

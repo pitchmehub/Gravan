@@ -6,12 +6,16 @@ Rotas para perfil EDITORA (role='publisher').
 - GET  /api/publishers/dashboard          agregado: obras, contratos, faturamento
 - GET  /api/publishers/lookup-by-email    verifica se um e-mail é editora cadastrada
 """
+import logging
+
 from flask import Blueprint, request, jsonify, g, abort
 
 from middleware.auth import require_auth
 from db.supabase_client import get_supabase
 from utils.audit import log_event
 from utils.crypto import encrypt_pii, decrypt_pii
+
+logger = logging.getLogger(__name__)
 
 publishers_bp = Blueprint("publishers", __name__, url_prefix="/api/publishers")
 
@@ -251,37 +255,68 @@ def historico_licenciamentos():
                     .limit(200)
                     .execute()).data or []
 
+    logger.debug("historico-licenciamentos: %d pagamentos encontrados para %s", len(pagamentos), g.user.id)
+
     if not pagamentos:
         return jsonify({"itens": [], "total_cents": 0, "total_transacoes": 0})
 
     tx_ids = list({p["transacao_id"] for p in pagamentos if p.get("transacao_id")})
+    logger.debug("historico-licenciamentos: tx_ids=%s", tx_ids)
 
-    # Carrega transações com obra (join direto)
+    # Carrega transações — join com obras via obra_id
     tx_map = {}
+    obra_map = {}  # obra_id -> {id, nome, titular_id}
     if tx_ids:
         try:
             tx = (sb.table("transacoes")
                     .select("id, valor_cents, status, created_at, obra_id, comprador_id, "
                             "obras(id, nome, titular_id)")
                     .in_("id", tx_ids).execute()).data or []
+            logger.debug("historico-licenciamentos: tx com join=%d rows, sample=%s", len(tx), tx[:1])
             tx_map = {t["id"]: t for t in tx}
-        except Exception:
+            # extrair obras do join para facilitar lookup
+            for t in tx:
+                ob = t.get("obras")
+                if isinstance(ob, dict) and ob.get("id"):
+                    obra_map[ob["id"]] = ob
+                elif isinstance(ob, list) and ob:
+                    obra_map[ob[0]["id"]] = ob[0]
+        except Exception as e:
+            logger.warning("historico-licenciamentos: join obras falhou (%s), tentando sem join", e)
             try:
                 tx = (sb.table("transacoes")
                         .select("id, valor_cents, status, created_at, obra_id, comprador_id")
                         .in_("id", tx_ids).execute()).data or []
                 tx_map = {t["id"]: t for t in tx}
-            except Exception:
+            except Exception as e2:
+                logger.error("historico-licenciamentos: fallback transacoes falhou: %s", e2)
                 tx_map = {}
+
+    # Se o join falhou (sem obras no tx_map), buscar obras separadamente por obra_id
+    obra_ids_sem_join = [t.get("obra_id") for t in tx_map.values()
+                         if t.get("obra_id") and t.get("obra_id") not in obra_map]
+    if obra_ids_sem_join:
+        try:
+            obs = (sb.table("obras")
+                     .select("id, nome, titular_id")
+                     .in_("id", obra_ids_sem_join).execute()).data or []
+            logger.debug("historico-licenciamentos: obras fetch separado=%d", len(obs))
+            for ob in obs:
+                obra_map[ob["id"]] = ob
+        except Exception as e:
+            logger.warning("historico-licenciamentos: fetch obras separado falhou: %s", e)
 
     # Coleta perfil_ids (titular + comprador) para resolver nomes em batch
     perfil_ids = set()
     for t in tx_map.values():
-        obra = t.get("obras") or {}
-        if obra.get("titular_id"):
-            perfil_ids.add(obra["titular_id"])
+        oid = t.get("obra_id")
+        ob = obra_map.get(oid) or {}
+        if ob.get("titular_id"):
+            perfil_ids.add(ob["titular_id"])
         if t.get("comprador_id"):
             perfil_ids.add(t["comprador_id"])
+
+    logger.debug("historico-licenciamentos: perfil_ids a resolver=%s", perfil_ids)
 
     perfil_map = {}
     if perfil_ids:
@@ -289,21 +324,21 @@ def historico_licenciamentos():
             prfs = (sb.table("perfis")
                       .select("id, nome_completo, nome_artistico")
                       .in_("id", list(perfil_ids)).execute()).data or []
+            logger.debug("historico-licenciamentos: perfis resolvidos=%d", len(prfs))
             perfil_map = {p["id"]: p for p in prfs}
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("historico-licenciamentos: fetch perfis falhou: %s", e)
 
     def _nome(perfil_id):
         p = perfil_map.get(perfil_id) or {}
         return p.get("nome_artistico") or p.get("nome_completo")
 
-    titular_map = perfil_map  # compatibilidade com bloco abaixo
-
     itens = []
     total_cents = 0
     for p in pagamentos:
         t = tx_map.get(p.get("transacao_id")) or {}
-        obra = t.get("obras") or {}
+        oid = t.get("obra_id")
+        obra = obra_map.get(oid) or {}
         titular_id   = obra.get("titular_id")
         comprador_id = t.get("comprador_id")
         itens.append({
