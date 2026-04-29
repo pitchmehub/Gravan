@@ -254,14 +254,16 @@ def buscar_por_email():
 
     sb = get_supabase()
     try:
-        resp = sb.rpc("buscar_perfil_por_email", {"p_email": email}).execute()
+        resp = sb.table("perfis").select(
+            "id, nome, nome_artistico, nome_completo, email, role"
+        ).eq("email", email).limit(1).execute()
     except Exception as e:
         abort(500, description=f"Erro na busca: {str(e)}")
 
     if not resp.data:
         abort(404, description="Nenhum compositor cadastrado com este email.")
 
-    perfil = resp.data[0] if isinstance(resp.data, list) else resp.data
+    perfil = resp.data[0]
     return jsonify(perfil), 200
 
 
