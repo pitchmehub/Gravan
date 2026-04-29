@@ -1,5 +1,39 @@
 # Gravan — Marketplace de Obras Musicais
 
+### Escrow Real — Assinatura Manual + Bug do Split da Editora (abr/2026)
+- **Modelo de assinatura mudou para MANUAL REAL**: autores, coautores e editora-mãe
+  agora são inseridos em `contract_signers` com `signed=False, signed_at=None`. Cada
+  parte humana DEVE acessar `/contratos/licenciamento/<id>` e clicar "Concordo" para
+  assinar. Apenas o COMPRADOR (intérprete) e a Gravan (editora_detentora bilateral)
+  continuam auto-assinando — o primeiro porque o pagamento é o aceite, a segunda
+  porque é a operadora institucional.
+- **Trava extra no `_escrow_guard`** (defesa em profundidade): além de checar
+  `contracts.status='concluído'`, valida que cada signer humano (autor, coautor,
+  editora_detentora não-Gravan) tem `signed=True E ip_hash NOT NULL`. O `ip_hash`
+  é setado apenas via rota HTTP `/aceitar` (`hash_ip(remote_addr)`), garantindo
+  que houve clique humano via interface. Se algum humano não assinou via HTTP,
+  o crédito é bloqueado e registrado como `escrow_blocked_human_check` em
+  `contract_events` mesmo que o status diga "concluído".
+- **Notificações ao criar contrato**: bilateral e trilateral agora notificam
+  todos os autores e a editora-mãe sobre a pendência de assinatura, com link
+  direto para `/contratos/licenciamento/<id>`.
+- **Bug do split da editora corrigido (silent fail)**: a query
+  `transacoes.select("..., obras(...)")` em `creditar_wallets_por_transacao`
+  estava ambígua porque a tabela `transacoes` tem duas FKs para `obras`
+  (`transacoes_obra_fk` e `transacoes_obra_id_fkey`). PostgREST devolvia
+  `PGRST201`, a função abortava antes de chegar no crédito da editora,
+  e os autores eram pagos por uma execução anterior que rodou antes da
+  ambiguidade aparecer. **Fix**: embed explícito
+  `obras!transacoes_obra_id_fkey(...)`.
+- **Idempotência granular**: `creditar_wallets_por_transacao` agora skipa
+  apenas perfis_id já pagos (não bail-out na primeira ocorrência), permitindo
+  retry da editora quando autores foram pagos antes. Falhas em pagamento de
+  qualquer perfil agora são registradas como `credito_falhou` em
+  `contract_events` (era `logger.warning` silencioso antes).
+- **Backfill aplicado** na transação `3e889470-29e0-4ceb-8326-72756b1f8ed6`
+  (content_hash `bb5df127...`): editora `32657744` recebeu 28799 cents (10%
+  do net após taxas Stripe), wallet atualizada de 419061 → 447860.
+
 ### Escrow — Correção de Violação + E-mail com PDF (abr/2026)
 - **Bug corrigido**: o INSERT do signer Gravan usava fallback frágil baseado em string de
   erro (`"signers_role_check" in str(e)`). Se a string não aparecia exatamente assim,

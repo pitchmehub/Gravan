@@ -37,18 +37,32 @@ logger = logging.getLogger("gravan.repasses")
 # ══════════════════════════════════════════════════════════════
 # GUARDA CENTRAL DE ESCROW
 # ══════════════════════════════════════════════════════════════
+# UUID da Gravan operacional (editora institucional bilateral). Auto-assina por design.
+_GRAVAN_EDITORA_UUID = "e96bd8af-dfb8-4bf1-9ba5-7746207269cd"
+
+
 def _escrow_guard(transacao_id: str, sb, caller: str = "desconhecido") -> bool:
     """
     Verifica se o contrato de licenciamento vinculado à transação está
-    com status 'concluído' (todas as partes assinaram).
+    com status 'concluído' (todas as partes assinaram) E se cada signer
+    humano tem assinatura registrada via HTTP (ip_hash preenchido).
 
     RETORNA:
-      True  → contrato concluído, pode creditar.
-      False → contrato não concluído ou não encontrado, BLOQUEIA tudo.
+      True  → contrato concluído + todas as assinaturas humanas validadas.
+      False → contrato não concluído OU alguma assinatura humana ausente.
 
     REGRA ABSOLUTA: esta função DEVE ser a primeira chamada em qualquer
     caminho de código que credite wallets ou dispare Stripe Transfers.
     Em caso de dúvida, BLOQUEIA (fail-safe).
+
+    DEFESA EM PROFUNDIDADE: além de checar o status do contrato, validamos
+    diretamente que cada signer humano (autor, coautor, editora_detentora
+    NÃO-Gravan) tem signed=True E ip_hash preenchido — marca de que a
+    assinatura veio de uma chamada HTTP real à rota /aceitar (que registra
+    sempre o ip_hash via hash_ip(remote_addr)). Signatários que assinam
+    automaticamente por design ficam isentos:
+      • Gravan (editora_detentora bilateral) — autoassinatura institucional.
+      • Comprador (interprete) — aceite eletrônico via pagamento.
     """
     try:
         row = sb.table("contracts").select("id, status").eq(
@@ -76,10 +90,70 @@ def _escrow_guard(transacao_id: str, sb, caller: str = "desconhecido") -> bool:
             )
             return False
 
+        # ── TRAVA EXTRA: assinatura humana real por papel ──────────────
+        # Mesmo que status='concluído', validamos diretamente os signers
+        # para impedir que o status seja contornado por edição manual no
+        # banco ou caminho de código que ignore aceitar_contrato().
+        signers = sb.table("contract_signers").select(
+            "user_id, role, signed, ip_hash"
+        ).eq("contract_id", contract_id).execute().data or []
+
+        humanos = [
+            s for s in signers
+            if s.get("role") in ("autor", "coautor", "editora_detentora", "editora_agregadora")
+            and s.get("user_id") != _GRAVAN_EDITORA_UUID  # Gravan: autoassinatura institucional
+        ]
+
+        if not humanos:
+            logger.error(
+                "ESCROW BLOQUEADO [%s]: contrato %s da transação '%s' está 'concluído' "
+                "mas NÃO possui nenhum signer humano (autor/coautor/editora) cadastrado. "
+                "Anomalia grave — bloqueando por segurança.",
+                caller, contract_id, transacao_id,
+            )
+            return False
+
+        nao_assinaram = [
+            s for s in humanos
+            if not (s.get("signed") and s.get("ip_hash"))
+        ]
+        if nao_assinaram:
+            logger.error(
+                "ESCROW BLOQUEADO [%s] (HUMAN SIGNATURE CHECK): contrato %s da "
+                "transação '%s' está 'concluído', mas %d signer(s) humano(s) "
+                "não possuem assinatura via HTTP (signed + ip_hash): %s. "
+                "Wallets NÃO serão creditadas.",
+                caller, contract_id, transacao_id, len(nao_assinaram),
+                [(s.get("role"), (s.get("user_id") or "")[:8],
+                  "signed" if s.get("signed") else "unsigned",
+                  "ip" if s.get("ip_hash") else "no-ip")
+                 for s in nao_assinaram],
+            )
+            try:
+                sb.table("contract_events").insert({
+                    "contract_id": contract_id,
+                    "event_type":  "escrow_blocked_human_check",
+                    "payload": {
+                        "caller": caller,
+                        "transacao_id": transacao_id,
+                        "missing": [
+                            {"role": s.get("role"),
+                             "user_id_prefix": (s.get("user_id") or "")[:12],
+                             "signed": bool(s.get("signed")),
+                             "has_ip_hash": bool(s.get("ip_hash"))}
+                            for s in nao_assinaram
+                        ],
+                    },
+                }).execute()
+            except Exception:
+                pass
+            return False
+
         logger.info(
-            "ESCROW LIBERADO [%s]: contrato %s da transação '%s' está '%s'. "
+            "ESCROW LIBERADO [%s]: contrato %s da transação '%s' está '%s' e "
+            "todos os %d signer(s) humano(s) assinaram via HTTP (ip_hash ok). "
             "Prosseguindo com crédito de carteiras.",
-            caller, contract_id, transacao_id, status,
+            caller, contract_id, transacao_id, status, len(humanos),
         )
         return True
 
@@ -196,17 +270,28 @@ def creditar_wallets_por_transacao(
     if not _escrow_guard(transacao_id, sb, caller="creditar_wallets_por_transacao"):
         return {"status": "escrow_bloqueado"}
 
-    # Idempotência: se já tem registro de pagamento, ignora
-    ja = sb.table("pagamentos_compositores").select("id").eq(
+    # Idempotência GRANULAR: ao invés de bailar fora se QUALQUER pagamento
+    # existir para a transação, listamos todos os perfis_id já pagos e
+    # creditamos somente o que estiver faltando. Isso permite recuperação
+    # automática quando uma execução anterior pagou os autores mas falhou
+    # (silenciosamente) na editora — bug histórico que deixou editoras sem
+    # receber 10%. Cada perfil só é creditado UMA vez, mas a função pode
+    # rodar N vezes para a mesma transação sem perder pagamentos faltantes.
+    ja_pagos = sb.table("pagamentos_compositores").select("perfil_id").eq(
         "transacao_id", transacao_id
-    ).limit(1).execute()
-    if ja.data:
-        logger.info("Wallets já creditadas para transação %s", transacao_id)
-        return {"status": "ja_creditado"}
+    ).execute()
+    perfis_ja_pagos = {r["perfil_id"] for r in (ja_pagos.data or []) if r.get("perfil_id")}
+    if perfis_ja_pagos:
+        logger.info(
+            "Idempotência granular: transação %s já tem pagamento para %d perfil(is): %s. "
+            "Creditarei apenas perfis faltantes.",
+            transacao_id, len(perfis_ja_pagos),
+            [p[:8] for p in perfis_ja_pagos],
+        )
 
     trans = sb.table("transacoes").select(
         "id, obra_id, valor_cents, stripe_payment_intent, "
-        "obras(id, titular_id, publisher_id, gravan_editora_id)"
+        "obras!transacoes_obra_id_fkey(id, titular_id, publisher_id, gravan_editora_id)"
     ).eq("id", transacao_id).single().execute()
     if not trans.data:
         return {"status": "transacao_nao_encontrada"}
@@ -290,73 +375,118 @@ def creditar_wallets_por_transacao(
         [(p["perfil_id"][:8], p["valor_cents"], p["share_pct"]) for p in split["payouts"]],
     )
 
+    # Helper: localiza o contract_id desta transação (para registrar eventos
+    # de erro auditáveis em contract_events).
+    def _contract_id_para_evento() -> str | None:
+        try:
+            r = sb.table("contracts").select("id").eq(
+                "transacao_id", transacao_id
+            ).limit(1).execute()
+            return (r.data or [{}])[0].get("id")
+        except Exception:
+            return None
+
+    def _registrar_falha_credito(perfil_id: str, papel: str, etapa: str, erro: str) -> None:
+        """Registra falha de crédito em contract_events para alertar a operação.
+        Substitui o antigo 'logger.warning + segue a vida' que mascarava bugs
+        como o do split da editora (transação 3e889470)."""
+        cid = _contract_id_para_evento()
+        if not cid:
+            return
+        try:
+            sb.table("contract_events").insert({
+                "contract_id": cid,
+                "event_type":  "credito_falhou",
+                "payload": {
+                    "transacao_id": transacao_id,
+                    "perfil_id":    perfil_id,
+                    "papel":        papel,
+                    "etapa":        etapa,
+                    "erro":         (erro or "")[:500],
+                },
+            }).execute()
+        except Exception:
+            pass
+
+    def _creditar_wallet(perfil_id: str, valor_cents: int, papel: str) -> bool:
+        """Tenta RPC; se falhar, faz upsert direto. Retorna True se OK."""
+        try:
+            sb.rpc("creditar_wallet", {
+                "p_perfil_id":    perfil_id,
+                "p_valor_cents":  valor_cents,
+                "p_transacao_id": transacao_id,
+            }).execute()
+            return True
+        except Exception as e:
+            logger.warning("RPC creditar_wallet (%s) falhou: %s — tentando fallback.", papel, e)
+            try:
+                w = sb.table("wallets").select("saldo_cents").eq(
+                    "perfil_id", perfil_id
+                ).maybe_single().execute()
+                saldo_atual = ((w.data if w else None) or {}).get("saldo_cents", 0) or 0
+                novo = saldo_atual + valor_cents
+                sb.table("wallets").upsert(
+                    {"perfil_id": perfil_id, "saldo_cents": novo},
+                    on_conflict="perfil_id",
+                ).execute()
+                return True
+            except Exception as e2:
+                logger.error("Fallback wallet (%s) falhou para perfil %s: %s — RPC erro: %s",
+                             papel, perfil_id, e2, e)
+                _registrar_falha_credito(perfil_id, papel, "wallet",
+                                         f"rpc={e}; fallback={e2}")
+                return False
+
     # Crédito automático da editora vinculada (10%), se aplicável.
     creditados_editora = 0
     edp = split.get("editora_payout")
     if edp and edp["valor_cents"] > 0:
-        try:
-            sb.rpc("creditar_wallet", {
-                "p_perfil_id":    edp["perfil_id"],
-                "p_valor_cents":  edp["valor_cents"],
-                "p_transacao_id": transacao_id,
-            }).execute()
-        except Exception as e:
-            logger.warning("RPC creditar_wallet (editora) falhou: %s — fallback direto.", e)
+        if edp["perfil_id"] in perfis_ja_pagos:
+            logger.info(
+                "Editora %s já tem pagamento para transação %s — pulando (idempotência granular).",
+                edp["perfil_id"][:8], transacao_id,
+            )
+        else:
+            wallet_ok = _creditar_wallet(edp["perfil_id"], edp["valor_cents"], "editora")
             try:
-                w = sb.table("wallets").select("saldo_cents").eq(
-                    "perfil_id", edp["perfil_id"]
-                ).maybe_single().execute()
-                saldo_atual = ((w.data if w else None) or {}).get("saldo_cents", 0) or 0
-                novo = saldo_atual + edp["valor_cents"]
-                # IMPORTANTE: on_conflict="perfil_id" para atualizar wallet
-                # existente em vez de tentar inserir e bater na unique.
-                sb.table("wallets").upsert(
-                    {"perfil_id": edp["perfil_id"], "saldo_cents": novo},
-                    on_conflict="perfil_id",
-                ).execute()
-            except Exception as e2:
-                logger.error("Fallback wallet (editora) falhou para %s: %s",
-                             edp["perfil_id"], e2)
-        try:
-            # Editora não é coautora — coautoria_id fica nulo. A coluna
-            # precisa permitir NULL no schema (vide migration aplicada).
-            sb.table("pagamentos_compositores").insert({
-                "perfil_id":    edp["perfil_id"],
-                "transacao_id": transacao_id,
-                "valor_cents":  edp["valor_cents"],
-                "share_pct":    edp["share_pct"],
-                "coautoria_id": None,
-            }).execute()
-            creditados_editora = 1
-        except Exception as e:
-            logger.warning("Falha ao gravar pagamento da editora: %s", e)
+                # Editora não é coautora — coautoria_id fica nulo. A coluna
+                # precisa permitir NULL no schema (vide migration aplicada).
+                sb.table("pagamentos_compositores").insert({
+                    "perfil_id":    edp["perfil_id"],
+                    "transacao_id": transacao_id,
+                    "valor_cents":  edp["valor_cents"],
+                    "share_pct":    edp["share_pct"],
+                    "coautoria_id": None,
+                }).execute()
+                creditados_editora = 1
+                logger.info(
+                    "EDITORA CREDITADA: perfil=%s, valor=%d cents, transacao=%s, wallet_ok=%s",
+                    edp["perfil_id"][:8], edp["valor_cents"], transacao_id, wallet_ok,
+                )
+            except Exception as e:
+                logger.error(
+                    "FALHA AO GRAVAR pagamento da editora (perfil=%s, transacao=%s): %s. "
+                    "Wallet credit foi %s. Registrando em contract_events para reconciliação.",
+                    edp["perfil_id"], transacao_id, e,
+                    "OK" if wallet_ok else "TAMBÉM FALHOU",
+                )
+                _registrar_falha_credito(edp["perfil_id"], "editora",
+                                         "pagamentos_compositores", str(e))
 
     creditados = 0
     for p in split["payouts"]:
         if p["valor_cents"] <= 0:
             continue
-        # Tenta RPC; fallback direto na tabela
-        try:
-            sb.rpc("creditar_wallet", {
-                "p_perfil_id":   p["perfil_id"],
-                "p_valor_cents": p["valor_cents"],
-                "p_transacao_id": transacao_id,
-            }).execute()
-        except Exception as e:
-            logger.warning("RPC creditar_wallet falhou: %s — fallback direto.", e)
-            try:
-                w = sb.table("wallets").select("saldo_cents").eq(
-                    "perfil_id", p["perfil_id"]
-                ).maybe_single().execute()
-                saldo_atual = ((w.data if w else None) or {}).get("saldo_cents", 0) or 0
-                novo = saldo_atual + p["valor_cents"]
-                sb.table("wallets").upsert(
-                    {"perfil_id": p["perfil_id"], "saldo_cents": novo},
-                    on_conflict="perfil_id",
-                ).execute()
-            except Exception as e2:
-                logger.error("Fallback wallet falhou para %s: %s", p["perfil_id"], e2)
-                continue
+        if p["perfil_id"] in perfis_ja_pagos:
+            logger.info(
+                "Autor/coautor %s já tem pagamento para transação %s — pulando.",
+                p["perfil_id"][:8], transacao_id,
+            )
+            continue
+
+        wallet_ok = _creditar_wallet(p["perfil_id"], p["valor_cents"], "autor")
+        if not wallet_ok:
+            continue  # já logado e registrado em contract_events
 
         # Registra histórico de pagamento
         try:
@@ -367,7 +497,13 @@ def creditar_wallets_por_transacao(
                 "share_pct":    p["share_pct"],
             }).execute()
         except Exception as e:
-            logger.warning("Falha ao gravar pagamentos_compositores: %s", e)
+            logger.error(
+                "FALHA AO GRAVAR pagamentos_compositores (autor perfil=%s, transacao=%s): %s. "
+                "Wallet já foi creditada. Registrando em contract_events para reconciliação.",
+                p["perfil_id"], transacao_id, e,
+            )
+            _registrar_falha_credito(p["perfil_id"], "autor",
+                                     "pagamentos_compositores", str(e))
         creditados += 1
 
     return {
@@ -483,7 +619,7 @@ def gerar_repasses_para_transacao(transacao_id: str) -> dict:
 
     trans = sb.table("transacoes").select(
         "id, obra_id, valor_cents, stripe_payment_intent, "
-        "obras(id, titular_id, publisher_id, gravan_editora_id)"
+        "obras!transacoes_obra_id_fkey(id, titular_id, publisher_id, gravan_editora_id)"
     ).eq("id", transacao_id).single().execute()
     if not trans.data:
         return {"status": "transacao_nao_encontrada"}
