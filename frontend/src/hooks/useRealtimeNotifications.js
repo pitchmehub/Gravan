@@ -15,6 +15,14 @@ export default function useRealtimeNotifications(perfilId, onChange) {
   useEffect(() => {
     if (!perfilId) return
 
+    // Remove qualquer canal com o mesmo nome antes de criar um novo
+    // (evita o erro "cannot add callbacks after subscribe()" no StrictMode)
+    const topic = `realtime:notif:${perfilId}`
+    const existing = supabase.getChannels().find(c => c.topic === topic)
+    if (existing) {
+      supabase.removeChannel(existing).catch(() => {})
+    }
+
     const channel = supabase
       .channel(`notif:${perfilId}`)
       .on(
@@ -35,7 +43,7 @@ export default function useRealtimeNotifications(perfilId, onChange) {
       .subscribe()
 
     return () => {
-      try { supabase.removeChannel(channel) } catch (_) {}
+      supabase.removeChannel(channel).catch(() => {})
     }
   }, [perfilId])
 }
