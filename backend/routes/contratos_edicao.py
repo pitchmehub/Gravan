@@ -118,7 +118,7 @@ def assinar(cid):
                     tipo="contrato_assinado",
                     titulo="Contrato de edição assinado",
                     mensagem="Todas as partes assinaram o contrato de edição.",
-                    link="/contratos",
+                    link=f"/contratos?contrato={cid}",
                     payload={"contract_id": cid, "tipo": "edicao"},
                 )
         elif outra_parte:
@@ -127,7 +127,7 @@ def assinar(cid):
                 tipo="contrato_assinado",
                 titulo="Contrato aguardando sua assinatura",
                 mensagem="A outra parte assinou o contrato de edição. Falta apenas a sua assinatura.",
-                link="/contratos",
+                link=f"/contratos?contrato={cid}",
                 payload={"contract_id": cid, "tipo": "edicao"},
             )
     except Exception:

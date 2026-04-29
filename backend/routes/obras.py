@@ -202,6 +202,7 @@ def criar_obra():
             # Notifica a EDITORA: contrato gerado, aguarda assinatura dela
             try:
                 from services.notificacoes import notify
+                _cid_edit = (contrato_gerado or {}).get("id")
                 notify(
                     perfil_id=editora_terceira_id,
                     tipo="contrato_edicao_gerado",
@@ -211,8 +212,8 @@ def criar_obra():
                         f"\"{obra.get('nome')}\", cadastrada pelo compositor. "
                         f"Acesse seus contratos para ler e assinar."
                     ),
-                    link="/contratos",
-                    payload={"obra_id": obra["id"], "contrato_id": (contrato_gerado or {}).get("id"), "via": "contrato_bilateral"},
+                    link=f"/contratos?contrato={_cid_edit}" if _cid_edit else "/contratos",
+                    payload={"obra_id": obra["id"], "contrato_id": _cid_edit, "tipo": "edicao", "via": "contrato_bilateral"},
                 )
             except Exception as e:
                 print(f"[obras] notify editora contrato falhou: {e}")
@@ -229,8 +230,8 @@ def criar_obra():
                         f"Um Contrato de Edição Musical bilateral foi gerado entre você e sua editora. "
                         f"Acesse \"Meus Contratos\" para ler e assinar."
                     ),
-                    link="/contratos",
-                    payload={"obra_id": obra["id"], "contrato_id": (contrato_gerado or {}).get("id"), "via": "contrato_bilateral"},
+                    link=f"/contratos?contrato={_cid_edit}" if _cid_edit else "/contratos",
+                    payload={"obra_id": obra["id"], "contrato_id": _cid_edit, "tipo": "edicao", "via": "contrato_bilateral"},
                 )
             except Exception as e:
                 print(f"[obras] notify artista contrato falhou: {e}")

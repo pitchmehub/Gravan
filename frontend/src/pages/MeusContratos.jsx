@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { api } from '../lib/api'
 import ContratosLicenciamentoLista from '../components/ContratosLicenciamentoLista'
 
 export default function MeusContratos() {
+ const [searchParams] = useSearchParams()
+ const contratoIdParam = searchParams.get('contrato')
+
  const [aba, setAba] = useState('edicao')
  const [contratos, setContratos] = useState([])
  const [edicaoLista, setEdicaoLista] = useState([])
@@ -24,11 +28,19 @@ export default function MeusContratos() {
    ])
    setContratos(legacy || [])
    setEdicaoLista(edicao || [])
-  } catch (e) { setErro(e.message) }
+   return edicao || []
+  } catch (e) { setErro(e.message); return [] }
   finally { setLoading(false) }
  }
 
- useEffect(() => { carregarTudo() }, [])
+ useEffect(() => {
+  carregarTudo().then(lista => {
+   if (contratoIdParam && lista.length > 0) {
+    const alvo = lista.find(c => c.id === contratoIdParam)
+    if (alvo) abrirEdicao(alvo)
+   }
+  })
+ }, []) // eslint-disable-line
 
  async function baixarPdf(c) {
   try {
