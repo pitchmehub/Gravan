@@ -392,6 +392,8 @@ def listar():
     return jsonify(own), 200
 
 
+GRAVAN_EDITORA_UUID = "00000000-0000-0000-0000-000000000001"
+
 @contratos_lic_bp.route("/<contract_id>", methods=["GET"])
 @require_auth
 def detalhe(contract_id):
@@ -402,6 +404,21 @@ def detalhe(contract_id):
     signers = sb.table("contract_signers").select(
         "user_id, role, share_pct, signed, signed_at, perfis(nome, nome_artistico, nome_completo)"
     ).eq("contract_id", contract_id).execute().data or []
+
+    # Contratos bilaterais (não trilaterais): Gravan é EDITORA DETENTORA DOS DIREITOS.
+    # Se ainda não consta nos signers (contratos gerados antes da mudança), injeta agora.
+    eh_trilateral = bool(c.get("trilateral"))
+    gravan_ja_presente = any(s.get("user_id") == GRAVAN_EDITORA_UUID for s in signers)
+    if not eh_trilateral and not gravan_ja_presente:
+        signers.append({
+            "user_id":   GRAVAN_EDITORA_UUID,
+            "role":      "editora_detentora",
+            "share_pct": None,
+            "signed":    True,
+            "signed_at": c.get("created_at"),
+            "perfis":    {"nome": "GRAVAN Editora Musical Ltda.", "nome_completo": "GRAVAN Editora Musical Ltda.", "nome_artistico": None},
+        })
+
     obra = sb.table("obras").select("nome").eq("id", c["obra_id"]).single().execute().data or {}
     c["signers"] = signers
     c["obra_nome"] = obra.get("nome")
