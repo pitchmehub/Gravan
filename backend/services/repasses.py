@@ -266,15 +266,6 @@ def creditar_wallets_por_transacao(
     """
     sb = get_supabase()
 
-    # ── DEBUG ESCROW: registra QUEM chamou esta função, com stack trace ──
-    import traceback as _tb
-    _stack_str = "".join(_tb.format_stack(limit=15))
-    logger.warning(
-        "[ESCROW-DEBUG] creditar_wallets_por_transacao CHAMADA | transacao=%s | "
-        "publisher_override=%s\n=== STACK TRACE ===\n%s=== FIM ===",
-        transacao_id, publisher_id_override, _stack_str,
-    )
-
     # ── GUARDA CENTRAL DE ESCROW (primeira instrução, sem exceção) ──────────
     if not _escrow_guard(transacao_id, sb, caller="creditar_wallets_por_transacao"):
         return {"status": "escrow_bloqueado"}
