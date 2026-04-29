@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from db.supabase_client import get_supabase
 from utils.crypto import decrypt_pii
 
-GRAVAN_EDITORA_UUID   = "00000000-0000-0000-0000-000000000001"
+GRAVAN_EDITORA_UUID   = "e96bd8af-dfb8-4bf1-9ba5-7746207269cd"
 GRAVAN_RAZAO_SOCIAL   = "GRAVAN EDITORA MUSICAL LTDA."
 GRAVAN_CNPJ           = "64.342.514/0001-08"
 GRAVAN_ENDERECO       = "Rio de Janeiro/RJ"

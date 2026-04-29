@@ -68,7 +68,7 @@ def detalhes(cid):
     return jsonify(c)
 
 
-GRAVAN_EDITORA_UUID = "00000000-0000-0000-0000-000000000001"
+GRAVAN_EDITORA_UUID = "e96bd8af-dfb8-4bf1-9ba5-7746207269cd"
 
 
 @contratos_edicao_bp.post("/<cid>/assinar")

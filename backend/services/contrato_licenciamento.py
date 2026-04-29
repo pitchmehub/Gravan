@@ -232,7 +232,7 @@ def _decrypt(val: str) -> str:
 
 
 # UUID do usuário phantom Gravan — nunca notificado, assina automaticamente
-GRAVAN_EDITORA_UUID = "00000000-0000-0000-0000-000000000001"
+GRAVAN_EDITORA_UUID = "e96bd8af-dfb8-4bf1-9ba5-7746207269cd"
 
 # Roles permitidos para a Gravan no contrato, em ordem de preferência.
 # Se a migration que adiciona 'editora_detentora' ainda não foi rodada no

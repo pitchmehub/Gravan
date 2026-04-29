@@ -114,7 +114,7 @@ def gerar_contrato_edicao(obra_id: str, autor_id: str, publisher_id: str) -> dic
     html = "<pre style='white-space:pre-wrap;font-family:Georgia,serif;font-size:14px;line-height:1.6'>" + \
            texto.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + "</pre>"
 
-    GRAVAN_EDITORA_UUID = "00000000-0000-0000-0000-000000000001"
+    GRAVAN_EDITORA_UUID = "e96bd8af-dfb8-4bf1-9ba5-7746207269cd"
     gravan_e_publisher = (publisher_id == GRAVAN_EDITORA_UUID)
     agora_iso = datetime.now(timezone.utc).isoformat()
 
