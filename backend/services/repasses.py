@@ -7,6 +7,18 @@ Regra B confirmada pelo usuário:
 
 Taxas Stripe são deduzidas ANTES do split (item 9): usamos o `net` do
 balance_transaction como base de cálculo, então todos pagam proporcionalmente.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REGRA DE ESCROW — ACIMA DE TODAS AS OUTRAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NENHUM saldo é creditado na carteira de ninguém enquanto o contrato
+de licenciamento da transação estiver com status != 'concluído'.
+
+A função _escrow_guard() é o ponto único de verificação e DEVE ser a
+primeira chamada em QUALQUER função que credite wallets ou dispare
+Stripe Transfers. Toda nova função de crédito futura deve chamar
+_escrow_guard() antes de qualquer outra lógica.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 import os
 import logging
@@ -20,6 +32,64 @@ from db.supabase_client import get_supabase
 from services.finance import fee_rate_for_plano, EDITORA_RATE
 
 logger = logging.getLogger("gravan.repasses")
+
+
+# ══════════════════════════════════════════════════════════════
+# GUARDA CENTRAL DE ESCROW
+# ══════════════════════════════════════════════════════════════
+def _escrow_guard(transacao_id: str, sb, caller: str = "desconhecido") -> bool:
+    """
+    Verifica se o contrato de licenciamento vinculado à transação está
+    com status 'concluído' (todas as partes assinaram).
+
+    RETORNA:
+      True  → contrato concluído, pode creditar.
+      False → contrato não concluído ou não encontrado, BLOQUEIA tudo.
+
+    REGRA ABSOLUTA: esta função DEVE ser a primeira chamada em qualquer
+    caminho de código que credite wallets ou dispare Stripe Transfers.
+    Em caso de dúvida, BLOQUEIA (fail-safe).
+    """
+    try:
+        row = sb.table("contracts").select("id, status").eq(
+            "transacao_id", transacao_id
+        ).limit(1).execute()
+
+        if not row.data:
+            logger.error(
+                "ESCROW BLOQUEADO [%s]: transação '%s' não possui contrato vinculado. "
+                "Nenhuma carteira será creditada. (Possível chamada prematura antes de "
+                "gerar_contrato_licenciamento ser concluído.)",
+                caller, transacao_id,
+            )
+            return False
+
+        status = row.data[0].get("status", "")
+        contract_id = row.data[0].get("id", "")
+
+        if status not in ("concluído", "concluido"):
+            logger.error(
+                "ESCROW BLOQUEADO [%s]: contrato %s da transação '%s' está '%s' "
+                "(necessário: 'concluído'). Nenhuma carteira será creditada enquanto "
+                "o contrato estiver 'Aguardando assinaturas'.",
+                caller, contract_id, transacao_id, status,
+            )
+            return False
+
+        logger.info(
+            "ESCROW LIBERADO [%s]: contrato %s da transação '%s' está '%s'. "
+            "Prosseguindo com crédito de carteiras.",
+            caller, contract_id, transacao_id, status,
+        )
+        return True
+
+    except Exception as exc:
+        logger.error(
+            "ESCROW BLOQUEADO [%s]: exceção ao verificar contrato da transação '%s': %s. "
+            "Bloqueando por segurança (fail-safe).",
+            caller, transacao_id, exc,
+        )
+        return False
 
 
 def _ensure_key():
@@ -117,67 +187,14 @@ def creditar_wallets_por_transacao(
     manualmente em /saques.
     Idempotente: se já creditou pra essa transação, não duplica.
 
-    ESCROW: Só credita se houver um contrato de licenciamento com
-    status='concluído' vinculado a esta transação. Se o contrato ainda
-    estiver 'pendente' (não assinado), bloqueia e loga o erro.
-
-    `publisher_id_override`: se informado, usa essa editora (em vez do
-    publisher_id do titular). Usado pelo fluxo de oferta trilateral
-    para creditar a editora terceira que aceitou a oferta.
+    ESCROW: usa _escrow_guard() — regra absoluta acima de tudo.
+    Nenhuma carteira é creditada enquanto o contrato estiver pendente.
     """
     sb = get_supabase()
 
-    # ── GUARDA DE ESCROW ────────────────────────────────────────────────────
-    # Garante que o contrato de licenciamento está CONCLUÍDO (todas as partes
-    # assinaram) antes de qualquer crédito de wallet.
-    # Bloqueia QUALQUER caminho de código — webhook antigo, trigger, chamada
-    # direta — que tente creditar antes da conclusão do contrato.
-    #
-    # Regras:
-    #   • Contrato encontrado com status != 'concluído' → BLOQUEIA
-    #   • Contrato NÃO encontrado                       → BLOQUEIA
-    #     (o contrato é vinculado por transacao_id em todos os fluxos legítimos
-    #      antes de creditar; ausência de contrato indica chamada prematura)
-    #   • Contrato encontrado com status = 'concluído'  → PERMITE
-    #   • Exceção ao consultar                          → BLOQUEIA (fail-safe)
-    try:
-        contract_row = sb.table("contracts").select("id, status").eq(
-            "transacao_id", transacao_id
-        ).limit(1).execute()
-
-        if not contract_row.data:
-            logger.error(
-                "ESCROW BLOQUEADO: creditar_wallets_por_transacao para transação %s "
-                "não encontrou contrato vinculado. Chamada prematura ou inválida. "
-                "Wallets NÃO serão creditadas.",
-                transacao_id,
-            )
-            return {"status": "escrow_bloqueado_sem_contrato"}
-
-        contract_status = contract_row.data[0].get("status", "")
-        if contract_status not in ("concluído", "concluido"):
-            logger.error(
-                "ESCROW BLOQUEADO: creditar_wallets_por_transacao para transação %s "
-                "mas contrato está '%s' (esperado: 'concluído'). "
-                "Wallets NÃO serão creditadas.",
-                transacao_id,
-                contract_status,
-            )
-            return {"status": "escrow_bloqueado", "contract_status": contract_status}
-
-        logger.info(
-            "ESCROW OK: contrato concluído para transação %s — prosseguindo com crédito.",
-            transacao_id,
-        )
-
-    except Exception as _eg:
-        logger.error(
-            "ESCROW BLOQUEADO (exceção): falha ao verificar contrato para transação %s: %s. "
-            "Bloqueando por segurança.",
-            transacao_id,
-            _eg,
-        )
-        return {"status": "escrow_bloqueado_excecao", "erro": str(_eg)}
+    # ── GUARDA CENTRAL DE ESCROW (primeira instrução, sem exceção) ──────────
+    if not _escrow_guard(transacao_id, sb, caller="creditar_wallets_por_transacao"):
+        return {"status": "escrow_bloqueado"}
 
     # Idempotência: se já tem registro de pagamento, ignora
     ja = sb.table("pagamentos_compositores").select("id").eq(
@@ -423,9 +440,16 @@ def gerar_repasses_para_transacao(transacao_id: str) -> dict:
     """
     [LEGADO/OPCIONAL] Modo de transfer automático por venda.
     Hoje a plataforma usa wallet+saque manual; mantido aqui caso queira reativar.
+
+    ESCROW: usa _escrow_guard() — regra absoluta acima de tudo.
+    Nenhum Transfer Stripe é disparado enquanto o contrato estiver pendente.
     """
     _ensure_key()
     sb = get_supabase()
+
+    # ── GUARDA CENTRAL DE ESCROW (primeira instrução, sem exceção) ──────────
+    if not _escrow_guard(transacao_id, sb, caller="gerar_repasses_para_transacao"):
+        return {"status": "escrow_bloqueado"}
 
     # Já gerado?
     existing = sb.table("repasses").select("id").eq("transacao_id", transacao_id).limit(1).execute()
