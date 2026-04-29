@@ -269,8 +269,9 @@ export default function NotificationDetailModal({ notif, onClose, onChange }) {
                   </div>
                   <details className="ndm-details">
                     <summary>Ler texto integral do termo jurídico</summary>
-                    <div className="ndm-termo"
-                         dangerouslySetInnerHTML={{ __html: detalheExtra.termo_html }} />
+                    <pre className="ndm-termo" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, fontFamily: 'Georgia, "Times New Roman", serif' }}>
+                      {detalheExtra.termo_text || detalheExtra.termo_html}
+                    </pre>
                   </details>
                   {detalheExtra.termo_aceito_pelo_artista_em && (
                     <p className="ndm-muted small">

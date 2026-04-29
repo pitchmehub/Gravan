@@ -133,7 +133,7 @@ export default function Convites() {
                    style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
          </div>
 
-         <div style={termoBox} dangerouslySetInnerHTML={{ __html: aberto.termo_html }} />
+         <pre style={termoBox}>{aberto.termo_text || aberto.termo_html}</pre>
 
          {aberto.status === 'pendente' ? (
            !acao ? (
@@ -188,4 +188,4 @@ const alertOk = { padding: 12, background: 'rgba(34,197,94,.1)', border: '1px so
 const alertErr= { padding: 12, background: 'rgba(239,68,68,.1)', border: '1px solid #ef4444', borderRadius: 8, marginBottom: 16, fontSize: 13, color: '#c0392b' }
 const modalBg = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }
 const modalBox= { background: '#fff', borderRadius: 14, maxWidth: 760, width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: 20, boxShadow: '0 20px 60px rgba(0,0,0,.3)' }
-const termoBox= { background: '#FAFAFA', border: '1px solid var(--border)', borderRadius: 8, padding: 16, maxHeight: '50vh', overflowY: 'auto' }
+const termoBox= { background: '#FAFAFA', border: '1px solid var(--border)', borderRadius: 8, padding: 20, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 13, lineHeight: 1.85, margin: 0 }

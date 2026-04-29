@@ -25,6 +25,7 @@ Endpoints:
   DELETE /api/agregados/<aid>                    → desvincula
   GET    /api/agregados/<aid>/dashboard          → dashboard do agregado
 """
+import re
 import secrets
 from datetime import datetime, timezone
 
@@ -464,10 +465,22 @@ def listar_convites_recebidos():
     return jsonify(items)
 
 
+def _html_para_text(html: str) -> str:
+    """Extrai o texto puro de um HTML de termo, preservando quebras de linha."""
+    if not html:
+        return ""
+    t = re.sub(r'<br\s*/?>', '\n', html, flags=re.IGNORECASE)
+    t = re.sub(r'</(p|div|h[1-6]|li|tr|section|article)>', '\n', t, flags=re.IGNORECASE)
+    t = re.sub(r'<[^>]+>', '', t)
+    t = t.replace('&nbsp;', ' ').replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&').replace('&quot;', '"')
+    t = re.sub(r'\n{3,}', '\n\n', t)
+    return t.strip()
+
+
 @agregados_bp.get("/convites/<cid>/termo")
 @require_auth
 def ver_termo(cid):
-    """HTML do termo. Visível para a editora dona ou para o artista convidado."""
+    """Texto original do termo. Visível para a editora dona ou para o artista convidado."""
     sb = get_supabase()
     c = sb.table("agregado_convites").select("*").eq("id", cid).maybe_single().execute()
     if not c or not c.data:
@@ -485,6 +498,7 @@ def ver_termo(cid):
     return jsonify({
         "id":           cv["id"],
         "termo_html":   cv["termo_html"],
+        "termo_text":   _html_para_text(cv.get("termo_html", "")),
         "termo_versao": cv.get("termo_versao"),
         "modo":         cv.get("modo"),
         "status":       cv.get("status"),
