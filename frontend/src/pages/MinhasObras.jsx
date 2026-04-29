@@ -31,11 +31,20 @@ export default function MinhasObras() {
  .from('coautorias')
  .select('share_pct, is_titular, obras(id, nome, genero, preco_cents, status, audio_path, titular_id, created_at, cover_url, publisher_id, gravan_editora_id)')
  .eq('perfil_id', perfil.id)
- setObras((data ?? [])
+ const lista = (data ?? [])
  .filter(c => c.obras)
  .map(c => ({ ...c.obras, share_pct: c.share_pct, sou_titular: c.is_titular }))
  .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
- )
+ const publisherIds = [...new Set(lista.filter(o => o.publisher_id && !o.gravan_editora_id).map(o => o.publisher_id))]
+ let publisherMap = {}
+ if (publisherIds.length > 0) {
+ const { data: pubs } = await supabase.from('perfis').select('id, nome, nome_artistico').in('id', publisherIds)
+ publisherMap = Object.fromEntries((pubs || []).map(p => [p.id, p.nome_artistico || p.nome || 'Editora parceira']))
+ }
+ setObras(lista.map(o => ({
+ ...o,
+ _publisher_nome: o.publisher_id && !o.gravan_editora_id ? (publisherMap[o.publisher_id] || 'Editora parceira vinculada') : null,
+ })))
  } finally { setLoading(false) }
  }
 
@@ -158,9 +167,9 @@ export default function MinhasObras() {
  Editora: Gravan Editora Musical
  </div>
  )}
- {obra.publisher_id && !obra.gravan_editora_id && (
+ {obra._publisher_nome && (
  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
- Editora parceira vinculada
+ Editora: {obra._publisher_nome}
  </div>
  )}
  </div>

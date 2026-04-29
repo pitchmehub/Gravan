@@ -358,12 +358,24 @@ function AnalyticsDashboard() {
   const [erro, setErro] = useState('')
   const isPro = isPerfilPro(perfil)
 
-  useEffect(() => {
+  function fetchResumo() {
     api.get('/analytics/resumo')
       .then(setData)
       .catch(e => setErro(e.message))
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => {
+    fetchResumo()
+    function onFocus() { fetchResumo() }
+    function onVisible() { if (document.visibilityState === 'visible') fetchResumo() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, []) // eslint-disable-line
 
   return (
     <div data-testid="analytics-page" style={{ padding: '32px 20px', maxWidth: 1100, margin: '0 auto' }}>

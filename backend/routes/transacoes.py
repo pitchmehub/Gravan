@@ -65,26 +65,37 @@ def minhas_vendas():
     if tx_ids:
         try:
             tx = (sb.table("transacoes")
-                    .select("id, valor_cents, status, created_at, obra_id, comprador_id, "
-                            "obras(id, nome, titular_id), "
-                            "comprador:perfis!comprador_id(id, nome, nome_completo, nome_artistico)")
+                    .select("id, valor_cents, status, created_at, obra_id, comprador_id")
                     .in_("id", tx_ids).execute()).data or []
             tx_map = {t["id"]: t for t in tx}
         except Exception:
-            try:
-                tx = (sb.table("transacoes")
-                        .select("id, valor_cents, status, created_at, obra_id, comprador_id")
-                        .in_("id", tx_ids).execute()).data or []
-                tx_map = {t["id"]: t for t in tx}
-            except Exception:
-                tx_map = {}
+            tx_map = {}
 
-    titular_ids = set()
-    for t in tx_map.values():
-        obra = t.get("obras") or {}
-        if obra.get("titular_id"):
-            titular_ids.add(obra["titular_id"])
+    # Busca obras e compradores separadamente (mais robusto que JOINs aninhados)
+    obra_ids     = list({t["obra_id"]     for t in tx_map.values() if t.get("obra_id")})
+    comprador_ids = list({t["comprador_id"] for t in tx_map.values() if t.get("comprador_id")})
 
+    obra_map = {}
+    if obra_ids:
+        try:
+            obs = (sb.table("obras")
+                     .select("id, nome, titular_id")
+                     .in_("id", obra_ids).execute()).data or []
+            obra_map = {o["id"]: o for o in obs}
+        except Exception:
+            pass
+
+    comprador_map = {}
+    if comprador_ids:
+        try:
+            comps = (sb.table("perfis")
+                       .select("id, nome, nome_completo, nome_artistico")
+                       .in_("id", comprador_ids).execute()).data or []
+            comprador_map = {p["id"]: p for p in comps}
+        except Exception:
+            pass
+
+    titular_ids = {o["titular_id"] for o in obra_map.values() if o.get("titular_id")}
     titular_map = {}
     if titular_ids:
         try:
@@ -100,9 +111,9 @@ def minhas_vendas():
     transacoes_unicas = set()
     for p in pagamentos:
         t = tx_map.get(p.get("transacao_id")) or {}
-        obra = t.get("obras") or {}
+        obra = obra_map.get(t.get("obra_id")) or {}
         titular = titular_map.get(obra.get("titular_id")) or {}
-        comprador = t.get("comprador") or {}
+        comprador = comprador_map.get(t.get("comprador_id")) or {}
         recebido = int(p.get("valor_cents") or 0)
         total_cents += recebido
         if p.get("transacao_id"):

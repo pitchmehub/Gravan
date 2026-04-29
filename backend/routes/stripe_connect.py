@@ -147,14 +147,10 @@ def criar_onboarding():
                 },
                 business_type="individual",
                 metadata={"perfil_id": str(perfil["id"])},
-                # Payout manual: o saldo na conta Stripe Connect só sai
-                # quando NÓS dispararmos um Transfer (controlado pelo
-                # fluxo de saque mensal com janela 24h+OTP).
-                settings={
-                    "payouts": {
-                        "schedule": {"interval": "manual"},
-                    },
-                },
+                # Nota: Brasil não suporta payout schedule "manual" via Stripe Connect.
+                # O controle de saques é feito ao nível de Transfer (fluxo saque mensal 24h+OTP),
+                # não ao nível de payout. Removemos o settings.payouts para evitar o erro
+                # "You cannot be on a manual payout plan in country BR".
             )
             account_id = acc.id
             if perfil.get("_migration_pendente"):

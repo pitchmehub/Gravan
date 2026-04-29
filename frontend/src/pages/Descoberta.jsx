@@ -344,13 +344,8 @@ export default function Descoberta() {
 
  async function selecionarCompositor(comp) {
  if (!comp?.id) return
- const nome = comp.nome_artistico || comp.nome || ''
- // Mantém o nome do perfil escolhido na barra para que, ao reabrir a busca,
- // o usuário veja "Baby Boy Records" em vez do que ele havia digitado ("Bab").
- if (nome) {
- setBusca(nome)
- try { localStorage.setItem('gravan_ultima_busca', nome) } catch (_) {}
- }
+ // Limpa busca salva para que ao voltar a Descoberta a tela apareça limpa
+ try { localStorage.removeItem('gravan_ultima_busca') } catch (_) {}
  navigate(`/perfil/${comp.id}`)
  }
 

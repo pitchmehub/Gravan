@@ -99,8 +99,22 @@ export default function PerfilPublico() {
           titular_nome: c.obras?.perfis?.nome_artistico || c.obras?.perfis?.nome,
         }))
 
+      // Busca contagem de plays para ordenar as mais ouvidas no topo
+      const obraIds = lista.map(o => o.id)
+      let playsMap = {}
+      if (obraIds.length > 0) {
+        const { data: analytics } = await supabase
+          .from('obra_analytics')
+          .select('obra_id, plays_count')
+          .in('obra_id', obraIds)
+        playsMap = Object.fromEntries((analytics || []).map(a => [a.obra_id, Number(a.plays_count) || 0]))
+      }
+      const listaOrdenada = lista
+        .map(o => ({ ...o, plays_count: playsMap[o.id] || 0 }))
+        .sort((a, b) => b.plays_count - a.plays_count)
+
       setPerfil(p)
-      setObras(lista)
+      setObras(listaOrdenada)
       setAtualizadoEm(new Date())
     } catch (e) {
       setErro(e.message)

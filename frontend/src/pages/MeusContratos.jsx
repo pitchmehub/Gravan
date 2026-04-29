@@ -152,50 +152,49 @@ export default function MeusContratos() {
      {/* Contratos de Edição (autor ⇄ editora) */}
      {edicaoLista.length > 0 && (
       <section style={{ marginBottom: 30 }}>
-       <h2 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Edição (autor ⇄ editora)</h2>
-       <div style={{ border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 640 }}>
-         <thead style={{ background: 'var(--surface-2, #fafafa)' }}>
-          <tr>
-           <th style={th}>Contrato</th>
-           <th style={th}>Split (autor)</th>
-           <th style={th}>Status</th>
-           <th style={{ ...th, textAlign: 'right' }}>Ações</th>
-          </tr>
-         </thead>
-         <tbody>
-          {edicaoLista.map(c => {
-           const sl = statusLabel(c.status)
-           const podeAssinar = c.status !== 'assinado' && c.status !== 'cancelado'
-           return (
-            <tr key={c.id} style={{ borderTop: '1px solid var(--border)' }}>
-             <td style={td}>
-              <div style={{ fontWeight: 600, fontSize: 13 }}>
-               {c.obra_nome || 'Obra'}
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-               {c.created_at && new Date(c.created_at).toLocaleDateString('pt-BR')}
-               {' · '}Contrato de Edição Musical
-              </div>
-             </td>
-             <td style={td}>{c.share_pct}%</td>
-             <td style={td}>
-              <span style={{ fontSize: 11, padding: '2px 8px', background: sl.bg, color: sl.cor, borderRadius: 4 }}>{sl.txt}</span>
-             </td>
-             <td style={{ ...td, textAlign: 'right' }}>
-              <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end' }}>
-               <button className="btn"
-                style={{ fontSize: 12, padding: '6px 12px', border: '1px solid var(--border)', background: 'transparent' }}
-                onClick={() => abrirEdicao(c)}>
-                {podeAssinar ? 'Ver e assinar' : 'Ver contrato'}
-               </button>
-              </div>
-             </td>
-            </tr>
-           )
-          })}
-         </tbody>
-        </table>
+       <div style={{ display: 'grid', gap: 12 }}>
+        {edicaoLista.map((c, i) => {
+         const sl = statusLabel(c.status)
+         const assinado = c.status === 'assinado' || c.status === 'cancelado'
+         const euSouAutorCard = c.autor_id === user?.id
+         const jaAssinou = euSouAutorCard ? !!c.signed_by_autor_at : !!c.signed_by_publisher_at
+         const precisaAssinar = !assinado && !jaAssinou
+         return (
+          <div key={c.id} data-testid={`edicao-${i}`} style={{
+           padding: 16, background: '#fff', border: '1px solid var(--border)',
+           borderRadius: 12,
+           boxShadow: precisaAssinar ? '0 0 0 2px #f59e0b inset' : 'none',
+          }}>
+           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 200 }}>
+             <div style={{ fontWeight: 700, fontSize: 15 }}>{c.obra_nome || 'Obra'}</div>
+             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+              {euSouAutorCard ? 'Autor' : 'Editora'} · Split autor: {c.share_pct}% · {c.created_at && new Date(c.created_at).toLocaleDateString('pt-BR')}
+             </div>
+            </div>
+            <span style={{ fontSize: 11, padding: '3px 8px', background: sl.bg, color: sl.cor, fontWeight: 600, borderRadius: 4 }}>{sl.txt}</span>
+            {jaAssinou
+             ? <span style={{ fontSize: 11, color: '#0E6B2B', fontWeight: 600 }}>✓ você assinou</span>
+             : !assinado && (
+              <span style={{ fontSize: 11, color: '#7A4D00', fontWeight: 600 }}>⏱ aguardando sua assinatura</span>
+             )}
+            {precisaAssinar ? (
+             <button className="btn btn-primary"
+              style={{ fontSize: 13, padding: '8px 16px', fontWeight: 700, background: '#f59e0b', borderColor: '#f59e0b', color: '#fff' }}
+              onClick={() => abrirEdicao(c)}>
+              Assinar contrato
+             </button>
+            ) : (
+             <button className="btn btn-ghost"
+              style={{ fontSize: 12, padding: '6px 12px' }}
+              onClick={() => abrirEdicao(c)}>
+              Ver contrato
+             </button>
+            )}
+           </div>
+          </div>
+         )
+        })}
        </div>
       </section>
      )}
