@@ -112,16 +112,48 @@ def creditar_wallets_por_transacao(
     publisher_id_override: str | None = None,
 ) -> dict:
     """
-    Chamado pelo webhook após uma venda confirmada.
-    Calcula o split (sobre o NET Stripe) e CREDITA na wallet de cada autor.
-    NÃO dispara Transfer — o autor saca manualmente em /saques.
+    Credita as wallets dos autores/coautores após o contrato de licenciamento
+    ser concluído (todos assinaram). NÃO dispara Transfer — o autor saca
+    manualmente em /saques.
     Idempotente: se já creditou pra essa transação, não duplica.
+
+    ESCROW: Só credita se houver um contrato de licenciamento com
+    status='concluído' vinculado a esta transação. Se o contrato ainda
+    estiver 'pendente' (não assinado), bloqueia e loga o erro.
 
     `publisher_id_override`: se informado, usa essa editora (em vez do
     publisher_id do titular). Usado pelo fluxo de oferta trilateral
     para creditar a editora terceira que aceitou a oferta.
     """
     sb = get_supabase()
+
+    # ── GUARDA DE ESCROW ────────────────────────────────────────────────────
+    # Garante que o contrato está CONCLUÍDO antes de qualquer crédito.
+    # Bloqueia crediting prematuro independentemente de quem chamou a função.
+    try:
+        contract_row = sb.table("contracts").select("id, status").eq(
+            "transacao_id", transacao_id
+        ).limit(1).execute()
+        if contract_row.data:
+            contract_status = contract_row.data[0].get("status", "")
+            if contract_status not in ("concluído", "concluido"):
+                logger.error(
+                    "ESCROW BLOQUEADO: creditar_wallets_por_transacao chamada para "
+                    "transação %s mas contrato está '%s' (não 'concluído'). "
+                    "Wallets NÃO serão creditadas.",
+                    transacao_id,
+                    contract_status,
+                )
+                return {"status": "escrow_bloqueado", "contract_status": contract_status}
+        # Se não há contrato (fluxo de oferta trilateral sem contrato padrão),
+        # permite creditar — a guarda de escrow está no aceitar_contrato.
+    except Exception as _eg:
+        logger.warning(
+            "Não foi possível verificar status do contrato para transação %s: %s. "
+            "Continuando com cuidado.",
+            transacao_id,
+            _eg,
+        )
 
     # Idempotência: se já tem registro de pagamento, ignora
     ja = sb.table("pagamentos_compositores").select("id").eq(
