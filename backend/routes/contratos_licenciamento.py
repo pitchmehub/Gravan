@@ -402,7 +402,8 @@ def detalhe(contract_id):
     if not c:
         abort(404, description="Contrato não encontrado.")
     signers = sb.table("contract_signers").select(
-        "user_id, role, share_pct, signed, signed_at, perfis(nome, nome_artistico, nome_completo)"
+        "user_id, role, share_pct, signed, signed_at, ip_hash, user_agent, "
+        "perfis(nome, nome_artistico, nome_completo, email)"
     ).eq("contract_id", contract_id).execute().data or []
 
     # Contratos bilaterais (não trilaterais): Gravan é EDITORA DETENTORA DOS DIREITOS.
@@ -449,7 +450,12 @@ def aceitar(contract_id):
         abort(409, description="Este contrato foi cancelado.")
 
     try:
-        out = aceitar_contrato(contract_id, g.user.id, ip_hash=hash_ip(request.remote_addr or ""))
+        out = aceitar_contrato(
+            contract_id,
+            g.user.id,
+            ip_hash=hash_ip(request.remote_addr or ""),
+            user_agent=request.headers.get("User-Agent", "")[:500],
+        )
     except ValueError as e:
         abort(422, description=str(e))
     return jsonify({"ok": True, **out}), 200

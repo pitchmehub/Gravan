@@ -1020,13 +1020,19 @@ def gerar_contrato_trilateral(oferta_id: str) -> dict | None:
     return contract
 
 
-def aceitar_contrato(contract_id: str, user_id: str, ip_hash: str | None = None) -> dict:
+def aceitar_contrato(
+    contract_id: str,
+    user_id: str,
+    ip_hash: str | None = None,
+    user_agent: str | None = None,
+) -> dict:
     """Marca o signer como assinado. Se todos assinaram → status=concluído."""
     sb = get_supabase()
     upd = sb.table("contract_signers").update({
-        "signed":    True,
-        "signed_at": datetime.now(timezone.utc).isoformat(),
-        "ip_hash":   ip_hash,
+        "signed":     True,
+        "signed_at":  datetime.now(timezone.utc).isoformat(),
+        "ip_hash":    ip_hash,
+        "user_agent": (user_agent or "")[:500] or None,
     }).eq("contract_id", contract_id).eq("user_id", user_id).execute()
     if not upd.data:
         raise ValueError("Você não é uma das partes deste contrato.")
@@ -1116,6 +1122,21 @@ def aceitar_contrato(contract_id: str, user_id: str, ip_hash: str | None = None)
             "status":       "concluído",
             "completed_at": datetime.now(timezone.utc).isoformat(),
         }).eq("id", contract_id).execute()
+
+        # Gera e grava o Certificado de Assinaturas Digitais permanentemente
+        try:
+            from services.certificado_assinaturas import gerar_certificado_assinaturas
+            cert_result = gerar_certificado_assinaturas(contract_id)
+            _clt_log.info(
+                "Certificado de assinaturas gerado para contrato %s: %s",
+                contract_id, cert_result,
+            )
+        except Exception as _ce:
+            _clt_log.error(
+                "Falha ao gerar certificado de assinaturas (contrato=%s): %s",
+                contract_id, _ce,
+            )
+
         try:
             sb.table("contract_events").insert({
                 "contract_id": contract_id,
