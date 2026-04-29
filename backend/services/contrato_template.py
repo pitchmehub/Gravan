@@ -105,7 +105,7 @@ CNPJ: {{plataforma_cnpj}}
 (EDITORA)
 """
 
-CONTRATO_VERSAO = "v3.0 - Abr/2026"
+CONTRATO_VERSAO = "v3.1 - Abr/2026"
 
 CONTRATO_PUBLISHER_TEMPLATE = """CONTRATO DE EDIÇÃO DE OBRAS MUSICAIS — EDITORA
 
@@ -143,8 +143,16 @@ CLÁUSULA SEGUNDA — DIREITOS
 CLÁUSULA TERCEIRA — ORIGINALIDADE
 3.1 O AUTOR declara que a OBRA é de sua autoria/coautoria, livre de plágio e de contratos prévios.
 
-CLÁUSULA QUARTA — REMUNERAÇÃO DA TERCEIRA BENEFICIÁRIA (FEE DE PLATAFORMA)
-4.1 Em razão da utilização da plataforma GRAVAN e dos serviços de infraestrutura tecnológica, gestão e disponibilização de obras musicais, a EDITORA reconhece o direito autônomo e exigível da GRAVAN, na qualidade de TERCEIRA BENEFICIÁRIA, de receber o equivalente a 5% (cinco por cento) sobre todos os valores brutos recebidos pela EDITORA decorrentes da exploração econômica das obras cadastradas na plataforma.
+CLÁUSULA QUARTA — REMUNERAÇÃO DO AUTOR
+4.1 A EDITORA pagará ao AUTOR sobre as receitas líquidas relativas à parte do AUTOR na OBRA ({{share_autor_pct}}%, conforme declarado no Considerando):
+  (a) Sincronização: 70% AUTOR / 30% EDITORA;
+  (b) Reprodução, distribuição digital, fonomecânicos: 75% AUTOR / 25% EDITORA;
+  (c) Execução pública: 75% AUTOR / 25% EDITORA — o percentual do AUTOR é pago diretamente ao AUTOR pela sociedade de autores competente; o percentual da EDITORA é distribuído conforme acordos registrados na plataforma.
+
+Parágrafo Único: Na hipótese de coautoria, os valores acima devidos ao AUTOR correspondem exclusivamente à sua participação de {{share_autor_pct}}% sobre a OBRA. Os demais coautores possuem contratos individuais com suas respectivas participações, e cada qual recebe sua parte de forma autônoma, conforme divisão registrada na plataforma GRAVAN.
+
+CLÁUSULA QUINTA — REMUNERAÇÃO DA TERCEIRA BENEFICIÁRIA (FEE DE PLATAFORMA)
+5.1 Em razão da utilização da plataforma GRAVAN e dos serviços de infraestrutura tecnológica, gestão e disponibilização de obras musicais, a EDITORA reconhece o direito autônomo e exigível da GRAVAN, na qualidade de TERCEIRA BENEFICIÁRIA, de receber o equivalente a 5% (cinco por cento) sobre todos os valores brutos recebidos pela EDITORA decorrentes da exploração econômica das obras cadastradas na plataforma.
 
 Parágrafo Primeiro: O percentual incidirá sobre todas as receitas, incluindo, mas não se limitando a cessão de direitos, sincronização, distribuição digital e execução pública.
 
@@ -161,13 +169,13 @@ Parágrafo Quarto: A EDITORA se compromete a manter registros financeiros e forn
 
 Parágrafo Quinto: O não pagamento dentro do prazo estipulado poderá resultar na suspensão da conta da EDITORA na plataforma e nas medidas legais cabíveis.
 
-CLÁUSULA QUINTA — PRAZO, TERRITÓRIO E RESCISÃO
-5.1 O presente Contrato terá vigência inicial de 5 (cinco) anos, contados da data de assinatura eletrônica, com renovação automática por igual período. A autorização é concedida em caráter mundial, sem limitação territorial.
+CLÁUSULA SEXTA — PRAZO, TERRITÓRIO E RESCISÃO
+6.1 O presente Contrato terá vigência inicial de 5 (cinco) anos, contados da data de assinatura eletrônica, com renovação automática por igual período. A autorização é concedida em caráter mundial, sem limitação territorial.
 
-5.2 Qualquer das PARTES poderá rescindi-lo ao término de cada período de 5 (cinco) anos, mediante comunicação formal e expressa enviada por e-mail ao endereço cadastrado na plataforma, com antecedência mínima de 30 (trinta) dias em relação ao final do período vigente; não havendo manifestação tempestiva, o contrato renova-se automaticamente. Toda e qualquer licença e exploração concedida durante a vigência reputar-se-á válida e definitiva.
+6.2 Qualquer das PARTES poderá rescindi-lo ao término de cada período de 5 (cinco) anos, mediante comunicação formal e expressa enviada por e-mail ao endereço cadastrado na plataforma, com antecedência mínima de 30 (trinta) dias em relação ao final do período vigente; não havendo manifestação tempestiva, o contrato renova-se automaticamente. Toda e qualquer licença e exploração concedida durante a vigência reputar-se-á válida e definitiva.
 
-CLÁUSULA SEXTA — FORO
-6.1 Fica eleito o foro da comarca da cidade do Rio de Janeiro/RJ.
+CLÁUSULA SÉTIMA — FORO
+7.1 Fica eleito o foro da comarca da cidade do Rio de Janeiro/RJ.
 
 ASSINATURAS ELETRÔNICAS
 Este instrumento é firmado eletronicamente, com registro de data, hora, IP anonimizado (SHA-256) e hash de integridade. A aceitação eletrônica por cada parte configura assinatura válida e vinculante (MP 2.200-2/2001; Lei 14.063/2020).
