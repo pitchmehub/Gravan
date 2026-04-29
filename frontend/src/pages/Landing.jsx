@@ -6,11 +6,38 @@ import GravanLogo from '../components/GravanLogo'
 
 const API_URL = import.meta.env.VITE_API_URL
 
+const BG_PHRASES = [
+  'Música brasileira ao mundo.',
+  'Licencie sua obra.',
+  'Do estúdio ao contrato.',
+  'Sua arte tem valor.',
+  'Conecte compositores e compradores.',
+  'Monetize seu talento.',
+  'Proteção contratual garantida.',
+  'Cada nota, um direito.',
+]
+
+const MUSIC_NOTES = [
+  { char: '♪', x: '6%',  y: '18%', size: 32, dur: 38, delay: 0 },
+  { char: '♫', x: '78%', y: '22%', size: 40, dur: 52, delay: 7 },
+  { char: '♩', x: '48%', y: '55%', size: 26, dur: 44, delay: 3 },
+  { char: '♬', x: '90%', y: '63%', size: 34, dur: 61, delay: 14 },
+  { char: '♭', x: '24%', y: '72%', size: 22, dur: 35, delay: 5 },
+  { char: '♮', x: '62%', y: '8%',  size: 24, dur: 48, delay: 18 },
+  { char: '♯', x: '33%', y: '42%', size: 20, dur: 55, delay: 10 },
+  { char: '♪', x: '93%', y: '40%', size: 28, dur: 42, delay: 22 },
+  { char: '♫', x: '16%', y: '52%', size: 22, dur: 33, delay: 8 },
+  { char: '♩', x: '55%', y: '80%', size: 18, dur: 46, delay: 16 },
+  { char: '♬', x: '12%', y: '84%', size: 30, dur: 57, delay: 2 },
+]
+
 export default function Landing() {
   const [showContato, setShowContato] = useState(false)
   const [stats, setStats] = useState(null)
   const [content, setContent] = useState(DEFAULT_CONTENT)
   const [navScrolled, setNavScrolled] = useState(false)
+  const [typerPhrase, setTyperPhrase] = useState('')
+  const typerState = useRef({ phraseIdx: 0, charIdx: 0, erasing: false })
   const { user, loading } = useAuth()
   const navigate = useNavigate()
 
@@ -77,6 +104,37 @@ export default function Landing() {
     const onScroll = () => setNavScrolled(window.scrollY > 24)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Typewriter effect for hero background phrases
+  useEffect(() => {
+    let timeout
+    function tick() {
+      const s = typerState.current
+      const phrase = BG_PHRASES[s.phraseIdx]
+      if (!s.erasing) {
+        if (s.charIdx < phrase.length) {
+          s.charIdx++
+          setTyperPhrase(phrase.slice(0, s.charIdx))
+          timeout = setTimeout(tick, 62 + Math.random() * 44)
+        } else {
+          s.erasing = true
+          timeout = setTimeout(tick, 2600)
+        }
+      } else {
+        if (s.charIdx > 0) {
+          s.charIdx--
+          setTyperPhrase(phrase.slice(0, s.charIdx))
+          timeout = setTimeout(tick, 26)
+        } else {
+          s.erasing = false
+          s.phraseIdx = (s.phraseIdx + 1) % BG_PHRASES.length
+          timeout = setTimeout(tick, 500)
+        }
+      }
+    }
+    timeout = setTimeout(tick, 1200)
+    return () => clearTimeout(timeout)
   }, [])
 
   // Scroll reveal via IntersectionObserver
@@ -161,6 +219,25 @@ export default function Landing() {
 
       {/* Hero Section */}
       <section className="hero" data-testid="hero-section">
+        <div className="hero-bg" aria-hidden="true">
+          {MUSIC_NOTES.map((n, i) => (
+            <span
+              key={i}
+              className="hero-note"
+              style={{
+                left: n.x,
+                top: n.y,
+                fontSize: `${n.size}px`,
+                animationDuration: `${n.dur}s`,
+                animationDelay: `${n.delay}s`,
+              }}
+            >{n.char}</span>
+          ))}
+          <div className="hero-typer">
+            <span className="typer-text">{typerPhrase}</span>
+            <span className="typer-cursor">|</span>
+          </div>
+        </div>
         <div className="hero-grid">
           <div className="hero-text">
             <div className="eyebrow">
@@ -483,6 +560,8 @@ export default function Landing() {
         /* ===================== HERO ===================== */
         .hero {
           border-bottom: 1px solid var(--border);
+          position: relative;
+          overflow: hidden;
         }
         .hero-grid {
           max-width: 1280px;
@@ -492,6 +571,60 @@ export default function Landing() {
           grid-template-columns: 1.1fr 0.9fr;
           gap: 72px;
           align-items: center;
+          position: relative;
+          z-index: 1;
+        }
+
+        /* ─── HERO BACKGROUND ANIMATION ─────────────────── */
+        .hero-bg {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          pointer-events: none;
+          overflow: hidden;
+        }
+        .hero-note {
+          position: absolute;
+          color: var(--text);
+          opacity: 0.07;
+          line-height: 1;
+          user-select: none;
+          animation: gvNoteFloat linear infinite;
+        }
+        @keyframes gvNoteFloat {
+          0%   { transform: translate(0px, 0px) rotate(0deg);    opacity: 0.05; }
+          25%  { transform: translate(8px, -16px) rotate(6deg);  opacity: 0.09; }
+          50%  { transform: translate(-5px, -28px) rotate(-4deg); opacity: 0.06; }
+          75%  { transform: translate(7px, -14px) rotate(8deg);  opacity: 0.10; }
+          100% { transform: translate(0px, 0px) rotate(0deg);    opacity: 0.05; }
+        }
+        .hero-typer {
+          position: absolute;
+          bottom: 30px;
+          left: 0;
+          right: 0;
+          text-align: center;
+          pointer-events: none;
+        }
+        .typer-text {
+          font-family: 'Space Grotesk', sans-serif;
+          font-size: 11px;
+          letter-spacing: 0.20em;
+          text-transform: uppercase;
+          color: var(--muted);
+          opacity: 0.6;
+        }
+        .typer-cursor {
+          font-family: monospace;
+          font-size: 12px;
+          color: var(--accent);
+          opacity: 0.7;
+          margin-left: 1px;
+          animation: gvBlink .9s steps(1) infinite;
+        }
+        @keyframes gvBlink {
+          0%, 100% { opacity: 0.7; }
+          50%       { opacity: 0;   }
         }
         .eyebrow {
           display: inline-flex;
