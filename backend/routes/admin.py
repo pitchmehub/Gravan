@@ -24,6 +24,10 @@ def _enforce_admin_on_all_routes():
     from middleware.auth import _get_cached_user, _cache_user
     from db.supabase_client import get_supabase as _gsb
 
+    # CORS preflight: precisa retornar 2xx sem auth — Flask-CORS responde.
+    if request.method == "OPTIONS":
+        return None
+
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
         abort(401, description="Token de autenticação ausente.")

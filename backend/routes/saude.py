@@ -29,6 +29,10 @@ def _enforce_admin():
     """Mesma camada de proteção do admin_bp: exige JWT + role administrador."""
     from middleware.auth import _get_cached_user, _cache_user
 
+    # CORS preflight: precisa retornar 2xx sem auth — Flask-CORS responde.
+    if request.method == "OPTIONS":
+        return None
+
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
         abort(401, description="Token de autenticação ausente.")
