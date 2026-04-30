@@ -17,6 +17,116 @@ const GENEROS_PERMITIDOS = [
  'Gospel', 'Forró', 'Pagode', 'RNB', 'RAP', 'OUTROS',
 ]
 
+const TAXA_PLATAFORMA = 0.25
+const TAXA_EDITORA    = 0.10
+
+function fmtBRL(v) {
+ if (!Number.isFinite(v)) return '—'
+ return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
+function ResumoSplit({ totalAutores, preco, temEditora, nomeTitular, nomesCoautores }) {
+ const precoNum = Number(String(preco || '').replace(',', '.'))
+ const temPreco = Number.isFinite(precoNum) && precoNum > 0
+ const fatiaAutoresPct = (1 - TAXA_PLATAFORMA - (temEditora ? TAXA_EDITORA : 0)) * 100
+ const porAutorPct = totalAutores > 0 ? fatiaAutoresPct / totalAutores : 0
+
+ const valorPlataforma = temPreco ? precoNum * TAXA_PLATAFORMA : null
+ const valorEditora    = temPreco && temEditora ? precoNum * TAXA_EDITORA : null
+ const valorAutoresTot = temPreco ? precoNum - (valorPlataforma || 0) - (valorEditora || 0) : null
+ const valorPorAutor   = temPreco && totalAutores > 0 ? valorAutoresTot / totalAutores : null
+
+ const Linha = ({ label, pct, valor, destaque, sublabel }) => (
+   <div style={{
+     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+     padding: '8px 12px', borderRadius: 8, gap: 10,
+     background: destaque ? 'rgba(34,197,94,.10)' : 'var(--surface-2)',
+     border: destaque ? '1px solid rgba(34,197,94,.35)' : '1px solid transparent',
+     marginBottom: 6,
+   }}>
+     <div style={{ minWidth: 0, flex: 1 }}>
+       <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+         {label}
+       </div>
+       {sublabel && (
+         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{sublabel}</div>
+       )}
+     </div>
+     <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+       <div style={{ fontSize: 13, fontWeight: 700, color: destaque ? '#16a34a' : 'var(--text)' }}>
+         {pct.toFixed(2)}%
+       </div>
+       {valor != null && (
+         <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{fmtBRL(valor)}</div>
+       )}
+     </div>
+   </div>
+ )
+
+ return (
+   <div style={{
+     marginTop: 16, padding: 14, borderRadius: 10,
+     background: 'var(--surface)', border: '1px dashed var(--border)',
+   }}>
+     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+       <strong style={{ fontSize: 13, color: 'var(--text)' }}>
+         Pré-visualização do split por venda
+       </strong>
+       <small style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+         {totalAutores} {totalAutores === 1 ? 'autor' : 'autores'} · divisão automática e igual
+       </small>
+     </div>
+
+     <Linha
+       label="Plataforma Gravan"
+       sublabel="taxa fixa de 25% sobre o valor bruto"
+       pct={TAXA_PLATAFORMA * 100}
+       valor={valorPlataforma}
+     />
+
+     {temEditora && (
+       <Linha
+         label="Editora vinculada"
+         sublabel="10% do valor bruto (10/75 do pool restante)"
+         pct={TAXA_EDITORA * 100}
+         valor={valorEditora}
+       />
+     )}
+
+     <Linha
+       label={nomeTitular}
+       sublabel="você (titular)"
+       pct={porAutorPct}
+       valor={valorPorAutor}
+       destaque
+     />
+
+     {nomesCoautores.map((nm, i) => (
+       <Linha
+         key={i}
+         label={nm}
+         sublabel="coautor"
+         pct={porAutorPct}
+         valor={valorPorAutor}
+       />
+     ))}
+
+     {!temPreco && (
+       <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+         Informe o preço de licenciamento da obra acima para ver os valores em reais.
+       </p>
+     )}
+
+     <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.5 }}>
+       Cálculo conforme Cláusula 9 dos Termos de Uso. A divisão entre autores
+       é <strong>obrigatoriamente igualitária</strong> e não pode ser
+       personalizada. Adicionar ou remover coautores acima recalcula o split
+       em tempo real.
+     </p>
+   </div>
+ )
+}
+
 export default function NovaObra() {
  const { perfil } = useAuth()
  const navigate = useNavigate()
@@ -349,7 +459,8 @@ export default function NovaObra() {
  <div className="card" style={{ marginBottom: 20 }}>
  <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>Coautores</h2>
  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
- Adicione os demais compositores que participaram da criação. Os ganhos serão divididos igualmente entre todos.
+ Adicione os demais compositores que participaram da criação.
+ <strong style={{ color: 'var(--text)' }}> O split é automático e obrigatoriamente igual</strong> entre todos os autores (regra pró rata — Cláusula 9 dos Termos de Uso).
  </p>
 
  <div style={{ marginBottom: 12 }}>
@@ -398,6 +509,15 @@ export default function NovaObra() {
  </small>
  </div>
  )}
+
+ {/* Resumo do split — visível e dinâmico */}
+ <ResumoSplit
+ totalAutores={1 + coautores.length}
+ preco={preco}
+ temEditora={obraEditada === true}
+ nomeTitular={perfil?.nome_artistico || perfil?.nome || 'Você'}
+ nomesCoautores={coautores.map(c => c.nome)}
+ />
  </div>
 
  {/* Obra já editada? */}

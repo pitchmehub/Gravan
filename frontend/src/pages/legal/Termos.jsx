@@ -381,10 +381,10 @@ export default function Termos() {
         de Proteção de Dados (Lei nº 13.709/2018) e Lei das Assinaturas
         Eletrônicas (Lei nº 14.063/2020 e MP 2.200-2/2001).
         <p style={{ marginTop: 14 }}>
-          Fica eleito o <b>foro da Comarca de São Paulo/SP</b> — cidade de
-          operação da Gravan — para dirimir qualquer controvérsia entre o
-          Usuário e a Gravan oriunda da relação de uso da Plataforma, com
-          expressa renúncia a qualquer outro, por mais privilegiado que seja.
+          Fica eleito o <b>foro da Comarca da Cidade do Rio de Janeiro/RJ</b>{' '}
+          para dirimir qualquer controvérsia entre o Usuário e a Gravan
+          oriunda da relação de uso da Plataforma, com expressa renúncia a
+          qualquer outro, por mais privilegiado que seja.
         </p>
       </Section>
 
