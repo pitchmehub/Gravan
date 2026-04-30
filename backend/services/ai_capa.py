@@ -145,29 +145,30 @@ def _rng_index(seed_str: str, n: int) -> int:
     return int.from_bytes(h[:4], "big") % max(1, n)
 
 
+NEGATIVE_PROMPT = (
+    "face, faces, human, person, people, man, woman, child, body, portrait, "
+    "silhouette, mannequin, anatomy, skin, eyes, mouth, nose, head, hair, hands, "
+    "fingers, crowd, figure, figurative, character, selfie, photography of person, "
+    "text, typography, letters, alphabet, numbers, digits, words, logo, watermark, "
+    "signature, calligraphy, font, label, caption, title, inscription, symbol, icon"
+)
+
+
 def _build_prompt(nome: str, genero: str, seed: int | None) -> str:
     """
-    Prompt premium para geração de capas musicais contemporâneas.
-    O nome da obra entra apenas para manter variação determinística via seed.
+    Prompt puramente positivo — descreve SÓ o que queremos.
+    Proibições ficam no negative_prompt separado, que é mais eficaz.
     """
     return (
-        "Create a high-end contemporary cover artwork with a modern, minimalistic and premium aesthetic. "
-        "STRICT RULES (NON-NEGOTIABLE): "
-        "Do NOT include any human figures, faces, facial features, silhouettes, mannequins, or anything that resembles a face or human anatomy. "
-        "Do NOT include any text, typography, letters, numbers, symbols, logos, or typographic elements of any kind. "
-        "Avoid any shapes or compositions that could be interpreted as eyes, mouth, head, or facial structure (even abstractly). "
-        "Do NOT include calligraphy, signatures, watermarks, or hidden text. "
-        "VISUAL DIRECTION: "
-        "Focus on abstract composition, textures, gradients, lighting, reflections, and geometric or organic forms. "
-        "Use a sophisticated and contemporary art direction inspired by luxury branding, modern album covers, and high-end editorial design. "
-        "Emphasize depth, contrast, and visual balance. "
-        "Prefer cinematic lighting, soft shadows, glow effects, or subtle reflections. "
-        "Materials can include glass, metal, liquid, fabric, smoke, or light-based elements. "
-        "STYLE: Ultra-clean, premium, futuristic or artistic. Minimalist but visually striking. High-resolution, sharp details, professional-grade composition. "
-        "COLOR: Use a controlled and cohesive color palette (can be monochromatic or limited palette). Avoid overly saturated or chaotic color schemes unless intentionally directed. "
-        "COMPOSITION: Centered or well-balanced layout. Strong focal point using abstract elements only. "
-        "OUTPUT: Square format (1:1), suitable for music or digital cover artwork. No borders, no frames, no text overlays. "
-        "The final result must feel like a premium contemporary cover used in global music or luxury creative platforms."
+        "High-end contemporary music cover artwork. "
+        "Pure abstract composition with premium aesthetic. "
+        "Cinematic lighting, soft shadows, glow effects and subtle reflections. "
+        "Abstract textures, gradients and geometric or organic forms. "
+        "Materials: glass, metal, liquid, fabric, smoke, light beams. "
+        "Inspired by luxury branding and high-end editorial design. "
+        "Minimalist but visually striking. Ultra-clean, professional-grade. "
+        "Controlled cohesive color palette. Strong focal point. "
+        "Perfect square 1:1 format. No borders, no frames."
     )
 
 
@@ -179,11 +180,12 @@ def gerar_url_capa(nome: str, genero: str, seed: int | None = None) -> str:
     prompt = _build_prompt(nome or "Música", genero or "OUTROS", seed)
     encoded = urllib.parse.quote(prompt, safe="")
     params = {
-        "width":   "768",
-        "height":  "768",
-        "nologo":  "true",
-        "enhance": "true",
-        "model":   "flux",
+        "width":    "768",
+        "height":   "768",
+        "nologo":   "true",
+        "enhance":  "true",
+        "model":    "flux",
+        "negative": urllib.parse.quote(NEGATIVE_PROMPT, safe=""),
     }
     if seed is not None:
         params["seed"] = str(seed)
