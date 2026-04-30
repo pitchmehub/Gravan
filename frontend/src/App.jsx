@@ -79,7 +79,7 @@ function RouteTracker() {
   useEffect(() => {
     const path = location.pathname + location.search
     // Não persiste rotas públicas/efêmeras
-    const ignorar = ['/', '/login', '/perfil/tipo']
+    const ignorar = ['/', '/login', '/perfil/tipo', '/termos', '/privacidade', '/direitos-autorais', '/redefinir-senha']
     if (ignorar.includes(location.pathname)) return
     try { localStorage.setItem('gravan_last_route', path) } catch {}
   }, [location.pathname, location.search])

@@ -19,9 +19,11 @@ export default function Landing() {
   useEffect(() => {
     if (loading || !user) return
     let destino = '/descoberta'
+    const rotasIgnoradas = ['/', '/login', '/termos', '/privacidade', '/direitos-autorais', '/redefinir-senha']
     try {
       const ultima = localStorage.getItem('gravan_last_route')
-      if (ultima && ultima !== '/' && ultima !== '/login') destino = ultima
+      const base = (ultima || '').split('?')[0]
+      if (ultima && !rotasIgnoradas.includes(base)) destino = ultima
     } catch { /* noop */ }
     navigate(destino, { replace: true })
   }, [user, loading, navigate])
