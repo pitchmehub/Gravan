@@ -189,9 +189,14 @@ export default function Landing() {
           </div>
           <div className="hero-media">
             <img
-              src={content.hero.imageUrl}
+              src={content.hero.imageUrl || '/hero-default.jpg'}
               alt="Hero"
               loading="eager"
+              onError={(e) => {
+                if (!e.currentTarget.src.endsWith('/hero-default.jpg')) {
+                  e.currentTarget.src = '/hero-default.jpg'
+                }
+              }}
             />
             <div className="hero-media-label">
               <span className="dot-rec" /> {content.hero.imageLabel}
