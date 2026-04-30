@@ -147,19 +147,27 @@ def _rng_index(seed_str: str, n: int) -> int:
 
 def _build_prompt(nome: str, genero: str, seed: int | None) -> str:
     """
-    Prompt simples e direto: pede arte anti-IA + Memphis design,
-    nada de visual genérico. O nome da obra entra apenas como referência para
-    a seed manter variação entre obras (sem renderizar texto na imagem).
+    Prompt premium para geração de capas musicais contemporâneas.
+    O nome da obra entra apenas para manter variação determinística via seed.
     """
     return (
-        f"Album cover for the song '{nome}'. "
-        f"Create art in anti-AI, Memphis design — nothing generic. "
-        f"Square 1:1 format. "
-        f"ABSOLUTELY NO faces, no people, no human figures, no portraits, "
-        f"no bodies, no hands, no eyes, no skin, no crowd. "
-        f"No text, no letters, no words, no numbers, no logo, no watermark, "
-        f"no signature, no typography of any kind. "
-        f"Pure abstract or symbolic art only."
+        "Create a high-end contemporary cover artwork with a modern, minimalistic and premium aesthetic. "
+        "STRICT RULES (NON-NEGOTIABLE): "
+        "Do NOT include any human figures, faces, facial features, silhouettes, mannequins, or anything that resembles a face or human anatomy. "
+        "Do NOT include any text, typography, letters, numbers, symbols, logos, or typographic elements of any kind. "
+        "Avoid any shapes or compositions that could be interpreted as eyes, mouth, head, or facial structure (even abstractly). "
+        "Do NOT include calligraphy, signatures, watermarks, or hidden text. "
+        "VISUAL DIRECTION: "
+        "Focus on abstract composition, textures, gradients, lighting, reflections, and geometric or organic forms. "
+        "Use a sophisticated and contemporary art direction inspired by luxury branding, modern album covers, and high-end editorial design. "
+        "Emphasize depth, contrast, and visual balance. "
+        "Prefer cinematic lighting, soft shadows, glow effects, or subtle reflections. "
+        "Materials can include glass, metal, liquid, fabric, smoke, or light-based elements. "
+        "STYLE: Ultra-clean, premium, futuristic or artistic. Minimalist but visually striking. High-resolution, sharp details, professional-grade composition. "
+        "COLOR: Use a controlled and cohesive color palette (can be monochromatic or limited palette). Avoid overly saturated or chaotic color schemes unless intentionally directed. "
+        "COMPOSITION: Centered or well-balanced layout. Strong focal point using abstract elements only. "
+        "OUTPUT: Square format (1:1), suitable for music or digital cover artwork. No borders, no frames, no text overlays. "
+        "The final result must feel like a premium contemporary cover used in global music or luxury creative platforms."
     )
 
 
