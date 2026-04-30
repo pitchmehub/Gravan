@@ -200,6 +200,11 @@ def create_app() -> Flask:
         try:
             payload = request.get_json(silent=True, force=True) or {}
             app.logger.warning("CSP-VIOLATION %s", payload)
+            try:
+                from routes.saude import record_csp_violation
+                record_csp_violation(payload)
+            except Exception:
+                pass
         except Exception:
             pass
         return ("", 204)
@@ -243,6 +248,8 @@ def create_app() -> Flask:
     app.register_blueprint(catalogo_bp, url_prefix="/api/catalogo")
     app.register_blueprint(admin_bp, url_prefix="/api/admin")
     app.register_blueprint(security_bp, url_prefix="/api/admin")
+    from routes.saude import saude_bp
+    app.register_blueprint(saude_bp, url_prefix="/api/admin")
     app.register_blueprint(stripe_bp, url_prefix="/api/stripe")
     from routes.stripe_connect import connect_bp
     app.register_blueprint(connect_bp, url_prefix="/api/connect")

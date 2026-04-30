@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { usePlayer } from '../contexts/PlayerContext'
 import { IconPlay, IconPause, IconCopy, IconHourglass, IconCheck } from '../components/Icons'
+import AdminSaude from './AdminSaude'
 
 function fmt(cents) {
  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents ?? 0) / 100)
@@ -18,6 +19,7 @@ const ABAS = [
  { id: 'saques', label: 'Autorizar saques', icon: '' },
  { id: 'auditoria', label: 'Auditoria de splits', icon: '' },
  { id: 'seguranca', label: 'Segurança', icon: '' },
+ { id: 'saude', label: 'Saúde do sistema', icon: '' },
 ]
 
 function StatCard({ label, value, sublabel, color = 'var(--brand)', big = false }) {
@@ -391,6 +393,9 @@ export default function Admin() {
 
  {/* ── SEGURANÇA ── */}
  {aba === 'seguranca' && <SecurityPanel />}
+
+ {/* ── SAÚDE DO SISTEMA ── */}
+ {aba === 'saude' && <AdminSaude />}
  </div>
  )
 }
