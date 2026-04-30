@@ -638,27 +638,41 @@ def listar_publishers():
         .order("created_at", desc=True) \
         .execute()
     pubs_data = pubs.data or []
+    if not pubs_data:
+        return jsonify([]), 200
 
-    # Contagens agregadas (best-effort)
-    resumo = []
-    for p in pubs_data:
-        pid = p["id"]
-        try:
-            n_obras = sb.table("obras").select("id", count="exact").eq("publisher_id", pid).execute().count or 0
-        except Exception:
-            n_obras = 0
-        try:
-            n_agreg = sb.table("perfis").select("id", count="exact").eq("publisher_id", pid).execute().count or 0
-        except Exception:
-            n_agreg = 0
-        try:
-            n_contr = sb.table("contracts_edicao").select("id", count="exact").eq("publisher_id", pid).execute().count or 0
-        except Exception:
-            n_contr = 0
-        resumo.append({**p,
-                       "total_obras":     n_obras,
-                       "total_agregados": n_agreg,
-                       "total_contratos": n_contr})
+    pub_ids = [p["id"] for p in pubs_data]
+
+    # ── 3 queries batch em vez de 3×N queries individuais ──────────
+    obras_count: dict = {}
+    agreg_count: dict = {}
+    contr_count: dict = {}
+    try:
+        for row in (sb.table("obras").select("publisher_id").in_("publisher_id", pub_ids).execute().data or []):
+            pid = row["publisher_id"]
+            obras_count[pid] = obras_count.get(pid, 0) + 1
+    except Exception:
+        pass
+    try:
+        for row in (sb.table("perfis").select("publisher_id").in_("publisher_id", pub_ids).execute().data or []):
+            pid = row["publisher_id"]
+            agreg_count[pid] = agreg_count.get(pid, 0) + 1
+    except Exception:
+        pass
+    try:
+        for row in (sb.table("contracts_edicao").select("publisher_id").in_("publisher_id", pub_ids).execute().data or []):
+            pid = row["publisher_id"]
+            contr_count[pid] = contr_count.get(pid, 0) + 1
+    except Exception:
+        pass
+
+    resumo = [
+        {**p,
+         "total_obras":     obras_count.get(p["id"], 0),
+         "total_agregados": agreg_count.get(p["id"], 0),
+         "total_contratos": contr_count.get(p["id"], 0)}
+        for p in pubs_data
+    ]
     return jsonify(resumo), 200
 
 

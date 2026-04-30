@@ -2,363 +2,267 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { api } from '../lib/api'
 import { IconCopy, IconCheck } from '../components/Icons'
 
-/**
- * Página de administração de Dossiês.
- *
- * Spec:
- * - Listar todos os dossiês (já gerados) com NOME + ID ÚNICO.
- * - Barra de pesquisa para buscar pelo ID ÚNICO do dossiê.
- * - Botão para baixar o ZIP de cada dossiê.
- * - Botão para visualizar o metadata (preview do que está dentro).
- *
- * A geração de dossiê em si acontece a partir da página de
- * detalhe da obra (POST /api/dossies/obras/:obra_id) e cai aqui
- * automaticamente assim que persistido.
- */
 export default function Dossies() {
- const [dossies, setDossies] = useState([])
- const [loading, setLoading] = useState(true)
- const [error, setError] = useState('')
- const [query, setQuery] = useState('')
- const [selected, setSelected] = useState(null)
- const [meta, setMeta] = useState(null)
- const [metaLoading, setMetaLoading] = useState(false)
- const [dlLoadingId, setDlLoadingId] = useState(null)
- const [copiedId, setCopiedId] = useState(null)
+  const [obras, setObras]       = useState([])
+  const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState('')
+  const [query, setQuery]       = useState('')
+  const [busy, setBusy]         = useState({})
+  const [copiedId, setCopiedId] = useState(null)
+  const [feedback, setFeedback] = useState(null)
 
- // ────────────────────────────────────────────────────────────
- // Carrega a lista
- // ────────────────────────────────────────────────────────────
- useEffect(() => {
- let alive = true
- setLoading(true)
- api.get('/dossies')
- .then(data => { if (alive) setDossies(Array.isArray(data) ? data : []) })
- .catch(e => { if (alive) setError(e.message) })
- .finally(() => { if (alive) setLoading(false) })
- return () => { alive = false }
- }, [])
+  async function carregar() {
+    setLoading(true)
+    setError('')
+    try {
+      const data = await api.get('/dossies/admin/obras')
+      setObras(Array.isArray(data) ? data : [])
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
- // ────────────────────────────────────────────────────────────
- // Busca local (instantânea por ID único OU nome da obra)
- // ────────────────────────────────────────────────────────────
- const filtered = useMemo(() => {
- const q = query.trim().toLowerCase()
- if (!q) return dossies
- return dossies.filter(d => {
- const id = (d.id || '').toLowerCase()
- const obraId = (d.obra_id || '').toLowerCase()
- const titulo = (d.titulo_obra || '').toLowerCase()
- const hash = (d.hash_sha256 || '').toLowerCase()
- return id.includes(q) || obraId.includes(q) || titulo.includes(q) || hash.includes(q)
- })
- }, [query, dossies])
+  useEffect(() => { carregar() }, [])
 
- // ────────────────────────────────────────────────────────────
- // Ações
- // ────────────────────────────────────────────────────────────
- async function handleVisualizar(d) {
- if (selected?.id === d.id) {
- setSelected(null); setMeta(null); return
- }
- setSelected(d); setMeta(null); setMetaLoading(true)
- try {
- const data = await api.get(`/dossies/${d.id}/visualizar`)
- setMeta(data)
- } catch (e) {
- setMeta({ erro: e.message })
- } finally {
- setMetaLoading(false)
- }
- }
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return obras
+    return obras.filter(o =>
+      (o.id || '').toLowerCase().includes(q) ||
+      (o.nome || '').toLowerCase().includes(q) ||
+      (o.titular?.nome || '').toLowerCase().includes(q) ||
+      (o.titular?.email || '').toLowerCase().includes(q)
+    )
+  }, [query, obras])
 
- async function handleDownload(d) {
- setDlLoadingId(d.id)
- try {
- await api.download(`/dossies/${d.id}/download`, `obra-${d.obra_id}.zip`)
- } catch (e) {
- alert('Erro ao baixar: ' + e.message)
- } finally {
- setDlLoadingId(null)
- }
- }
+  function showFeedback(obraId, type, message) {
+    setFeedback({ obraId, type, message })
+    setTimeout(() => setFeedback(prev => prev?.obraId === obraId ? null : prev), 4000)
+  }
 
- async function handleCopyId(id) {
- try {
- await navigator.clipboard.writeText(id)
- setCopiedId(id)
- setTimeout(() => setCopiedId(prev => prev === id ? null : prev), 1400)
- } catch {
- // ignora — alguns navegadores bloqueiam fora de HTTPS
- }
- }
+  async function handleGerar(obra) {
+    if (obra.dossie && !confirm(
+      `Esta obra já possui dossiê gerado em ${new Date(obra.dossie.created_at).toLocaleString('pt-BR')}.\n\nDeseja regenerar (substituirá o anterior)?`
+    )) return
 
- function fmt(ts) {
- if (!ts) return '—'
- return new Date(ts).toLocaleString('pt-BR', {
- dateStyle: 'short',
- timeStyle: 'short',
- })
- }
+    setBusy(prev => ({ ...prev, [obra.id]: 'gerar' }))
+    try {
+      const r = await api.post(`/dossies/obras/${obra.id}`, {})
+      setObras(prev => prev.map(o =>
+        o.id === obra.id
+          ? { ...o, dossie: { id: r.id, hash_sha256: r.hash_sha256, created_at: r.created_at } }
+          : o
+      ))
+      showFeedback(obra.id, 'success', '✓ Dossiê gerado com sucesso')
+    } catch (e) {
+      showFeedback(obra.id, 'error', '✗ Erro: ' + e.message)
+    } finally {
+      setBusy(prev => ({ ...prev, [obra.id]: null }))
+    }
+  }
 
- // ────────────────────────────────────────────────────────────
- // Render
- // ────────────────────────────────────────────────────────────
- return (
- <div style={{ padding: '2rem', maxWidth: 1080, margin: '0 auto' }}>
- <h2 style={{
- fontFamily: 'monospace',
- letterSpacing: 2,
- marginBottom: '0.4rem',
- }}>
- DOSSIÊS DAS OBRAS
- </h2>
- <p style={{
- color: 'var(--text-muted)',
- fontSize: 13,
- marginBottom: '1.4rem',
- }}>
- Arquivos ZIP oficiais gerados a partir dos contratos assinados na
- plataforma. Cada dossiê tem um <b>ID único</b> que serve como
- identificador permanente.
- </p>
+  async function handleBaixar(obra) {
+    if (!obra.dossie) return
+    setBusy(prev => ({ ...prev, [obra.id]: 'baixar' }))
+    try {
+      const safeName = (obra.nome || obra.id).replace(/[^a-zA-Z0-9-_]/g, '_').slice(0, 60)
+      await api.download(`/dossies/${obra.dossie.id}/download`, `dossie-${safeName}.zip`)
+    } catch (e) {
+      showFeedback(obra.id, 'error', '✗ Erro ao baixar: ' + e.message)
+    } finally {
+      setBusy(prev => ({ ...prev, [obra.id]: null }))
+    }
+  }
 
- {/* ── Barra de pesquisa ─────────────────────────────────── */}
- <div style={{
- position: 'relative',
- marginBottom: '1.4rem',
- }}>
- <span style={{
- position: 'absolute', left: 14, top: '50%',
- transform: 'translateY(-50%)',
- color: 'var(--text-muted)', fontSize: 14,
- pointerEvents: 'none',
- }}>⌕</span>
- <input
- type="search"
- value={query}
- onChange={e => setQuery(e.target.value)}
- placeholder="Buscar pelo ID único do dossiê, ID da obra ou nome…"
- aria-label="Buscar dossiê"
- style={{
- width: '100%',
- padding: '0.75rem 1rem 0.75rem 2.4rem',
- fontSize: '0.92rem',
- background: 'var(--surface)',
- color: 'var(--text)',
- border: '1px solid var(--border)',
- borderRadius: 8,
- outline: 'none',
- fontFamily: 'inherit',
- }}
- />
- {query && (
- <button
- onClick={() => setQuery('')}
- aria-label="Limpar busca"
- style={{
- position: 'absolute', right: 8, top: '50%',
- transform: 'translateY(-50%)',
- background: 'none', border: 'none', cursor: 'pointer',
- color: 'var(--text-muted)', fontSize: 16, padding: '4px 10px',
- }}
- >✕</button>
- )}
- </div>
+  async function handleCopyId(id) {
+    try {
+      await navigator.clipboard.writeText(id)
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(prev => prev === id ? null : prev), 1400)
+    } catch { }
+  }
 
- <div style={{
- fontSize: 12,
- color: 'var(--text-muted)',
- marginBottom: '1rem',
- }}>
- {loading
- ? 'Carregando…'
- : `${filtered.length} de ${dossies.length} dossiê(s)`}
- </div>
+  const total    = obras.length
+  const comDossie = obras.filter(o => o.dossie).length
 
- {error && (
- <p style={{ color: '#e55' }}>
- {error}
- </p>
- )}
+  return (
+    <div style={{ padding: '2rem', maxWidth: 1080, margin: '0 auto' }}>
+      <div style={{ marginBottom: '1.4rem' }}>
+        <h2 style={{ fontFamily: 'monospace', letterSpacing: 2, marginBottom: '0.3rem' }}>
+          DOSSIÊS DAS OBRAS
+        </h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>
+          Todas as obras da plataforma. Gere e baixe o ZIP oficial de cada uma.
+        </p>
+      </div>
 
- {/* ── Empty states ──────────────────────────────────────── */}
- {!loading && !error && dossies.length === 0 && (
- <EmptyCard
- icon=""
- title="Nenhum dossiê gerado ainda"
- subtitle="Gere o primeiro dossiê na página de detalhe de uma obra."
- />
- )}
+      {/* Barra de pesquisa */}
+      <div style={{ position: 'relative', marginBottom: '1rem' }}>
+        <span style={{
+          position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+          color: 'var(--text-muted)', fontSize: 14, pointerEvents: 'none',
+        }}>⌕</span>
+        <input
+          type="search"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Buscar por nome, ID único ou e-mail do titular…"
+          style={{
+            width: '100%', padding: '0.75rem 2.4rem', fontSize: '0.92rem',
+            background: 'var(--surface)', color: 'var(--text)',
+            border: '1px solid var(--border)', borderRadius: 8,
+            outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+          }}
+        />
+        {query && (
+          <button onClick={() => setQuery('')} style={{
+            position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--text-muted)', fontSize: 16, padding: '4px 10px',
+          }}>✕</button>
+        )}
+      </div>
 
- {!loading && !error && dossies.length > 0 && filtered.length === 0 && (
- <EmptyCard
- icon="∅"
- title="Nenhum dossiê encontrado"
- subtitle={`Nenhum resultado para "${query}".`}
- />
- )}
+      {/* Contadores */}
+      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: '1.2rem', display: 'flex', gap: 16 }}>
+        {loading ? 'Carregando…' : (
+          <>
+            <span><strong>{filtered.length}</strong> obra(s) exibida(s) de <strong>{total}</strong></span>
+            <span>·</span>
+            <span style={{ color: 'var(--success)' }}><strong>{comDossie}</strong> com dossiê gerado</span>
+            <span>·</span>
+            <span style={{ color: 'var(--text-muted)' }}><strong>{total - comDossie}</strong> sem dossiê</span>
+          </>
+        )}
+      </div>
 
- {/* ── Lista ─────────────────────────────────────────────── */}
- {filtered.map(d => (
- <div key={d.id} className="hover-lift" style={{
- border: selected?.id === d.id
- ? '1px solid var(--brand)'
- : '1px solid var(--border)',
- borderRadius: 14,
- marginBottom: 10,
- padding: '1rem 1.2rem',
- background: 'var(--surface)',
- display: 'flex',
- alignItems: 'center',
- gap: '1rem',
- flexWrap: 'wrap',
- }}>
- <div style={{ flex: 1, minWidth: 240 }}>
- <div style={{
- fontWeight: 700,
- fontSize: '0.98rem',
- marginBottom: 4,
- }}>
- {d.titulo_obra || '(sem título)'}
- </div>
+      {error && <p style={{ color: '#e55', marginBottom: 12 }}>⚠ {error}</p>}
 
- {/* ID único + copiar */}
- <div style={{
- display: 'flex',
- alignItems: 'center',
- gap: 8,
- fontSize: '0.72rem',
- opacity: 0.8,
- }}>
- <span style={{ color: 'var(--text-muted)' }}>ID:</span>
- <code style={{
- fontFamily: 'monospace',
- fontSize: '0.72rem',
- background: 'var(--surface-2, rgba(0,0,0,.04))',
- padding: '2px 6px',
- borderRadius: 4,
- }}>{d.id}</code>
- <button
- onClick={() => handleCopyId(d.id)}
- title="Copiar ID"
- style={{
- background: 'none', border: 'none', cursor: 'pointer',
- color: copiedId === d.id ? 'var(--brand)' : 'var(--text-muted)',
- fontSize: '0.72rem', padding: '2px 4px',
- }}
- >{copiedId === d.id ? (<><IconCheck size={11} /> copiado</>) : <IconCopy size={13} />}</button>
- </div>
+      {!loading && filtered.length === 0 && !error && (
+        <div style={{
+          padding: '3rem', textAlign: 'center', background: 'var(--surface)',
+          border: '1px dashed var(--border)', borderRadius: 10,
+        }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}></div>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>
+            {query ? 'Nenhuma obra encontrada' : 'Nenhuma obra cadastrada'}
+          </div>
+          <div style={{ opacity: 0.5, fontSize: 13 }}>
+            {query ? `Nenhum resultado para "${query}".` : 'As obras aparecerão aqui quando forem cadastradas.'}
+          </div>
+        </div>
+      )}
 
- <div style={{
- fontSize: '0.7rem',
- opacity: 0.5,
- marginTop: 4,
- }}>
- Gerado em {fmt(d.created_at)}
- &nbsp;·&nbsp;
- hash: <code style={{ fontSize: '0.68rem' }}>
- {(d.hash_sha256 || '').slice(0, 16)}…
- </code>
- </div>
- </div>
+      {/* Lista */}
+      <div style={{ display: 'grid', gap: 10 }}>
+        {filtered.map(o => {
+          const fb = feedback?.obraId === o.id ? feedback : null
+          return (
+            <div key={o.id} style={{
+              border: '1px solid var(--border)',
+              borderRadius: 12,
+              padding: '14px 16px',
+              background: 'var(--surface)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+              flexWrap: 'wrap',
+            }}>
+              {/* Capa */}
+              {o.cover_url && (
+                <img src={o.cover_url} alt={o.nome}
+                  style={{ width: 48, height: 48, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />
+              )}
 
- <button
- onClick={() => handleVisualizar(d)}
- style={btnStyle('transparent', selected?.id === d.id ? 'var(--brand)' : 'var(--text-muted)')}
- >
- {selected?.id === d.id ? 'Fechar' : 'Visualizar'}
- </button>
+              {/* Info */}
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>{o.nome || '(sem nome)'}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  {o.titular?.nome || o.titular?.nome_artistico || '—'}
+                  {o.genero && <span style={{ marginLeft: 8, background: 'var(--surface-2, rgba(0,0,0,.06))', borderRadius: 4, padding: '1px 6px' }}>{o.genero}</span>}
+                </div>
 
- <button
- onClick={() => handleDownload(d)}
- disabled={dlLoadingId === d.id}
- style={btnStyle('var(--brand)', '#fff')}
- >
- {dlLoadingId === d.id ? 'Baixando…' : ' Baixar ZIP'}
- </button>
- </div>
- ))}
+                {/* ID da obra */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                  <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>ID:</span>
+                  <code style={{ fontSize: 10, fontFamily: 'monospace', background: 'var(--surface-2, rgba(0,0,0,.04))', padding: '1px 5px', borderRadius: 4 }}>
+                    {o.id}
+                  </code>
+                  <button onClick={() => handleCopyId(o.id)} title="Copiar ID" style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: copiedId === o.id ? 'var(--brand)' : 'var(--text-muted)', fontSize: 10, padding: '1px 3px',
+                  }}>
+                    {copiedId === o.id ? <><IconCheck size={10} /> copiado</> : <IconCopy size={11} />}
+                  </button>
+                </div>
 
- {/* ── Painel de visualização do metadata ────────────────── */}
- {selected && (
- <div style={{
- marginTop: '1.5rem',
- padding: '1.5rem',
- background: 'var(--surface)',
- border: '1px solid var(--border)',
- borderRadius: 10,
- }}>
- <div style={{
- display: 'flex',
- justifyContent: 'space-between',
- alignItems: 'center',
- marginBottom: '1rem',
- }}>
- <h3 style={{ margin: 0, fontFamily: 'monospace', fontSize: 14 }}>
- {selected.titulo_obra || selected.obra_id}
- </h3>
- <button
- onClick={() => { setSelected(null); setMeta(null) }}
- style={{
- background: 'none',
- border: 'none',
- color: 'var(--text-muted)',
- cursor: 'pointer',
- fontSize: '1.2rem',
- }}
- >✕</button>
- </div>
+                {/* Dossiê info */}
+                {o.dossie && (
+                  <div style={{ fontSize: 10, color: 'var(--success)', marginTop: 3 }}>
+                    ✓ Gerado em {new Date(o.dossie.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                    &nbsp;·&nbsp;hash: <code style={{ fontSize: 10 }}>{(o.dossie.hash_sha256 || '').slice(0, 12)}…</code>
+                  </div>
+                )}
 
- {metaLoading && <p style={{ opacity: 0.5 }}>Carregando metadata…</p>}
+                {fb && (
+                  <div style={{ fontSize: 11, marginTop: 4, color: fb.type === 'success' ? 'var(--success)' : '#e55' }}>
+                    {fb.message}
+                  </div>
+                )}
+              </div>
 
- {meta && !metaLoading && (
- <pre style={{
- background: 'var(--surface-2, rgba(0,0,0,.04))',
- padding: '1rem',
- borderRadius: 8,
- fontSize: '0.78rem',
- overflowX: 'auto',
- color: 'var(--text-secondary)',
- lineHeight: 1.7,
- margin: 0,
- maxHeight: 480,
- }}>
- {JSON.stringify(meta.metadata || meta, null, 2)}
- </pre>
- )}
- </div>
- )}
- </div>
- )
-}
+              {/* Badges */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                {o.dossie && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: '2px 8px',
+                    background: 'var(--success-bg, #d1fae5)', color: 'var(--success, #059669)',
+                    borderRadius: 99, textTransform: 'uppercase', letterSpacing: 1,
+                  }}>Dossiê gerado</span>
+                )}
+              </div>
 
-function EmptyCard({ icon, title, subtitle }) {
- return (
- <div style={{
- padding: '3rem',
- textAlign: 'center',
- background: 'var(--surface)',
- border: '1px dashed var(--border)',
- borderRadius: 10,
- }}>
- <div style={{ fontSize: 32, marginBottom: 12 }}>{icon}</div>
- <div style={{ fontWeight: 600, marginBottom: 4 }}>{title}</div>
- <div style={{ opacity: 0.5, fontSize: 13 }}>{subtitle}</div>
- </div>
- )
-}
+              {/* Ações */}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => handleGerar(o)}
+                  disabled={!!busy[o.id]}
+                  style={{
+                    background: o.dossie ? 'transparent' : 'var(--brand)',
+                    color: o.dossie ? 'var(--brand)' : '#fff',
+                    border: '1px solid var(--brand)',
+                    borderRadius: 6, padding: '7px 12px',
+                    cursor: busy[o.id] ? 'not-allowed' : 'pointer',
+                    fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
+                    opacity: busy[o.id] ? 0.6 : 1,
+                  }}
+                >
+                  {busy[o.id] === 'gerar' ? '⏳ Gerando…' : (o.dossie ? '↻ Regenerar' : 'Gerar dossiê')}
+                </button>
 
-function btnStyle(bg, color) {
- return {
- background: bg,
- color,
- border: `1px solid ${color === '#fff' ? 'var(--brand)' : 'var(--border)'}`,
- borderRadius: 6,
- padding: '0.45rem 1rem',
- cursor: 'pointer',
- fontSize: '0.82rem',
- fontWeight: 600,
- whiteSpace: 'nowrap',
- }
+                <button
+                  onClick={() => handleBaixar(o)}
+                  disabled={!o.dossie || !!busy[o.id]}
+                  title={!o.dossie ? 'Gere o dossiê primeiro' : 'Baixar ZIP do dossiê'}
+                  style={{
+                    background: !o.dossie ? 'var(--surface)' : 'var(--success)',
+                    color: !o.dossie ? 'var(--text-muted)' : '#fff',
+                    border: `1px solid ${!o.dossie ? 'var(--border)' : 'var(--success)'}`,
+                    borderRadius: 6, padding: '7px 12px',
+                    cursor: !o.dossie ? 'not-allowed' : (busy[o.id] ? 'wait' : 'pointer'),
+                    fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
+                    opacity: busy[o.id] === 'baixar' ? 0.6 : 1,
+                  }}
+                >
+                  {busy[o.id] === 'baixar' ? '⏳ Baixando…' : '⬇ Baixar ZIP'}
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
