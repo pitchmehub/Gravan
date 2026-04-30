@@ -49,19 +49,60 @@ export default function Termos() {
       </Section>
 
       <Section n="3" title="Natureza do serviço (cláusula crítica)">
-        A GRAVAN atua <b>exclusivamente como intermediadora tecnológica</b>,
-        conectando Usuários para fins de licenciamento de obras musicais e
-        provendo a infraestrutura digital necessária (cadastro, contratos
-        eletrônicos, registro probatório de assinaturas, orquestração técnica
-        de pagamento via Stripe).
-        <p style={{ marginTop: 14 }}><b>A Gravan:</b></p>
-        <ul style={{ marginTop: 10 }}>
+        A Gravan pode atuar em <b>duas qualidades distintas e independentes</b>{' '}
+        dentro da Plataforma. A qualidade aplicável a cada relação é{' '}
+        <b>identificada expressamente no respectivo contrato</b>.
+
+        <p style={{ marginTop: 16 }}>
+          <b>3.1. Gravan Tecnologia (regra geral — intermediadora tecnológica)</b>
+        </p>
+        <p style={{ marginTop: 6 }}>
+          Como regra, a GRAVAN atua <b>exclusivamente como intermediadora
+          tecnológica</b>, conectando Usuários para fins de licenciamento de
+          obras musicais e provendo a infraestrutura digital necessária
+          (cadastro, contratos eletrônicos, registro probatório de assinaturas,
+          orquestração técnica de pagamento via Stripe).
+        </p>
+        <p style={{ marginTop: 12 }}>Nessa qualidade, a Gravan:</p>
+        <ul style={{ marginTop: 6 }}>
           <Bullet><b>NÃO é proprietária</b> das obras cadastradas;</Bullet>
           <Bullet><b>NÃO é editora, gravadora, agregadora nem produtora</b>;</Bullet>
           <Bullet><b>NÃO participa da criação</b> das obras;</Bullet>
           <Bullet><b>NÃO é parte</b> dos contratos celebrados entre os Usuários, ainda que sua marca apareça por questão de identidade visual ou geração técnica do documento;</Bullet>
           <Bullet><b>NÃO é instituição financeira</b>, não atua como escrow nem retém valores em nome próprio.</Bullet>
         </ul>
+
+        <p style={{ marginTop: 18 }}>
+          <b>3.2. Gravan Editora (exceção — atuação como parte signatária)</b>
+        </p>
+        <p style={{ marginTop: 6 }}>
+          Em <b>casos específicos</b>, mediante instrumento contratual próprio
+          assinado entre a Gravan e o(s) titular(es) da Obra, a Gravan poderá
+          também atuar na qualidade de <b>editora musical</b> — sob a
+          identificação de <b>“Gravan Editora”</b> — assumindo direitos e
+          obrigações editoriais sobre Obras determinadas (ex.: gestão
+          editorial, administração de direitos, exploração comercial conforme
+          o escopo do contrato de edição).
+        </p>
+        <p style={{ marginTop: 12 }}>Nessa qualidade:</p>
+        <ul style={{ marginTop: 6 }}>
+          <Bullet>A Gravan figura como <b>parte signatária expressa</b> no contrato editorial específico, com qualificação, deveres e remuneração próprios e <b>distintos</b> de sua atuação tecnológica;</Bullet>
+          <Bullet>O contrato de edição é regido pelas suas próprias cláusulas, pela Lei 9.610/1998 e demais normas aplicáveis, e <b>não se confunde</b> com a relação de uso da Plataforma regida por estes Termos;</Bullet>
+          <Bullet>As <b>obrigações da Gravan Editora</b> existem apenas no âmbito desse contrato específico e não se estendem às demais Obras da Plataforma em que a Gravan não figure como parte;</Bullet>
+          <Bullet>A taxa de plataforma (25%) e a fatia editorial (10%) <b>continuam aplicáveis</b> conforme a Cláusula 9, podendo a Gravan Editora ocupar a posição de “editora” no split nas Obras em que assim estiver formalmente identificada.</Bullet>
+        </ul>
+
+        <p style={{ marginTop: 16, padding: '12px 14px',
+          background: 'var(--surface-2, #F8FAFC)',
+          border: '1px solid var(--border, #E5E7EB)', borderRadius: 8,
+          fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+          <b>Resumindo:</b> a regra é a Gravan Tecnologia (intermediadora,
+          não é parte). A exceção é a Gravan Editora, que só existe quando há
+          contrato de edição assinado e identificando expressamente a Gravan
+          como parte editorial — e mesmo nesse caso ela responde apenas pelas
+          obrigações desse contrato específico, não pelas demais relações da
+          Plataforma.
+        </p>
       </Section>
 
       <Section n="4" title="Cadastro e conta">
@@ -155,8 +196,8 @@ export default function Termos() {
         A divisão de receitas entre múltiplos Usuários (autores, coautores e
         editora vinculada) opera da seguinte forma a cada venda:
         <ul style={{ marginTop: 10 }}>
-          <Bullet><b>Gravan</b>: 25% do valor bruto;</Bullet>
-          <Bullet><b>Editora</b> (quando o titular é agregado a uma editora): 10/75 do pool restante (mantendo a proporção histórica de 10% editora : 65% autores);</Bullet>
+          <Bullet><b>Gravan</b> (na qualidade de Plataforma — Cláusula 3.1): 25% do valor bruto;</Bullet>
+          <Bullet><b>Editora</b> (quando o titular é agregado a uma editora): 10/75 do pool restante. A posição de editora pode ser ocupada por uma <b>editora terceira</b> ou pela <b>Gravan Editora</b> (Cláusula 3.2), conforme identificado no contrato editorial da Obra;</Bullet>
           <Bullet><b>Autores e coautores</b>: o restante do pool, distribuído conforme os percentuais (<i>share_pct</i>) cadastrados na Obra.</Bullet>
         </ul>
         <p style={{ marginTop: 14 }}>
@@ -224,6 +265,21 @@ export default function Termos() {
           <Bullet>Indisponibilidades pontuais de provedores terceiros (Stripe, e-mail, hospedagem, redes de internet, autoridades certificadoras);</Bullet>
           <Bullet>Eventos de força maior, caso fortuito, ataque cibernético externo ou ato de terceiros.</Bullet>
         </ul>
+        <p style={{ marginTop: 14, padding: '12px 14px',
+          background: 'var(--surface-2, #F8FAFC)',
+          border: '1px solid var(--border, #E5E7EB)', borderRadius: 8,
+          fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+          <b>Exceção (Gravan Editora):</b> as exclusões de responsabilidade
+          desta cláusula referem-se à atuação da Gravan como{' '}
+          <b>intermediadora tecnológica</b> (Cláusula 3.1). Quando a Gravan
+          figurar expressamente como <b>parte signatária</b> de um contrato
+          editorial específico — na qualidade de <b>Gravan Editora</b>{' '}
+          (Cláusula 3.2) — sua responsabilidade no âmbito daquele contrato
+          editorial será regida pelas próprias cláusulas do referido
+          instrumento e pela legislação aplicável, e <b>não pelas exclusões
+          desta Cláusula 13</b>, observada apenas a limitação financeira
+          global do parágrafo seguinte.
+        </p>
         <p style={{ marginTop: 14 }}>
           Em qualquer hipótese, a responsabilidade total da Gravan perante o
           Usuário fica limitada ao valor que o Usuário tenha efetivamente pago
