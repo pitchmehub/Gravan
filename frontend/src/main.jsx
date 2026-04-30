@@ -3,7 +3,10 @@ import { createRoot } from 'react-dom/client'
 import * as Sentry from '@sentry/react'
 import App from './App'
 import { startKeepAlive } from './lib/keepAlive'
+import { migratePWA } from './lib/migratePWA'
 import './styles/modal.css'
+
+migratePWA()
 
 const sentryDsn = import.meta.env.VITE_SENTRY_DSN
 if (sentryDsn) {

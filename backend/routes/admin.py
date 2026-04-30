@@ -14,6 +14,41 @@ def _check_admin():
         abort(403, description="Acesso restrito a administradores.")
 
 
+@admin_bp.before_request
+def _enforce_admin_on_all_routes():
+    """
+    Camada de segurança centralizada: toda rota do admin_bp exige
+    JWT válido + papel 'administrador', independentemente de decoradores
+    individuais. Impede que uma rota adicionada sem @require_auth fique exposta.
+    """
+    from middleware.auth import _get_cached_user, _cache_user
+    from db.supabase_client import get_supabase as _gsb
+
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        abort(401, description="Token de autenticação ausente.")
+
+    jwt = auth_header.split(" ", 1)[1]
+    if len(jwt) < 20 or len(jwt) > 2000:
+        abort(401, description="Token inválido.")
+
+    user = _get_cached_user(jwt)
+    if user is None:
+        try:
+            sb = _gsb()
+            user_resp = sb.auth.get_user(jwt)
+            if not user_resp or not user_resp.user:
+                abort(401, description="Token inválido ou expirado.")
+            user = user_resp.user
+            _cache_user(jwt, user)
+        except Exception:
+            abort(401, description="Falha ao validar o token.")
+
+    g.user = user
+    g.jwt = jwt
+    _check_admin()
+
+
 @admin_bp.route("/migrations-status", methods=["GET"])
 @require_auth
 def migrations_status():

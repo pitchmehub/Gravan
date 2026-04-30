@@ -41,35 +41,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script>
-      // Migração forçada: invalida Service Workers e caches anteriores ao Design 1.
-      // Executa 1x por cliente (marca no localStorage) para eliminar CSS roxo cacheado.
-      (function migratePWA() {
-        try {
-          var KEY = 'gravan_design1_migrated_v4'
-          if (localStorage.getItem(KEY) === '1') return
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function (regs) {
-              regs.forEach(function (r) { r.unregister().catch(function(){}) })
-            }).catch(function(){})
-          }
-          if ('caches' in window) {
-            caches.keys().then(function (keys) {
-              return Promise.all(keys.map(function (k) { return caches.delete(k) }))
-            }).then(function () {
-              localStorage.setItem(KEY, '1')
-              // Recarrega uma vez pra pegar CSS/JS fresco do servidor
-              if (!sessionStorage.getItem('gravan_pwa_reloaded')) {
-                sessionStorage.setItem('gravan_pwa_reloaded', '1')
-                window.location.reload()
-              }
-            }).catch(function(){ localStorage.setItem(KEY, '1') })
-          } else {
-            localStorage.setItem(KEY, '1')
-          }
-        } catch (e) { /* noop */ }
-      })()
-    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
