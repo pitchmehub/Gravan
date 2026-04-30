@@ -28,3 +28,8 @@ dependencies = [
     "supabase==2.10.0",
     "waitress==3.0.2",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
