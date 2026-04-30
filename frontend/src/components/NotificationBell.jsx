@@ -8,6 +8,7 @@ import {
 import NotificationDetailModal from './NotificationDetailModal'
 import { useAuth } from '../contexts/AuthContext'
 import useRealtimeNotifications from '../hooks/useRealtimeNotifications'
+import { tocarNotificacao } from '../lib/notifSound'
 import './NotificationBell.css'
 
 const ICONES = {
@@ -60,7 +61,10 @@ export default function NotificationBell() {
     return () => clearInterval(t)
   }, [])
 
-  useRealtimeNotifications(perfil?.id, () => carregar())
+  useRealtimeNotifications(perfil?.id, (evento) => {
+    if (evento === 'insert') tocarNotificacao()
+    carregar()
+  })
 
   useEffect(() => {
     if (!open) return
