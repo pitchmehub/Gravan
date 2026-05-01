@@ -79,7 +79,7 @@ function ObraCard({ obra, onPlay, onShowFicha, onExpand, isPlaying, isActive, on
  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
  <div style={{ minWidth: 0, flex: 1 }}>
  <div className="dc-card-nome">{obra.nome}</div>
- <div className="dc-card-autor">{obra.titular_nome}{obra.genero ? ` · ${obra.genero}` : ''}</div>
+ <div className="dc-card-autor">{obra.genero || ''}</div>
  {obra.tipo_gravacao && (
   <span style={{
    display: 'inline-block', marginTop: 4,
