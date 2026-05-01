@@ -898,3 +898,77 @@ def render_oferta_concluida_editora_terceira_email(
         "Acesse: https://www.gravan.com.br/editora/dashboard"
     )
     return _wrap_html(f"Comissão creditada — {nome_obra} — Gravan", body, accent="#16a34a"), text
+
+
+def render_convite_novo_usuario_email(
+    nome_editora: str, link: str,
+) -> tuple[str, str]:
+    """
+    Convite para compositor NOVO (ghost) criado pela editora.
+    Ele precisa ativar a conta, definir senha e aceitar/recusar o termo.
+    """
+    _alerta = _alert(
+        "Se você não conhece essa editora ou não esperava esse convite, "
+        "pode ignorar este e-mail com segurança — nenhum dado seu será cedido sem sua autorização.",
+        "#EDE9FE", "#7C3AED", "#4C1D95",
+    )
+    _botao = _btn("Ativar minha conta", link, "#BE123C")
+    body = (
+        '<h2 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#09090B;">'
+        "Você foi convidado(a) para a Gravan"
+        "</h2>"
+        '<p style="margin:0 0 16px;font-size:14px;color:#52525B;line-height:1.6;">'
+        f"A editora <strong>{nome_editora}</strong> cadastrou um perfil em seu nome na "
+        "plataforma Gravan e está te convidando para agregar suas obras ao catálogo dela."
+        "</p>"
+        '<p style="margin:0 0 24px;font-size:14px;color:#52525B;line-height:1.6;">'
+        "Clique no botão abaixo para escolher sua senha. No primeiro acesso você poderá "
+        "<strong>ler e aceitar (ou recusar) o termo de agregação</strong> antes que o "
+        "vínculo seja efetivado. Sem o seu aceite, nenhuma obra será administrada em seu nome."
+        "</p>"
+        f"\n{_botao}\n"
+        f"\n{_alerta}\n"
+    )
+    text = (
+        f"Gravan — Convite da editora {nome_editora}\n\n"
+        f"Acesse o link abaixo para ativar sua conta e responder ao convite:\n{link}\n\n"
+        "Sem o seu aceite, nenhuma obra será administrada em seu nome."
+    )
+    return _wrap_html("Convite Gravan — ative sua conta", body, accent="#BE123C"), text
+
+
+def render_convite_usuario_existente_email(
+    nome_artista: str, nome_editora: str, link: str,
+) -> tuple[str, str]:
+    """
+    Convite para compositor JÁ CADASTRADO na Gravan.
+    Ele só precisa ler o termo e aceitar ou recusar.
+    """
+    _alerta = _alert(
+        "Você pode acessar a área \"Convites\" na plataforma a qualquer momento para responder.",
+        "#EDE9FE", "#7C3AED", "#4C1D95",
+    )
+    _botao = _btn("Ler e responder o convite", link, "#BE123C")
+    nome_curto = (nome_artista or "").split(" ")[0] or "artista"
+    body = (
+        '<h2 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#09090B;">'
+        "Convite de agregação editorial"
+        "</h2>"
+        '<p style="margin:0 0 16px;font-size:14px;color:#52525B;line-height:1.6;">'
+        f"Olá, <strong>{nome_curto}</strong>! A editora <strong>{nome_editora}</strong> "
+        "está convidando você para agregar suas obras ao catálogo dela na Gravan."
+        "</p>"
+        '<p style="margin:0 0 24px;font-size:14px;color:#52525B;line-height:1.6;">'
+        "Antes de tudo, leia atentamente o <strong>termo jurídico</strong> que define os poderes "
+        "que você estaria concedendo. Você pode aceitar ou recusar a qualquer momento — "
+        "nenhum vínculo se efetiva sem o seu aceite."
+        "</p>"
+        f"\n{_botao}\n"
+        f"\n{_alerta}\n"
+    )
+    text = (
+        f"Gravan — {nome_editora} te enviou um convite de agregação\n\n"
+        f"Olá, {nome_curto}! Acesse o link abaixo para ler e responder:\n{link}\n\n"
+        "Nenhum vínculo é efetivado sem o seu aceite."
+    )
+    return _wrap_html(f"Convite Gravan — {nome_editora}", body, accent="#BE123C"), text

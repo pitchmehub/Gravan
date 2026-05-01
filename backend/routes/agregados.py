@@ -37,7 +37,11 @@ from utils.audit import log_event
 from utils.crypto import encrypt_pii, decrypt_pii
 from utils.termo_agregado import gerar_termo_html, gerar_termo_text, VERSAO_ATUAL, _mask_cpf
 from services.notificacoes import notify
-from services.email_service import send_email, _wrap_html
+from services.email_service import (
+    send_email,
+    render_convite_novo_usuario_email,
+    render_convite_usuario_existente_email,
+)
 
 agregados_bp = Blueprint("agregados", __name__, url_prefix="/api/agregados")
 
@@ -236,33 +240,10 @@ def cadastrar_agregado():
 
     # 4. E-mail
     link = _frontend_url(f"/ativar?token={invite_token}")
-    body = f"""
-      <h2 style="margin:0 0 8px">Você foi convidado(a) para a Gravan</h2>
-      <p style="color:#444;font-size:14px">
-        A editora <strong>{(editora.get('razao_social') or editora.get('nome_completo') or 'Editora')}</strong>
-        cadastrou um perfil em seu nome na plataforma Gravan e está te convidando para
-        agregar suas obras ao catálogo dela.
-      </p>
-      <p style="color:#444;font-size:14px">
-        Clique no botão abaixo para escolher sua senha. No primeiro acesso você
-        poderá <strong>ler e aceitar (ou recusar) o termo de agregação</strong> antes que o
-        vínculo seja efetivado. Sem o seu aceite, nenhuma obra será administrada
-        em seu nome.
-      </p>
-      <div style="text-align:center;margin:24px 0">
-        <a href="{link}" style="display:inline-block;padding:14px 28px;
-           background:#BE123C;color:#fff;text-decoration:none;
-           border-radius:10px;font-weight:700">Ativar minha conta</a>
-      </div>
-      <p style="color:#666;font-size:12px">
-        Se você não conhece essa editora ou não esperava esse convite,
-        pode simplesmente ignorar este e-mail — nenhum dado seu será cedido sem sua autorização.
-      </p>
-    """
+    _nome_editora_conv = editora.get("razao_social") or editora.get("nome_completo") or "Editora"
     try:
-        send_email(email, "Convite Gravan — defina sua senha e responda ao convite",
-                   _wrap_html("Convite Gravan", body),
-                   text=f"Acesse {link} para ativar sua conta na Gravan e responder ao convite da editora.")
+        _h, _t = render_convite_novo_usuario_email(_nome_editora_conv, link)
+        send_email(email, "Convite Gravan — defina sua senha e responda ao convite", _h, _t)
     except Exception as e:
         print(f"[agregados.cadastrar] falha enviando e-mail: {e}")
 
@@ -362,31 +343,10 @@ def adicionar_agregado():
 
     # E-mail
     link = _frontend_url(f"/convites?id={cid}")
-    body = f"""
-      <h2 style="margin:0 0 8px">Convite de agregação editorial</h2>
-      <p style="color:#444;font-size:14px">
-        Olá {(artista.get('nome_artistico') or artista.get('nome_completo') or '').split(' ')[0]},
-        a editora <strong>{nome_editora}</strong> está convidando você para agregar
-        suas obras ao catálogo dela na Gravan.
-      </p>
-      <p style="color:#444;font-size:14px">
-        Antes de tudo, leia atentamente o <strong>termo jurídico</strong> que define os poderes
-        que você estaria concedendo. Você pode aceitar ou recusar a qualquer momento;
-        nenhum vínculo se efetiva sem o seu aceite.
-      </p>
-      <div style="text-align:center;margin:24px 0">
-        <a href="{link}" style="display:inline-block;padding:14px 28px;
-           background:#BE123C;color:#fff;text-decoration:none;
-           border-radius:10px;font-weight:700">Ler e responder o convite</a>
-      </div>
-      <p style="color:#666;font-size:12px">
-        Você pode também acessar a área "Convites" na plataforma a qualquer momento.
-      </p>
-    """
+    _nome_artista_conv = artista.get("nome_artistico") or artista.get("nome_completo") or ""
     try:
-        send_email(email, f"Convite Gravan — {nome_editora} quer te agregar",
-                   _wrap_html("Convite Gravan", body),
-                   text=f"A editora {nome_editora} te enviou um convite. Acesse {link} para ler e responder.")
+        _h, _t = render_convite_usuario_existente_email(_nome_artista_conv, nome_editora, link)
+        send_email(email, f"Convite Gravan — {nome_editora} quer te agregar", _h, _t)
     except Exception as e:
         print(f"[agregados.adicionar] falha enviando e-mail: {e}")
 
