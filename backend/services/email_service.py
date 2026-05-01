@@ -134,27 +134,23 @@ def _wrap_html(title: str, body_html: str, accent: str = "#BE123C") -> str:
           <tr>
             <td align="center" style="padding-bottom:20px;">
               <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
-                     style="background-color:#09090B;border-radius:14px 14px 0 0;overflow:hidden;">
+                     style="background-color:#FFFFFF;border-radius:14px 14px 0 0;overflow:hidden;border:1px solid #E4E4E7;border-bottom:none;">
                 <tr>
-                  <td style="height:4px;background-color:{accent};font-size:0;line-height:0;">&nbsp;</td>
+                  <td style="height:5px;background-color:{accent};font-size:0;line-height:0;">&nbsp;</td>
                 </tr>
                 <tr>
-                  <td style="padding:24px 32px;">
-                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
-                      <tr>
-                        <td>
-                          <span style="font-size:20px;font-weight:800;color:#FFFFFF;letter-spacing:-0.5px;">
-                            &#9679;&nbsp;gravan
-                          </span>
-                        </td>
-                        <td align="right">
-                          <span style="font-size:11px;color:#71717A;letter-spacing:0.08em;text-transform:uppercase;">
-                            Marketplace musical
-                          </span>
-                        </td>
-                      </tr>
-                    </table>
+                  <td align="center" style="padding:28px 32px 20px;">
+                    <img src="https://www.gravan.com.br/gravan-logo-email.png"
+                         alt="Gravan"
+                         width="160"
+                         style="display:block;height:auto;border:0;max-width:160px;">
+                    <p style="margin:10px 0 0;font-size:11px;color:#A1A1AA;letter-spacing:0.12em;text-transform:uppercase;">
+                      Licenciamento de Obras Musicais
+                    </p>
                   </td>
+                </tr>
+                <tr>
+                  <td style="height:1px;background-color:#E4E4E7;font-size:0;line-height:0;">&nbsp;</td>
                 </tr>
               </table>
             </td>
@@ -186,7 +182,7 @@ def _wrap_html(title: str, body_html: str, accent: str = "#BE123C") -> str:
                 <a href="mailto:contato@gravan.com.br" style="color:#BE123C;text-decoration:none;">contato@gravan.com.br</a>
               </p>
               <p style="margin:0;font-size:11px;color:#A1A1AA;text-align:center;">
-                &copy; 2025 Gravan &middot; Marketplace de composições musicais
+                &copy; 2025 Gravan &middot; Licenciamento de Obras Musicais
               </p>
             </td>
           </tr>
