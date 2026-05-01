@@ -723,3 +723,178 @@ def render_rescisao_exclusividade_email(
         f"período de exclusividade contratado (5 anos).\n"
     )
     return _wrap_html(f"Rescisão — \"{nome_obra}\" — Gravan", body, accent="#BE123C"), text
+
+
+
+def render_oferta_notificacao_compositor_email(
+    nome: str, nome_obra: str, valor_brl: str,
+    nome_comprador: str, deadline_str: str,
+) -> tuple[str, str]:
+    """Notificação informativa ao compositor/coautor quando uma oferta chega."""
+    _row_obra     = _info_row("Obra", nome_obra)
+    _row_valor    = _info_row("Valor ofertado", valor_brl)
+    _row_compra   = _info_row("Comprador", nome_comprador)
+    _row_prazo    = _info_row("Prazo para a editora responder", deadline_str)
+    _tabela       = _info_table(_row_obra, _row_valor, _row_compra, _row_prazo)
+    body = (
+        '<h2 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#09090B;">'
+        "Oferta de licenciamento em andamento"
+        "</h2>"
+        '<p style="margin:0 0 20px;font-size:14px;color:#52525B;line-height:1.6;">'
+        f"Olá, <strong>{nome or 'compositor'}</strong>. Uma oferta de licenciamento "
+        "foi recebida para a sua obra e está aguardando a aprovação da editora vinculada."
+        "</p>"
+        f"\n{_tabela}\n"
+        '<p style="margin:20px 0 0;font-size:13px;color:#52525B;line-height:1.6;">'
+        "Você será notificado assim que a editora assinar o contrato e a transação "
+        "for concluída. Não é necessário nenhuma ação da sua parte agora."
+        "</p>"
+    )
+    text = (
+        f"Gravan — Oferta de licenciamento em andamento\n\n"
+        f"Obra: {nome_obra}\nValor: {valor_brl}\nComprador: {nome_comprador}\n"
+        f"Prazo da editora: {deadline_str}\n\n"
+        "Você será avisado quando a transação for concluída."
+    )
+    return _wrap_html(f"Oferta recebida — {nome_obra} — Gravan", body, accent="#1d4ed8"), text
+
+
+def render_oferta_lembrete_compositor_email(
+    nome: str, nome_obra: str, valor_brl: str, horas_restantes: int,
+) -> tuple[str, str]:
+    """Lembrete ao compositor de que o prazo está se esgotando."""
+    _row_obra   = _info_row("Obra", nome_obra)
+    _row_valor  = _info_row("Valor ofertado", valor_brl)
+    _row_horas  = _info_row("Horas úteis restantes", f"~{horas_restantes}h")
+    _tabela     = _info_table(_row_obra, _row_valor, _row_horas)
+    _alerta     = _alert(
+        "Se o prazo expirar sem resposta da editora, a oferta será cancelada "
+        "e o valor estornado ao comprador. Entre em contato com sua editora se necessário.",
+        "#FEF3C7", "#D97706", "#78350F",
+    )
+    body = (
+        '<h2 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#09090B;">'
+        "Prazo da oferta se esgotando"
+        "</h2>"
+        '<p style="margin:0 0 20px;font-size:14px;color:#52525B;line-height:1.6;">'
+        f"Olá, <strong>{nome or 'compositor'}</strong>. A oferta de licenciamento para a "
+        f'obra <strong>"{nome_obra}"</strong> ainda não foi respondida pela editora.'
+        "</p>"
+        f"\n{_tabela}\n"
+        f"\n{_alerta}\n"
+    )
+    text = (
+        f"Gravan — Prazo da oferta se esgotando\n\n"
+        f"Obra: {nome_obra}\nFaltam ~{horas_restantes}h úteis.\n"
+        "Se a editora não responder, a oferta será cancelada."
+    )
+    return _wrap_html(f"Lembrete: oferta de \"{nome_obra}\" — Gravan", body, accent="#d97706"), text
+
+
+def render_oferta_expirada_compositor_email(
+    nome: str, nome_obra: str, valor_brl: str,
+) -> tuple[str, str]:
+    """Notifica o compositor quando a oferta expira sem resposta da editora."""
+    _row_obra   = _info_row("Obra", nome_obra)
+    _row_valor  = _info_row("Valor da oferta", valor_brl)
+    _row_status = _info_row("Status", "Expirada — valor estornado ao comprador")
+    _tabela     = _info_table(_row_obra, _row_valor, _row_status)
+    body = (
+        '<h2 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#09090B;">'
+        "Oferta de licenciamento expirada"
+        "</h2>"
+        '<p style="margin:0 0 20px;font-size:14px;color:#52525B;line-height:1.6;">'
+        f"Olá, <strong>{nome or 'compositor'}</strong>. A oferta de licenciamento "
+        f'para a obra <strong>"{nome_obra}"</strong> expirou sem resposta da editora '
+        "dentro do prazo de 72 horas úteis."
+        "</p>"
+        f"\n{_tabela}\n"
+        '<p style="margin:16px 0 0;font-size:13px;color:#52525B;line-height:1.6;">'
+        "O comprador poderá fazer uma nova oferta a qualquer momento. "
+        "Se você deseja agilizar futuros licenciamentos, verifique se as informações "
+        "da sua editora estão atualizadas na plataforma."
+        "</p>"
+    )
+    text = (
+        f"Gravan — Oferta de licenciamento expirada\n\n"
+        f"Obra: {nome_obra}\nValor: {valor_brl}\n"
+        "A editora não respondeu no prazo. O valor foi estornado ao comprador."
+    )
+    return _wrap_html(f"Oferta expirada — {nome_obra} — Gravan", body, accent="#d97706"), text
+
+
+def render_oferta_concluida_compositor_email(
+    nome: str, nome_obra: str, valor_brl: str,
+) -> tuple[str, str]:
+    """Notifica o compositor/coautor quando a oferta é concluída com sucesso."""
+    _row_obra   = _info_row("Obra licenciada", nome_obra)
+    _row_valor  = _info_row("Valor bruto da transação", valor_brl)
+    _row_status = _info_row("Status", "Valor creditado na carteira")
+    _tabela     = _info_table(_row_obra, _row_valor, _row_status)
+    _alerta     = _alert(
+        "Você já pode solicitar o saque do valor na sua área financeira da Gravan.",
+        "#F0FDF4", "#16a34a", "#14532D",
+    )
+    _botao      = _btn("Ver minha carteira", "https://www.gravan.com.br/dashboard", "#16a34a")
+    body = (
+        '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;">'
+        "<tr><td align=\"center\">"
+        '<div style="width:56px;height:56px;background-color:#DCFCE7;border-radius:50%;'
+        'line-height:56px;text-align:center;font-size:26px;margin:0 auto 12px;">\U0001f4b0</div>'
+        '<h2 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#09090B;">'
+        "Licenciamento concluído — você recebeu!"
+        "</h2>"
+        '<p style="margin:0;font-size:14px;color:#52525B;">'
+        f"Olá, <strong>{nome or 'compositor'}</strong>. O contrato foi assinado por "
+        "todas as partes e sua parte do valor já foi creditada na sua carteira."
+        "</p>"
+        "</td></tr></table>"
+        f"\n{_tabela}\n"
+        f"\n{_alerta}\n"
+        f"\n{_botao}\n"
+    )
+    text = (
+        f"Gravan — Licenciamento concluído\n\n"
+        f"Obra: {nome_obra}\nValor da transação: {valor_brl}\n"
+        "Sua parte foi creditada na carteira. Acesse: https://www.gravan.com.br/dashboard"
+    )
+    return _wrap_html(f"Você recebeu — {nome_obra} — Gravan", body, accent="#16a34a"), text
+
+
+def render_oferta_concluida_editora_terceira_email(
+    nome_editora: str, nome_obra: str, valor_brl: str, comissao_brl: str,
+) -> tuple[str, str]:
+    """Notifica a editora terceira sobre a conclusão e a comissão creditada."""
+    _row_obra      = _info_row("Obra", nome_obra)
+    _row_valor     = _info_row("Valor total da transação", valor_brl)
+    _row_comissao  = _info_row("Sua comissão (10%)", comissao_brl)
+    _row_status    = _info_row("Status", "Creditado na carteira")
+    _tabela        = _info_table(_row_obra, _row_valor, _row_comissao, _row_status)
+    _alerta        = _alert(
+        "Você já pode solicitar o saque da comissão no painel da editora.",
+        "#F0FDF4", "#16a34a", "#14532D",
+    )
+    _botao = _btn("Acessar painel da editora", "https://www.gravan.com.br/editora/dashboard", "#16a34a")
+    body = (
+        '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;">'
+        "<tr><td align=\"center\">"
+        '<div style="width:56px;height:56px;background-color:#DCFCE7;border-radius:50%;'
+        'line-height:56px;text-align:center;font-size:26px;margin:0 auto 12px;">\U0001f3e6</div>'
+        '<h2 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#09090B;">'
+        "Comissão creditada"
+        "</h2>"
+        '<p style="margin:0;font-size:14px;color:#52525B;">'
+        f"Olá, <strong>{nome_editora}</strong>. O contrato trilateral foi concluído "
+        "e sua comissão editorial foi creditada na carteira Gravan da editora."
+        "</p>"
+        "</td></tr></table>"
+        f"\n{_tabela}\n"
+        f"\n{_alerta}\n"
+        f"\n{_botao}\n"
+    )
+    text = (
+        f"Gravan — Comissão creditada\n\n"
+        f"Obra: {nome_obra}\nValor da transação: {valor_brl}\nSua comissão (10%): {comissao_brl}\n"
+        "Acesse: https://www.gravan.com.br/editora/dashboard"
+    )
+    return _wrap_html(f"Comissão creditada — {nome_obra} — Gravan", body, accent="#16a34a"), text

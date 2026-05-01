@@ -38,6 +38,11 @@ from services.email_service import (
     render_oferta_expirada_comprador_email,
     render_oferta_expirada_editora_email,
     render_oferta_concluida_email,
+    render_oferta_notificacao_compositor_email,
+    render_oferta_lembrete_compositor_email,
+    render_oferta_expirada_compositor_email,
+    render_oferta_concluida_compositor_email,
+    render_oferta_concluida_editora_terceira_email,
 )
 
 log = logging.getLogger("gravan.ofertas")
@@ -61,6 +66,43 @@ def _link_aceitar_oferta(token: str) -> str:
 def _moeda(cents: int) -> str:
     s = f"R$ {(cents/100):,.2f}"
     return s.replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def _get_compositores(obra_id: str) -> list[dict]:
+    """Retorna lista de {nome, email, papel} para compositor titular e coautores da obra."""
+    sb = get_supabase()
+    obra = sb.table("obras").select("titular_id").eq("id", obra_id).maybe_single().execute()
+    obra = (obra.data if obra else None) or {}
+    titular_id = obra.get("titular_id")
+
+    autores_rows = sb.table("obra_autores").select("perfil_id, is_titular").eq(
+        "obra_id", obra_id
+    ).execute().data or []
+
+    perfil_ids = [r["perfil_id"] for r in autores_rows if r.get("perfil_id")]
+    if titular_id and titular_id not in perfil_ids:
+        perfil_ids.append(titular_id)
+    if not perfil_ids:
+        return []
+
+    perfis = sb.table("perfis").select("id, nome, nome_completo, email").in_(
+        "id", perfil_ids
+    ).execute().data or []
+
+    resultado = []
+    vistos: set[str] = set()
+    for p in perfis:
+        email = (p.get("email") or "").strip().lower()
+        if not email or email in vistos:
+            continue
+        papel = "compositor" if p.get("id") == titular_id else "coautor"
+        resultado.append({
+            "nome":  p.get("nome_completo") or p.get("nome") or "",
+            "email": email,
+            "papel": papel,
+        })
+        vistos.add(email)
+    return resultado
 
 
 # ─────────────────────────── criação ───────────────────────────
@@ -235,6 +277,22 @@ def on_payment_authorized(session_id: str, payment_intent_id: str) -> Optional[d
     send_email(of["editora_terceira_email"],
                f"Gravan — Pedido de licenciamento de \"{obra.get('nome','obra musical')}\"",
                html, text)
+
+    # Notifica compositor e coautores da obra sobre a oferta recebida
+    try:
+        for c in _get_compositores(of["obra_id"]):
+            h, t = render_oferta_notificacao_compositor_email(
+                nome=c["nome"],
+                nome_obra=obra.get("nome", "—"),
+                valor_brl=_moeda(of["valor_cents"]),
+                nome_comprador=comprador.get("nome") or "Intérprete",
+                deadline_str=deadline_str,
+            )
+            send_email(c["email"],
+                       f"Gravan — Oferta de licenciamento em andamento: \"{obra.get('nome','—')}\"",
+                       h, t)
+    except Exception as e:
+        log.warning("Falha ao notificar compositores sobre oferta %s: %s", of.get("id"), e)
 
     # Notifica o compositor titular da obra sobre a oferta de licenciamento
     if obra.get("titular_id"):
@@ -463,11 +521,43 @@ def on_contrato_concluido(contract_id: str) -> Optional[dict]:
         except Exception as e:
             log.warning("Falha ao notificar editora terceira sobre conclusão da oferta %s: %s", of["id"], e)
 
+    nome_obra = obra.get("nome", "—")
+    valor_brl = _moeda(of["valor_cents"])
+
     if comprador.get("email"):
         h, t = render_oferta_concluida_email(comprador.get("nome") or "Intérprete",
-                                             obra.get("nome", "—"),
-                                             _moeda(of["valor_cents"]))
+                                             nome_obra, valor_brl)
         send_email(comprador["email"], "Gravan — Licença concluída", h, t)
+
+    # Notifica compositor e coautores: licença concluída + saldo creditado
+    try:
+        for c in _get_compositores(of["obra_id"]):
+            hc, tc = render_oferta_concluida_compositor_email(
+                nome=c["nome"],
+                nome_obra=nome_obra,
+                valor_brl=valor_brl,
+            )
+            send_email(c["email"],
+                       f"Gravan — Licenciamento concluído: \"{nome_obra}\"",
+                       hc, tc)
+    except Exception as e:
+        log.warning("Falha ao notificar compositores sobre conclusão %s: %s", of.get("id"), e)
+
+    # Notifica a editora terceira sobre a comissão creditada
+    if of.get("editora_terceira_email"):
+        try:
+            comissao_brl = _moeda(int(of["valor_cents"] * 0.10))
+            he, te = render_oferta_concluida_editora_terceira_email(
+                nome_editora=of["editora_terceira_nome"] or "Editora",
+                nome_obra=nome_obra,
+                valor_brl=valor_brl,
+                comissao_brl=comissao_brl,
+            )
+            send_email(of["editora_terceira_email"],
+                       f"Gravan — Comissão creditada: \"{nome_obra}\"",
+                       he, te)
+        except Exception as e:
+            log.warning("Falha ao notificar editora terceira sobre conclusão %s: %s", of.get("id"), e)
 
     return sb.table("ofertas_licenciamento").select("*").eq("id", of["id"]).single().execute().data
 
@@ -530,16 +620,35 @@ def processar_lembretes_e_expiracoes() -> dict:
 def _enviar_lembrete(of: dict, horas_restantes: int) -> None:
     sb = get_supabase()
     obra = sb.table("obras").select("nome").eq("id", of["obra_id"]).single().execute().data or {}
+    nome_obra = obra.get("nome", "—")
+    valor_brl = _moeda(of["valor_cents"])
+
+    # Lembrete para a editora terceira (ação necessária dela)
     h, t = render_oferta_reminder_email(
         nome_editora=of["editora_terceira_nome"],
-        nome_obra=obra.get("nome", "—"),
-        valor_brl=_moeda(of["valor_cents"]),
+        nome_obra=nome_obra,
+        valor_brl=valor_brl,
         horas_restantes=horas_restantes,
         link=_link_aceitar_oferta(of["registration_token"]),
     )
     send_email(of["editora_terceira_email"],
                f"Gravan — Faltam {horas_restantes}h úteis para responder à oferta",
                h, t)
+
+    # Lembrete informativo para compositor e coautores
+    try:
+        for c in _get_compositores(of["obra_id"]):
+            hc, tc = render_oferta_lembrete_compositor_email(
+                nome=c["nome"],
+                nome_obra=nome_obra,
+                valor_brl=valor_brl,
+                horas_restantes=horas_restantes,
+            )
+            send_email(c["email"],
+                       f"Gravan — Oferta de \"{nome_obra}\" expira em ~{horas_restantes}h",
+                       hc, tc)
+    except Exception as e:
+        log.warning("Falha ao enviar lembrete aos compositores da oferta %s: %s", of.get("id"), e)
 
 
 def _expirar_oferta(of: dict) -> None:
@@ -580,3 +689,19 @@ def _expirar_oferta(of: dict) -> None:
     )
     send_email(of["editora_terceira_email"],
                "Gravan — Prazo da oferta expirado", h2, t2)
+
+    # Avisa compositor e coautores sobre a expiração
+    try:
+        nome_obra = obra.get("nome", "—")
+        valor_brl = _moeda(of["valor_cents"])
+        for c in _get_compositores(of["obra_id"]):
+            hc, tc = render_oferta_expirada_compositor_email(
+                nome=c["nome"],
+                nome_obra=nome_obra,
+                valor_brl=valor_brl,
+            )
+            send_email(c["email"],
+                       f"Gravan — Oferta de licenciamento expirada: \"{nome_obra}\"",
+                       hc, tc)
+    except Exception as e:
+        log.warning("Falha ao notificar compositores sobre expiração %s: %s", of.get("id"), e)

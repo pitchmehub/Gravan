@@ -1,0 +1,344 @@
+<!--
+  TEMPLATES DE E-MAIL SUPABASE — GRAVAN
+  =======================================
+  Cole cada bloco no Supabase Dashboard → Authentication → Email Templates.
+  Substitua as variáveis {{ .ConfirmationURL }}, {{ .Token }}, etc. exatamente
+  como estão — o Supabase as preenche automaticamente.
+  
+  TIPOS DISPONÍVEIS NO DASHBOARD:
+    1. Confirm signup        → use: CONFIRMAÇÃO DE CADASTRO
+    2. Reset Password        → use: REDEFINIÇÃO DE SENHA
+    3. Magic Link            → use: MAGIC LINK (acesso sem senha)
+    4. Email Change          → use: ALTERAÇÃO DE E-MAIL
+-->
+
+<!-- ================================================================
+     1. CONFIRMAÇÃO DE CADASTRO (Confirm signup)
+     Subject: Confirme seu e-mail — Gravan
+     ================================================================ -->
+<template id="confirm-signup">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Confirme seu e-mail — Gravan</title>
+</head>
+<body style="margin:0;padding:0;background-color:#F4F4F5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color:#F4F4F5;padding:32px 0;">
+  <tr><td align="center">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+
+      <!-- HEADER -->
+      <tr>
+        <td style="background-color:#09090B;padding:28px 40px;text-align:center;">
+          <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">GRAVAN</span>
+          <p style="margin:4px 0 0;font-size:11px;color:#A1A1AA;letter-spacing:2px;text-transform:uppercase;">Mercado de Obras Musicais</p>
+        </td>
+      </tr>
+
+      <!-- ACCENT BAR -->
+      <tr><td style="height:4px;background:linear-gradient(90deg,#7C3AED 0%,#4F46E5 100%);"></td></tr>
+
+      <!-- BODY -->
+      <tr>
+        <td style="padding:40px 40px 32px;">
+          <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#09090B;">Confirme seu endereço de e-mail</h2>
+          <p style="margin:0 0 24px;font-size:14px;color:#52525B;line-height:1.6;">
+            Seja bem-vindo(a) à Gravan! Para ativar sua conta e começar a explorar o mercado de obras musicais, clique no botão abaixo.
+          </p>
+
+          <!-- CTA BUTTON -->
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+            <tr>
+              <td style="background-color:#7C3AED;border-radius:8px;">
+                <a href="{{ .ConfirmationURL }}"
+                   style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:8px;">
+                  Confirmar meu e-mail
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <!-- ALERT -->
+          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;">
+            <tr>
+              <td style="background-color:#EDE9FE;border-left:4px solid #7C3AED;border-radius:0 6px 6px 0;padding:12px 16px;">
+                <p style="margin:0;font-size:13px;color:#4C1D95;line-height:1.5;">
+                  Se você não criou uma conta na Gravan, ignore este e-mail. Nenhuma ação é necessária da sua parte.
+                </p>
+              </td>
+            </tr>
+          </table>
+
+          <p style="margin:0;font-size:13px;color:#71717A;line-height:1.5;">
+            O link de confirmação expira em 24 horas. Caso expire, acesse a Gravan e solicite um novo link.
+          </p>
+        </td>
+      </tr>
+
+      <!-- FOOTER -->
+      <tr>
+        <td style="background-color:#F4F4F5;padding:20px 40px;text-align:center;border-top:1px solid #E4E4E7;">
+          <p style="margin:0;font-size:12px;color:#A1A1AA;">
+            Gravan — Mercado de Obras Musicais Brasileiras<br>
+            <a href="https://www.gravan.com.br" style="color:#7C3AED;text-decoration:none;">www.gravan.com.br</a>
+          </p>
+        </td>
+      </tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>
+</template>
+
+
+<!-- ================================================================
+     2. REDEFINIÇÃO DE SENHA (Reset Password)
+     Subject: Redefinir senha — Gravan
+     ================================================================ -->
+<template id="reset-password">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Redefinir senha — Gravan</title>
+</head>
+<body style="margin:0;padding:0;background-color:#F4F4F5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color:#F4F4F5;padding:32px 0;">
+  <tr><td align="center">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+
+      <!-- HEADER -->
+      <tr>
+        <td style="background-color:#09090B;padding:28px 40px;text-align:center;">
+          <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">GRAVAN</span>
+          <p style="margin:4px 0 0;font-size:11px;color:#A1A1AA;letter-spacing:2px;text-transform:uppercase;">Mercado de Obras Musicais</p>
+        </td>
+      </tr>
+
+      <!-- ACCENT BAR -->
+      <tr><td style="height:4px;background:linear-gradient(90deg,#DC2626 0%,#B91C1C 100%);"></td></tr>
+
+      <!-- BODY -->
+      <tr>
+        <td style="padding:40px 40px 32px;">
+          <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#09090B;">Redefinição de senha</h2>
+          <p style="margin:0 0 24px;font-size:14px;color:#52525B;line-height:1.6;">
+            Recebemos uma solicitação para redefinir a senha da sua conta Gravan. Clique no botão abaixo para criar uma nova senha. O link expira em <strong>1 hora</strong>.
+          </p>
+
+          <!-- CTA BUTTON -->
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+            <tr>
+              <td style="background-color:#DC2626;border-radius:8px;">
+                <a href="{{ .ConfirmationURL }}"
+                   style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:8px;">
+                  Redefinir minha senha
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <!-- ALERT -->
+          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;">
+            <tr>
+              <td style="background-color:#FEF2F2;border-left:4px solid #DC2626;border-radius:0 6px 6px 0;padding:12px 16px;">
+                <p style="margin:0;font-size:13px;color:#7F1D1D;line-height:1.5;">
+                  <strong>Não solicitou a redefinição?</strong> Ignore este e-mail. Sua senha permanece a mesma e sua conta está segura.
+                </p>
+              </td>
+            </tr>
+          </table>
+
+          <p style="margin:0;font-size:13px;color:#71717A;line-height:1.5;">
+            Por segurança, nunca compartilhe este link com ninguém. A equipe Gravan jamais solicitará sua senha.
+          </p>
+        </td>
+      </tr>
+
+      <!-- FOOTER -->
+      <tr>
+        <td style="background-color:#F4F4F5;padding:20px 40px;text-align:center;border-top:1px solid #E4E4E7;">
+          <p style="margin:0;font-size:12px;color:#A1A1AA;">
+            Gravan — Mercado de Obras Musicais Brasileiras<br>
+            <a href="https://www.gravan.com.br" style="color:#7C3AED;text-decoration:none;">www.gravan.com.br</a>
+          </p>
+        </td>
+      </tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>
+</template>
+
+
+<!-- ================================================================
+     3. MAGIC LINK (acesso sem senha)
+     Subject: Seu link de acesso à Gravan
+     ================================================================ -->
+<template id="magic-link">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seu link de acesso — Gravan</title>
+</head>
+<body style="margin:0;padding:0;background-color:#F4F4F5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color:#F4F4F5;padding:32px 0;">
+  <tr><td align="center">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+
+      <!-- HEADER -->
+      <tr>
+        <td style="background-color:#09090B;padding:28px 40px;text-align:center;">
+          <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">GRAVAN</span>
+          <p style="margin:4px 0 0;font-size:11px;color:#A1A1AA;letter-spacing:2px;text-transform:uppercase;">Mercado de Obras Musicais</p>
+        </td>
+      </tr>
+
+      <!-- ACCENT BAR -->
+      <tr><td style="height:4px;background:linear-gradient(90deg,#059669 0%,#047857 100%);"></td></tr>
+
+      <!-- BODY -->
+      <tr>
+        <td style="padding:40px 40px 32px;">
+          <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#09090B;">Seu link de acesso à Gravan</h2>
+          <p style="margin:0 0 24px;font-size:14px;color:#52525B;line-height:1.6;">
+            Clique no botão abaixo para acessar sua conta Gravan sem precisar de senha. O link é válido por <strong>1 hora</strong> e pode ser usado apenas uma vez.
+          </p>
+
+          <!-- CTA BUTTON -->
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+            <tr>
+              <td style="background-color:#059669;border-radius:8px;">
+                <a href="{{ .ConfirmationURL }}"
+                   style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:8px;">
+                  Acessar minha conta
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <!-- ALERT -->
+          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;">
+            <tr>
+              <td style="background-color:#ECFDF5;border-left:4px solid #059669;border-radius:0 6px 6px 0;padding:12px 16px;">
+                <p style="margin:0;font-size:13px;color:#064E3B;line-height:1.5;">
+                  Não solicitou este acesso? Ignore este e-mail com segurança. O link expirará automaticamente.
+                </p>
+              </td>
+            </tr>
+          </table>
+
+          <p style="margin:0;font-size:13px;color:#71717A;line-height:1.5;">
+            Por segurança, nunca compartilhe este link com ninguém. Cada link de acesso é único e de uso pessoal.
+          </p>
+        </td>
+      </tr>
+
+      <!-- FOOTER -->
+      <tr>
+        <td style="background-color:#F4F4F5;padding:20px 40px;text-align:center;border-top:1px solid #E4E4E7;">
+          <p style="margin:0;font-size:12px;color:#A1A1AA;">
+            Gravan — Mercado de Obras Musicais Brasileiras<br>
+            <a href="https://www.gravan.com.br" style="color:#7C3AED;text-decoration:none;">www.gravan.com.br</a>
+          </p>
+        </td>
+      </tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>
+</template>
+
+
+<!-- ================================================================
+     4. ALTERAÇÃO DE E-MAIL (Email Change)
+     Subject: Confirme sua nova conta de e-mail — Gravan
+     ================================================================ -->
+<template id="email-change">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Confirme o novo e-mail — Gravan</title>
+</head>
+<body style="margin:0;padding:0;background-color:#F4F4F5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color:#F4F4F5;padding:32px 0;">
+  <tr><td align="center">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+
+      <!-- HEADER -->
+      <tr>
+        <td style="background-color:#09090B;padding:28px 40px;text-align:center;">
+          <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">GRAVAN</span>
+          <p style="margin:4px 0 0;font-size:11px;color:#A1A1AA;letter-spacing:2px;text-transform:uppercase;">Mercado de Obras Musicais</p>
+        </td>
+      </tr>
+
+      <!-- ACCENT BAR -->
+      <tr><td style="height:4px;background:linear-gradient(90deg,#D97706 0%,#B45309 100%);"></td></tr>
+
+      <!-- BODY -->
+      <tr>
+        <td style="padding:40px 40px 32px;">
+          <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#09090B;">Confirme seu novo endereço de e-mail</h2>
+          <p style="margin:0 0 24px;font-size:14px;color:#52525B;line-height:1.6;">
+            Recebemos uma solicitação para alterar o e-mail da sua conta Gravan. Clique no botão abaixo para confirmar o novo endereço e concluir a alteração.
+          </p>
+
+          <!-- CTA BUTTON -->
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+            <tr>
+              <td style="background-color:#D97706;border-radius:8px;">
+                <a href="{{ .ConfirmationURL }}"
+                   style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:8px;">
+                  Confirmar novo e-mail
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <!-- ALERT -->
+          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;">
+            <tr>
+              <td style="background-color:#FFFBEB;border-left:4px solid #D97706;border-radius:0 6px 6px 0;padding:12px 16px;">
+                <p style="margin:0;font-size:13px;color:#78350F;line-height:1.5;">
+                  <strong>Não solicitou esta alteração?</strong> Entre em contato imediatamente com o suporte da Gravan, pois pode ser uma tentativa não autorizada de acesso à sua conta.
+                </p>
+              </td>
+            </tr>
+          </table>
+
+          <p style="margin:0;font-size:13px;color:#71717A;line-height:1.5;">
+            O link de confirmação expira em 24 horas.
+          </p>
+        </td>
+      </tr>
+
+      <!-- FOOTER -->
+      <tr>
+        <td style="background-color:#F4F4F5;padding:20px 40px;text-align:center;border-top:1px solid #E4E4E7;">
+          <p style="margin:0;font-size:12px;color:#A1A1AA;">
+            Gravan — Mercado de Obras Musicais Brasileiras<br>
+            <a href="https://www.gravan.com.br" style="color:#7C3AED;text-decoration:none;">www.gravan.com.br</a>
+          </p>
+        </td>
+      </tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>
+</template>
