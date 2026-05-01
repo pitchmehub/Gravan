@@ -36,7 +36,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd backend && ../.pythonlibs/bin/gunicorn --bind=0.0.0.0:8000 --workers 2 --reuse-port --capture-output --log-level info 'app:create_app()'"
+args = "cd backend && /home/runner/workspace/.pythonlibs/bin/gunicorn --bind=0.0.0.0:8000 --workers 2 --reuse-port --capture-output --log-level info 'app:create_app()'"
 waitForPort = 8000
 
 [[workflows.workflow]]
@@ -48,7 +48,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd frontend && npm run dev"
+args = "cd frontend && npx vite --port 5000"
 waitForPort = 5000
 
 [[workflows.workflow]]
@@ -65,14 +65,6 @@ outputType = "console"
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 8000
-externalPort = 8000
-
-[[ports]]
-localPort = 23636
-externalPort = 3001
 
 [deployment]
 deploymentTarget = "autoscale"

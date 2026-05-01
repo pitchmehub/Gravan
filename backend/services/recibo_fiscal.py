@@ -32,6 +32,7 @@ from reportlab.platypus import (
 
 from db.supabase_client import get_supabase
 from services.finance import EDITORA_RATE, PLATFORM_RATE
+from utils.crypto import decrypt_pii
 
 
 MES_PT = {
@@ -73,12 +74,12 @@ def _nome_perfil(p: dict) -> str:
 
 
 def _doc_perfil(p: dict) -> str:
-    """CNPJ se editora, senão tenta cpf_display (não encriptado)."""
+    """CNPJ se editora, senão usa cpf."""
     if not p:
         return "—"
     if p.get("role") == "publisher":
         return p.get("cnpj") or "—"
-    return p.get("cpf_display") or "—"
+    return p.get("cpf_display") or p.get("cpf") or "—"
 
 
 def _endereco(p: dict) -> str:
@@ -151,7 +152,7 @@ def gerar_dados_recibo(perfil_id: str, ano: int, mes: int) -> dict:
         sb.table("perfis")
           .select(
               "id, role, nome_completo, nome_artistico, razao_social, "
-              "nome_fantasia, cnpj, cpf_display, endereco_rua, "
+              "nome_fantasia, cnpj, cpf, endereco_rua, "
               "endereco_numero, endereco_bairro, endereco_cidade, "
               "endereco_uf, endereco_cep"
           )
@@ -161,6 +162,13 @@ def gerar_dados_recibo(perfil_id: str, ano: int, mes: int) -> dict:
     ).data
     if not perfil:
         raise ValueError("Perfil não encontrado.")
+
+    # descriptografa o CPF para exibição no recibo
+    if perfil.get("cpf"):
+        try:
+            perfil["cpf_display"] = decrypt_pii(perfil["cpf"])
+        except Exception:
+            perfil["cpf_display"] = perfil["cpf"]
 
     pagamentos = (
         sb.table("pagamentos_compositores")
