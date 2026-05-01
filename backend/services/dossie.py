@@ -14,17 +14,10 @@ REGRA CRÍTICA:
 Todos os dados vêm do CONTRATO ASSINADO no banco (`contratos_edicao`),
 NUNCA do frontend e NUNCA dos campos editáveis atuais do usuário.
 
-CORREÇÕES NESTA VERSÃO (v3):
-  - Hash agora é DETERMINÍSTICO: usa o texto do contrato (`conteudo`)
-    em vez do PDF regenerado (que muda a cada execução por causa do
-    timestamp embutido pelo ReportLab). Isso é fundamental para a
-    "integridade jurídica" exigida pela especificação.
-  - Adicionado o campo `interprete` no metadata.json (faltava).
-  - Validação de splits com mensagem clara.
-  - Idempotência: regerar o dossiê para a mesma obra substitui o
-    arquivo anterior em vez de duplicar linha na tabela.
-  - Corrigido `upsert` do Supabase Python (espera string "true").
-  - Erros padronizados como `ValueError` para a rota tratar como 422.
+PERCENTUAIS — Regras ECAD / Lei 9.610/98:
+  - COTA AUTORAL:   75% — dividida entre os autores pelo share_pct interno
+  - COTA EDITORIAL: 25% — dividida igualmente entre as editoras distintas
+                          (ou pelo percentual interno caso definido)
 """
 from __future__ import annotations
 
@@ -49,12 +42,8 @@ from utils.crypto import decrypt_pii
 # ──────────────────────────────────────────────────────────────────
 # CONSTANTES DE NEGÓCIO
 # ──────────────────────────────────────────────────────────────────
-EDITORA_NOME       = "GRAVAN"
-EDITORA_PERCENTUAL = 20          # informativo no metadata
-ROYALTIES_DEFAULT  = {
-    "ecad":      {"interprete": 10, "editora": 10, "autores": 80},
-    "fonograma": 2,
-}
+COTA_AUTORAL   = 75.0   # % fixo — Lei 9.610/98 / ECAD
+COTA_EDITORIAL = 25.0   # % fixo
 
 
 class DossieService:
@@ -66,37 +55,27 @@ class DossieService:
     # ──────────────────────────────────────────────────────────────
 
     def gerar(self, obra_id: str, user_id: str) -> dict:
-        """
-        Gera o dossiê de uma obra e persiste no Storage + tabela `dossies`.
-
-        Retorna a linha inserida na tabela `dossies` (com `id` único).
-        """
         obra        = self._buscar_obra(obra_id)
         contrato    = self._buscar_contrato_assinado(obra_id)
         autores     = self._buscar_autores(obra_id)
+        editoras    = self._buscar_editoras_dos_autores(autores)
         interprete  = self._extrair_interprete(contrato)
         audio_bytes = self._download_audio(obra["audio_path"])
 
-        # 1) Monta metadata SEM o hash (será adicionado depois)
-        metadata = self._montar_metadata(obra, autores, interprete, contrato)
+        metadata = self._montar_metadata(obra, autores, editoras, interprete, contrato)
 
-        # 2) Hash determinístico: depende SOMENTE de dados estáveis
-        #    (metadata canônico + texto do contrato assinado).
-        #    Não usa o PDF gerado, pois ele tem timestamp variável.
         contrato_texto = (contrato.get("conteudo") or "").encode("utf-8")
         metadata_canon = json.dumps(
             metadata, ensure_ascii=False, sort_keys=True, separators=(",", ":")
         ).encode("utf-8")
         hash_sha256 = hashlib.sha256(metadata_canon + contrato_texto).hexdigest()
 
-        # 3) Anexa o hash e serializa a versão final (humano-legível)
         metadata["hash_integridade"] = hash_sha256
         metadata_json = json.dumps(metadata, ensure_ascii=False, indent=2)
 
-        # 4) Gera os artefatos secundários
         contrato_pdf = gerar_pdf_contrato(contrato)
         resumo_pdf   = self._gerar_resumo_pdf(
-            obra, autores, interprete, contrato, hash_sha256
+            obra, autores, editoras, interprete, contrato, hash_sha256
         )
 
         ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -105,7 +84,6 @@ class DossieService:
             f"Data de geração:\n{ts}\n"
         )
 
-        # 5) Compacta tudo
         zip_bytes = self._criar_zip(
             audio_bytes   = audio_bytes,
             letra         = obra.get("letra", "") or "",
@@ -115,24 +93,16 @@ class DossieService:
             hash_txt      = hash_txt,
         )
 
-        # 6) Sobe para o Storage (upsert — substitui se já existir)
         storage_path = f"dossies/{obra_id}/obra-{obra_id}.zip"
         self.sb.storage.from_("dossies").upload(
             path=storage_path,
             file=zip_bytes,
-            file_options={
-                "content-type": "application/zip",
-                # supabase-py exige string "true"/"false" aqui
-                "upsert": "true",
-            },
+            file_options={"content-type": "application/zip", "upsert": "true"},
         )
 
-        # 7) Idempotência: se já existe um dossiê para esta obra,
-        #    apaga o anterior antes de inserir o novo.
         try:
             self.sb.table("dossies").delete().eq("obra_id", obra_id).execute()
         except Exception:
-            # se a tabela está vazia ou políticas RLS impedem, segue.
             pass
 
         row = {
@@ -148,7 +118,6 @@ class DossieService:
         return resp.data[0] if resp.data else row
 
     def download_zip(self, dossie_id: str) -> bytes:
-        """Retorna os bytes do ZIP de um dossiê já gerado."""
         resp = (
             self.sb.table("dossies")
             .select("storage_path")
@@ -184,14 +153,6 @@ class DossieService:
         return obra
 
     def _buscar_contrato_assinado(self, obra_id: str) -> dict:
-        """
-        Busca o contrato de edição assinado pelo titular ao cadastrar
-        a obra.
-
-        Tabela correta: `contratos_edicao` (não confundir com
-        `contracts_edicao`, que é entre compositores e editoras
-        externas).
-        """
         r = (
             self.sb.table("contratos_edicao")
             .select("*")
@@ -212,11 +173,6 @@ class DossieService:
         return contrato
 
     def _buscar_autores(self, obra_id: str) -> list:
-        """
-        Lê os autores em `coautorias` (fluxo atual) com fallback para
-        `obras_autores` (legado), e valida que os splits dos autores
-        somam 100%.
-        """
         autores = self._buscar_em_coautorias(obra_id)
         if not autores:
             autores = self._buscar_em_obras_autores(obra_id)
@@ -239,7 +195,7 @@ class DossieService:
         try:
             r = (
                 self.sb.table("coautorias")
-                .select("*, perfis(id,nome,nome_artistico,email,cpf)")
+                .select("*, perfis(id,nome,nome_artistico,email,cpf,publisher_id)")
                 .eq("obra_id", obra_id)
                 .execute()
             )
@@ -254,7 +210,7 @@ class DossieService:
         try:
             r = (
                 self.sb.table("obras_autores")
-                .select("*, perfis(id,nome,nome_artistico,email,cpf)")
+                .select("*, perfis(id,nome,nome_artistico,email,cpf,publisher_id)")
                 .eq("obra_id", obra_id)
                 .execute()
             )
@@ -262,14 +218,54 @@ class DossieService:
         except Exception:
             return []
 
+    def _buscar_editoras_dos_autores(self, autores: list) -> list:
+        """
+        Para cada autor, busca o perfil da sua editora (publisher_id).
+        Retorna lista de editoras únicas com nome e CNPJ descriptografado.
+        """
+        publisher_ids = []
+        seen = set()
+        for a in autores:
+            p = a.get("perfis") or {}
+            pid = p.get("publisher_id")
+            if pid and pid not in seen:
+                seen.add(pid)
+                publisher_ids.append(pid)
+
+        if not publisher_ids:
+            return []
+
+        try:
+            r = (
+                self.sb.table("perfis")
+                .select("id,nome,nome_artistico,razao_social,nome_fantasia,cnpj")
+                .in_("id", publisher_ids)
+                .execute()
+            )
+            editoras = []
+            for pub in (r.data or []):
+                cnpj_raw = pub.get("cnpj") or ""
+                try:
+                    cnpj = decrypt_pii(cnpj_raw) if cnpj_raw else ""
+                except Exception:
+                    cnpj = cnpj_raw
+                nome = (
+                    pub.get("nome_fantasia")
+                    or pub.get("razao_social")
+                    or pub.get("nome_artistico")
+                    or pub.get("nome")
+                    or "—"
+                )
+                editoras.append({
+                    "id":   pub["id"],
+                    "nome": nome,
+                    "cnpj": cnpj or "—",
+                })
+            return editoras
+        except Exception:
+            return []
+
     def _extrair_interprete(self, contrato: dict) -> dict:
-        """
-        Extrai o intérprete do contrato. Procura nos campos:
-          - contrato.interprete (objeto)
-          - contrato.dados_titular.interprete
-          - contrato.dados_titular  (titular = intérprete em muitos casos)
-        Sempre retorna um dicionário (mesmo vazio).
-        """
         if isinstance(contrato.get("interprete"), dict):
             i = contrato["interprete"]
         else:
@@ -277,7 +273,7 @@ class DossieService:
             if isinstance(dados.get("interprete"), dict):
                 i = dados["interprete"]
             else:
-                i = dados  # fallback: usa o titular como intérprete
+                i = dados
         return {
             "nome":           i.get("nome", "") or i.get("nome_completo", ""),
             "nome_artistico": i.get("nome_artistico", "") or "",
@@ -294,32 +290,114 @@ class DossieService:
         return data
 
     # ──────────────────────────────────────────────────────────────
-    # MONTAGEM DE METADATA / RESUMO
+    # CÁLCULO DE PERCENTUAIS — ECAD / Lei 9.610/98
+    # ──────────────────────────────────────────────────────────────
+
+    def _calcular_splits(self, autores: list, editoras: list) -> tuple[list, list]:
+        """
+        Retorna (autores_splits, editoras_splits) com percentuais calculados.
+
+        Cota autoral (75%): cada autor recebe share_pct * 75 / 100
+        Cota editorial (25%): dividida igualmente entre editoras distintas
+                              (ou 25% para "Editora não definida" se não houver)
+        """
+        n_autores = len(autores)
+
+        autores_splits = []
+        for a in autores:
+            share_interno = float(a.get("share_pct", 0) or 0)
+            # share_pct é o % interno de 100%; converte para % da obra total
+            pct_obra = round(share_interno * COTA_AUTORAL / 100.0, 2)
+            autores_splits.append({
+                "_autor_raw":       a,
+                "percentual_interno": round(share_interno, 2),
+                "percentual_obra":    pct_obra,
+            })
+
+        editoras_splits = []
+        if editoras:
+            n_ed = len(editoras)
+            pct_interno = round(100.0 / n_ed, 4)
+            pct_obra    = round(COTA_EDITORIAL / n_ed, 4)
+            for ed in editoras:
+                editoras_splits.append({
+                    "_editora_raw":       ed,
+                    "percentual_interno": round(pct_interno, 2),
+                    "percentual_obra":    round(pct_obra, 2),
+                })
+        else:
+            editoras_splits.append({
+                "_editora_raw": {
+                    "id":   None,
+                    "nome": "Editora não definida",
+                    "cnpj": "—",
+                },
+                "percentual_interno": 100.0,
+                "percentual_obra":    COTA_EDITORIAL,
+            })
+
+        return autores_splits, editoras_splits
+
+    # ──────────────────────────────────────────────────────────────
+    # MONTAGEM DE METADATA
     # ──────────────────────────────────────────────────────────────
 
     def _montar_metadata(
         self,
         obra: dict,
         autores: list,
+        editoras: list,
         interprete: dict,
         contrato: dict,
     ) -> dict:
+        autores_splits, editoras_splits = self._calcular_splits(autores, editoras)
+
+        # Mapa publisher_id → editora para associar a cada autor
+        pub_map = {ed["id"]: ed for ed in editoras if ed.get("id")}
+
         autores_list = []
-        for a in autores:
+        for item in autores_splits:
+            a = item["_autor_raw"]
             p = a.get("perfis") or {}
             cpf_raw = p.get("cpf") or ""
             try:
                 cpf = decrypt_pii(cpf_raw) if cpf_raw else ""
             except Exception:
                 cpf = ""
+
+            publisher_id = p.get("publisher_id")
+            editora_autor = pub_map.get(publisher_id, {}) if publisher_id else {}
+
             autores_list.append({
-                "nome":           p.get("nome", "") or "",
-                "nome_artistico": p.get("nome_artistico") or "",
-                "cpf":            cpf,
-                "email":          p.get("email", "") or "",
-                "percentual":     float(a.get("share_pct", 0) or 0),
-                "funcao":         "Autor" if a.get("is_principal") else "Coautor",
+                "nome":               p.get("nome", "") or "",
+                "nome_artistico":     p.get("nome_artistico") or "",
+                "cpf":                cpf,
+                "email":              p.get("email", "") or "",
+                "funcao":             "Autor" if a.get("is_principal") else "Coautor",
+                "percentual_interno": f"{item['percentual_interno']:.2f}%",
+                "percentual_obra":    f"{item['percentual_obra']:.2f}%",
+                "editora": {
+                    "nome": editora_autor.get("nome") or "—",
+                    "cnpj": editora_autor.get("cnpj") or "—",
+                } if editora_autor else None,
             })
+
+        editoras_list = []
+        for item in editoras_splits:
+            ed = item["_editora_raw"]
+            editoras_list.append({
+                "nome":               ed.get("nome", "—"),
+                "cnpj":               ed.get("cnpj", "—"),
+                "percentual_interno": f"{item['percentual_interno']:.2f}%",
+                "percentual_obra":    f"{item['percentual_obra']:.2f}%",
+            })
+
+        # Validação final
+        soma = (
+            sum(item["percentual_obra"] for item in autores_splits)
+            + sum(item["percentual_obra"] for item in editoras_splits)
+        )
+        validacao_status = "OK" if abs(soma - 100.0) < 0.1 else f"ERRO: soma={soma:.2f}%"
 
         assinado_em = str(
             contrato.get("assinado_em")
@@ -332,13 +410,24 @@ class DossieService:
             "titulo":       obra.get("nome", "") or "",
             "idioma":       obra.get("idioma") or "Português",
             "data_criacao": str(obra.get("created_at", ""))[:10],
-            "editora": {
-                "nome":       EDITORA_NOME,
-                "percentual": EDITORA_PERCENTUAL,
+            "interprete":   interprete,
+            "cota_autoral": {
+                "percentual_total": f"{COTA_AUTORAL:.0f}%",
+                "autores":          autores_list,
             },
-            "autores":    autores_list,
-            "interprete": interprete,
-            "royalties":  ROYALTIES_DEFAULT,
+            "cota_editorial": {
+                "percentual_total": f"{COTA_EDITORIAL:.0f}%",
+                "editoras":         editoras_list,
+                "aviso": (
+                    "Nenhuma editora cadastrada. Os 25% da cota editorial "
+                    "estão reservados até que uma editora seja vinculada."
+                    if not editoras else None
+                ),
+            },
+            "validacao": {
+                "soma_total": f"{soma:.2f}%",
+                "status":     validacao_status,
+            },
             "contrato": {
                 "id":              str(contrato["id"]),
                 "data_assinatura": assinado_em[:10],
@@ -377,10 +466,14 @@ class DossieService:
         self,
         obra: dict,
         autores: list,
+        editoras: list,
         interprete: dict,
         contrato: dict,
         hash_sha256: str,
     ) -> bytes:
+        autores_splits, editoras_splits = self._calcular_splits(autores, editoras)
+        pub_map = {ed["id"]: ed for ed in editoras if ed.get("id")}
+
         buf = io.BytesIO()
         doc = SimpleDocTemplate(
             buf, pagesize=A4,
@@ -410,13 +503,31 @@ class DossieService:
             fontName="Courier", fontSize=7.5,
             textColor=colors.HexColor("#333333"),
         )
+        aviso_style = ParagraphStyle(
+            "aviso", parent=ss["BodyText"],
+            fontName="Helvetica-Oblique", fontSize=8,
+            textColor=colors.HexColor("#885500"),
+            spaceBefore=4,
+        )
 
-        def ts() -> TableStyle:
+        def base_ts() -> TableStyle:
             return TableStyle([
                 ("FONTNAME",      (0, 0), (-1, -1), "Helvetica"),
                 ("FONTSIZE",      (0, 0), (-1, -1), 9),
                 ("TEXTCOLOR",     (0, 0), (0, -1),  colors.HexColor("#555555")),
                 ("BACKGROUND",    (0, 0), (0, -1),  colors.HexColor("#F5F5F5")),
+                ("GRID",          (0, 0), (-1, -1), 0.3, colors.HexColor("#DDDDDD")),
+                ("TOPPADDING",    (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ])
+
+        def header_ts() -> TableStyle:
+            return TableStyle([
+                ("FONTNAME",      (0, 0), (-1, -1), "Helvetica"),
+                ("FONTSIZE",      (0, 0), (-1, -1), 9),
+                ("FONTNAME",      (0, 0), (-1, 0),  "Helvetica-Bold"),
+                ("BACKGROUND",    (0, 0), (-1, 0),  colors.HexColor("#111111")),
+                ("TEXTCOLOR",     (0, 0), (-1, 0),  colors.white),
                 ("GRID",          (0, 0), (-1, -1), 0.3, colors.HexColor("#DDDDDD")),
                 ("TOPPADDING",    (0, 0), (-1, -1), 5),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
@@ -428,77 +539,141 @@ class DossieService:
 
         story = [
             Paragraph("DOSSIÊ DA OBRA", h1),
-            Paragraph(
-                "Gravan · Documento Oficial de Integridade Musical", sub
-            ),
+            Paragraph("Gravan · Documento Oficial de Integridade Musical", sub),
+
+            # ── OBRA ──────────────────────────────────────────────
             Paragraph("OBRA", h2),
             Table([
                 ["Título",           obra.get("nome", "—") or "—"],
                 ["Gênero",           obra.get("genero")    or "—"],
                 ["ID",               str(obra.get("id", ""))],
                 ["Data de cadastro", str(obra.get("created_at", ""))[:10]],
-            ], colWidths=[4.5 * cm, 11.5 * cm], style=ts()),
+            ], colWidths=[4.5 * cm, 11.5 * cm], style=base_ts()),
 
-            Paragraph("AUTORES E SPLITS", h2),
+            # ── COTA AUTORAL (75%) ────────────────────────────────
+            Paragraph(f"COTA AUTORAL — {COTA_AUTORAL:.0f}% (Lei 9.610/98 / ECAD)", h2),
         ]
 
-        hdr = [["Nome", "Nome Artístico", "Email", "%"]]
-        rows = []
-        for a in autores:
-            p = a.get("perfis") or {}
-            rows.append([
-                p.get("nome", "—") or "—",
+        # Tabela de autores com CPF, editora e percentuais
+        hdr_autores = [[
+            "Nome / CPF",
+            "Nome Artístico",
+            "Função",
+            "Editora (CNPJ)",
+            "% Interno",
+            "% Obra",
+        ]]
+        rows_autores = []
+        for item in autores_splits:
+            a  = item["_autor_raw"]
+            p  = a.get("perfis") or {}
+            cpf_raw = p.get("cpf") or ""
+            try:
+                cpf = decrypt_pii(cpf_raw) if cpf_raw else "—"
+            except Exception:
+                cpf = "—"
+
+            publisher_id  = p.get("publisher_id")
+            editora_autor = pub_map.get(publisher_id, {}) if publisher_id else {}
+            ed_nome  = editora_autor.get("nome", "—") if editora_autor else "—"
+            ed_cnpj  = editora_autor.get("cnpj", "—") if editora_autor else "—"
+            ed_cell  = f"{ed_nome}\n{ed_cnpj}"
+
+            nome_cpf = f"{p.get('nome', '—') or '—'}\nCPF: {cpf}"
+            funcao   = "Autor" if a.get("is_principal") else "Coautor"
+
+            rows_autores.append([
+                nome_cpf,
                 p.get("nome_artistico") or "—",
-                p.get("email", "—") or "—",
-                f"{float(a.get('share_pct', 0) or 0):.1f}%",
+                funcao,
+                ed_cell,
+                f"{item['percentual_interno']:.2f}%",
+                f"{item['percentual_obra']:.2f}%",
             ])
-        if not rows:
-            rows = [["—", "—", "—", "—"]]
-        ta = Table(hdr + rows, colWidths=[4 * cm, 4 * cm, 5 * cm, 3 * cm])
-        ta.setStyle(TableStyle([
-            ("FONTNAME",      (0, 0), (-1, -1), "Helvetica"),
-            ("FONTSIZE",      (0, 0), (-1, -1), 9),
-            ("FONTNAME",      (0, 0), (-1, 0),  "Helvetica-Bold"),
-            ("BACKGROUND",    (0, 0), (-1, 0),  colors.HexColor("#111111")),
-            ("TEXTCOLOR",     (0, 0), (-1, 0),  colors.white),
-            ("GRID",          (0, 0), (-1, -1), 0.3, colors.HexColor("#DDDDDD")),
-            ("TOPPADDING",    (0, 0), (-1, -1), 5),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-        ]))
+
+        if not rows_autores:
+            rows_autores = [["—", "—", "—", "—", "—", "—"]]
+
+        ta = Table(
+            hdr_autores + rows_autores,
+            colWidths=[4.0*cm, 3.0*cm, 1.8*cm, 4.0*cm, 1.8*cm, 1.6*cm],
+        )
+        ta.setStyle(header_ts())
         story.append(ta)
 
+        # ── COTA EDITORIAL (25%) ──────────────────────────────────
+        story.append(Paragraph(f"COTA EDITORIAL — {COTA_EDITORIAL:.0f}% (Lei 9.610/98 / ECAD)", h2))
+
+        if not editoras:
+            story.append(Paragraph(
+                "⚠ Nenhuma editora cadastrada. Os 25% da cota editorial estão "
+                "reservados até que uma editora seja vinculada à obra.",
+                aviso_style,
+            ))
+        else:
+            hdr_ed = [["Editora", "CNPJ", "% Interno", "% Obra"]]
+            rows_ed = []
+            for item in editoras_splits:
+                ed = item["_editora_raw"]
+                rows_ed.append([
+                    ed.get("nome", "—"),
+                    ed.get("cnpj", "—"),
+                    f"{item['percentual_interno']:.2f}%",
+                    f"{item['percentual_obra']:.2f}%",
+                ])
+            ted = Table(
+                hdr_ed + rows_ed,
+                colWidths=[6.0*cm, 5.0*cm, 2.5*cm, 2.5*cm],
+            )
+            ted.setStyle(header_ts())
+            story.append(ted)
+
+        # ── VALIDAÇÃO ─────────────────────────────────────────────
+        soma = (
+            sum(i["percentual_obra"] for i in autores_splits)
+            + sum(i["percentual_obra"] for i in editoras_splits)
+        )
+        status_txt = "OK ✓" if abs(soma - 100.0) < 0.1 else f"ERRO — soma = {soma:.2f}%"
+        story += [
+            Spacer(1, 0.3 * cm),
+            Table([
+                ["Soma total dos direitos", f"{soma:.2f}%"],
+                ["Status de validação",     status_txt],
+            ], colWidths=[6.0 * cm, 10.0 * cm], style=base_ts()),
+        ]
+
+        # ── INTÉRPRETE ────────────────────────────────────────────
         story += [
             Paragraph("INTÉRPRETE", h2),
             Table([
                 ["Nome",           interprete.get("nome", "") or "—"],
                 ["Nome Artístico", interprete.get("nome_artistico", "") or "—"],
                 ["Email",          interprete.get("email", "") or "—"],
-            ], colWidths=[4.5 * cm, 11.5 * cm], style=ts()),
+            ], colWidths=[4.5 * cm, 11.5 * cm], style=base_ts()),
+        ]
 
-            Paragraph("EDITORA", h2),
-            Table(
-                [[EDITORA_NOME, f"{EDITORA_PERCENTUAL}%"]],
-                colWidths=[12 * cm, 4 * cm], style=ts(),
-            ),
-
+        # ── CONTRATO ──────────────────────────────────────────────
+        story += [
             Paragraph("CONTRATO", h2),
             Table([
                 ["ID do Contrato",  str(contrato.get("id", ""))],
                 ["Data assinatura", assinado],
                 ["Tipo",            "Edição Musical"],
-            ], colWidths=[4.5 * cm, 11.5 * cm], style=ts()),
+            ], colWidths=[4.5 * cm, 11.5 * cm], style=base_ts()),
+        ]
 
+        # ── HASH ──────────────────────────────────────────────────
+        story += [
             Spacer(1, 0.5 * cm),
             Paragraph("HASH DE INTEGRIDADE SHA-256", h2),
             Paragraph(hash_sha256, mono),
-
             Spacer(1, 1 * cm),
             Paragraph(
                 "Documento gerado automaticamente pela plataforma Gravan. "
-                "Validade jurídica conforme MP nº 2.200-2/2001 e Lei nº "
-                "14.063/2020.",
+                "Validade jurídica conforme MP nº 2.200-2/2001 e Lei nº 14.063/2020.",
                 sub,
             ),
         ]
+
         doc.build(story)
         return buf.getvalue()
