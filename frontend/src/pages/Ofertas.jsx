@@ -49,6 +49,7 @@ export default function Ofertas() {
   const [editora, setEditora]     = useState([])
   const [loading, setLoading]     = useState(true)
   const [respondendo, setRespondendo] = useState(null)
+  const [cancelando, setCancelando] = useState(null)
   const [contraOferta, setContraOferta] = useState(null)
 
   async function carregar() {
@@ -84,6 +85,17 @@ export default function Ofertas() {
     const proxima = ordem.find(k => (counts[k] ?? 0) > 0)
     if (proxima && proxima !== aba) setAba(proxima)
   }, [loading, recebidas.length, enviadas.length, editora.length, abaTocadaPeloUsuario, isCompositor, isPublisher, aba])
+
+  async function cancelarOferta(oferta) {
+    if (!window.confirm(`Cancelar a proposta para "${oferta.obras?.nome ?? 'esta obra'}"? Esta ação não pode ser desfeita.`)) return
+    setCancelando(oferta.id)
+    try {
+      const updated = await api.patch(`/catalogo/ofertas/${oferta.id}/cancelar`, {})
+      setEnviadas(prev => prev.map(o => o.id === oferta.id ? { ...o, ...updated } : o))
+    } catch (e) {
+      alert(`Não foi possível cancelar: ${e.message}`)
+    } finally { setCancelando(null) }
+  }
 
   async function responder(oferta, status) {
     setRespondendo(oferta.id)
@@ -199,6 +211,10 @@ export default function Ofertas() {
           const podeResponderRecebida   = aba === 'recebidas' && oferta.status === 'pendente' && aguardandoCompositor
           const podePagarEnviada        = aba === 'enviadas'  && oferta.status === 'aceita'
           const podeResponderContraEnv  = aba === 'enviadas'  && oferta.status === 'pendente' && aguardandoInterprete
+          const podeCancelarEnviada     = aba === 'enviadas'  && (
+            (oferta.status === 'pendente' && aguardandoCompositor) ||
+            oferta.status === 'aceita'
+          )
 
           const labelExpiracao = aba === 'enviadas' && oferta.status === 'aceita'
             ? 'Janela de pagamento'
@@ -346,6 +362,27 @@ export default function Ofertas() {
                 >
                   Assinar contrato e pagar · {fmt(oferta.valor_cents)}
                 </button>
+              )}
+
+              {podeCancelarEnviada && (
+                <div style={{ marginTop: podeResponderContraEnv || podePagarEnviada ? 8 : 0 }}>
+                  <button
+                    className="btn btn-sm"
+                    style={{
+                      background: 'none', border: '1px solid var(--border)',
+                      color: 'var(--text-muted)', fontSize: 12,
+                    }}
+                    disabled={cancelando === oferta.id}
+                    onClick={() => cancelarOferta(oferta)}
+                  >
+                    {cancelando === oferta.id ? 'Cancelando…' : 'Cancelar proposta'}
+                  </button>
+                  {oferta.status === 'aceita' && (
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>
+                      O compositor já aceitou — cancelar encerra a negociação antes do pagamento.
+                    </span>
+                  )}
+                </div>
               )}
 
               {oferta.responded_at && (

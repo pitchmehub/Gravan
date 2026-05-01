@@ -335,6 +335,62 @@ def responder_oferta(oferta_id):
     return jsonify(upd), 200
 
 
+@catalogo_bp.route("/ofertas/<oferta_id>/cancelar", methods=["PATCH"])
+@require_auth
+def cancelar_oferta(oferta_id):
+    """
+    Intérprete cancela a sua própria oferta enquanto ela ainda está pendente
+    e aguardando resposta do compositor (antes de qualquer ação do compositor).
+    Também permite cancelar uma oferta aceita antes de o pagamento ser concluído.
+    """
+    import logging
+    from datetime import datetime, timezone
+    log = logging.getLogger("gravan.catalogo")
+    sb = get_supabase()
+
+    of = sb.table("ofertas").select("*").eq("id", oferta_id).single().execute().data
+    if not of:
+        abort(404, description="Oferta não encontrada.")
+
+    if of.get("interprete_id") != g.user.id:
+        abort(403, description="Apenas quem enviou a oferta pode cancelá-la.")
+
+    status_cancelaveis = ("pendente", "aceita")
+    if of["status"] not in status_cancelaveis:
+        abort(409, description=f"Oferta em status '{of['status']}' não pode ser cancelada.")
+
+    if of["status"] == "pendente" and of.get("aguardando_resposta_de") != "compositor":
+        abort(409, description="Oferta aguarda sua própria resposta — recuse ou aceite a contraproposta em vez de cancelar.")
+
+    sb.table("ofertas").update({
+        "status":       "cancelada",
+        "responded_at": datetime.now(timezone.utc).isoformat(),
+    }).eq("id", oferta_id).execute()
+
+    # Notifica compositor (in-app)
+    try:
+        obra = sb.table("obras").select("nome, titular_id").eq("id", of["obra_id"]).single().execute().data or {}
+        interprete = sb.table("perfis").select("nome").eq("id", g.user.id).single().execute().data or {}
+        if obra.get("titular_id"):
+            from services.notificacoes import notify
+            notify(
+                perfil_id=obra["titular_id"],
+                tipo="oferta",
+                titulo=f"Oferta cancelada em \"{obra.get('nome','—')}\"",
+                mensagem=(
+                    f"O intérprete {interprete.get('nome') or 'um usuário'} cancelou "
+                    f"a proposta enviada para a obra \"{obra.get('nome','—')}\"."
+                ),
+                link="/ofertas",
+                payload={"oferta_id": oferta_id},
+            )
+    except Exception as e:
+        log.warning("Falha ao notificar compositor sobre cancelamento: %s", e)
+
+    log.info("Oferta %s cancelada pelo intérprete %s", oferta_id, g.user.id)
+    return jsonify({"ok": True, "status": "cancelada"}), 200
+
+
 @catalogo_bp.route("/ofertas/<oferta_id>/contra-propor", methods=["POST"])
 @require_auth
 @require_role("compositor")

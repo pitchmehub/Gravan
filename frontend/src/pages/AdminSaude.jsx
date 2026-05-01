@@ -252,6 +252,111 @@ export default function AdminSaude() {
         })()}
       </Card>
 
+      {/* Mapa de e-mails automáticos */}
+      <Card titulo="E-mails automáticos — mapa completo">
+        {(() => {
+          const grupos = [
+            {
+              grupo: 'Saques',
+              cor: '#1d4ed8',
+              emails: [
+                { fn: 'render_otp_email', gatilho: 'Usuário solicita saque', destinatario: 'Titular da carteira', descricao: 'Código OTP de confirmação (expira em 10 min).' },
+                { fn: 'render_saque_agendado_email', gatilho: 'OTP confirmado — saque entra na janela de 24h', destinatario: 'Titular da carteira', descricao: 'Confirmação de agendamento + link de cancelamento de emergência.' },
+                { fn: 'render_saque_pago_email', gatilho: 'Saque processado pelo Stripe', destinatario: 'Titular da carteira', descricao: 'Comprovante de transferência com ID Stripe.' },
+                { fn: 'render_saque_cancelado_email', gatilho: 'Saque cancelado (pelo app ou pelo link do e-mail)', destinatario: 'Titular da carteira', descricao: 'Aviso de cancelamento e orientações de segurança.' },
+              ],
+            },
+            {
+              grupo: 'Ofertas de licenciamento (obra com editora terceira)',
+              cor: '#d97706',
+              emails: [
+                { fn: 'render_oferta_editora_email', gatilho: 'Pagamento da oferta confirmado no Stripe', destinatario: 'Editora terceira', descricao: 'Nova oferta de licença — prazo para aceitar e assinar o contrato trilateral.' },
+                { fn: 'render_oferta_notificacao_compositor_email', gatilho: 'Pagamento da oferta confirmado no Stripe', destinatario: 'Compositor(es) da obra', descricao: 'Aviso de que há uma oferta em andamento na obra.' },
+                { fn: 'render_oferta_reminder_email', gatilho: 'Job de lembrete (watchdog) quando prazo está próximo', destinatario: 'Editora terceira', descricao: 'Lembrete de oferta prestes a expirar com horas úteis restantes.' },
+                { fn: 'render_oferta_lembrete_compositor_email', gatilho: 'Job de lembrete (watchdog)', destinatario: 'Compositor(es)', descricao: 'Lembrete de oferta prestes a expirar.' },
+                { fn: 'render_oferta_expirada_comprador_email', gatilho: 'Oferta expira sem resposta da editora', destinatario: 'Comprador (intérprete)', descricao: 'Aviso de estorno integral do valor pago.' },
+                { fn: 'render_oferta_expirada_editora_email', gatilho: 'Oferta expira sem resposta', destinatario: 'Editora terceira', descricao: 'Aviso de expiração e orientação de cadastro.' },
+                { fn: 'render_oferta_expirada_compositor_email', gatilho: 'Oferta expira sem resposta da editora', destinatario: 'Compositor(es)', descricao: 'Aviso de que a oferta expirou.' },
+                { fn: 'render_oferta_concluida_email', gatilho: 'Todas as partes assinaram o contrato', destinatario: 'Comprador (intérprete)', descricao: 'Confirmação de licença ativa + link para baixar o áudio.' },
+                { fn: 'render_oferta_concluida_compositor_email', gatilho: 'Todas as partes assinaram o contrato', destinatario: 'Compositor(es)', descricao: 'Confirmação de licença concluída.' },
+                { fn: 'render_oferta_concluida_editora_terceira_email', gatilho: 'Todas as partes assinaram o contrato', destinatario: 'Editora terceira', descricao: 'Confirmação de licença concluída.' },
+              ],
+            },
+            {
+              grupo: 'Contrato de licenciamento (obra sem editora terceira)',
+              cor: '#16a34a',
+              emails: [
+                { fn: 'render_licenciamento_concluido_email', gatilho: 'Contrato de licenciamento assinado por todas as partes', destinatario: 'Compositor, intérprete e editora (se houver)', descricao: 'Contrato ativo — enviado a cada papel com os detalhes do contrato.' },
+              ],
+            },
+            {
+              grupo: 'Exclusividade e rescisão',
+              cor: '#BE123C',
+              emails: [
+                { fn: 'render_rescisao_exclusividade_email', gatilho: 'Compositor rescinde contrato de exclusividade', destinatario: 'Intérprete, editora-mãe e editora terceira', descricao: 'Aviso formal de rescisão com os dados da obra.' },
+              ],
+            },
+            {
+              grupo: 'Convites (sistema de agregação de editoras)',
+              cor: '#6b7280',
+              emails: [
+                { fn: 'render_convite_novo_usuario_email', gatilho: 'Editora convida artista que ainda não tem cadastro', destinatario: 'E-mail do convidado (novo usuário)', descricao: 'Link para definir senha e responder ao convite de agregação.' },
+                { fn: 'render_convite_usuario_existente_email', gatilho: 'Editora convida artista já cadastrado', destinatario: 'Usuário existente', descricao: 'Notificação de convite de agregação com link para responder.' },
+              ],
+            },
+          ]
+
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {grupos.map(g => (
+                <div key={g.grupo}>
+                  <div style={{
+                    fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                    letterSpacing: 1, color: g.cor, marginBottom: 8,
+                    borderBottom: `2px solid ${g.cor}22`, paddingBottom: 4,
+                  }}>
+                    {g.grupo}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {g.emails.map(e => (
+                      <div key={e.fn} style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'minmax(220px,1fr) minmax(160px,.7fr) minmax(0,1.2fr)',
+                        gap: 10, alignItems: 'start',
+                        padding: '8px 10px',
+                        background: 'var(--surface-2)', borderRadius: 8, fontSize: 12,
+                      }}>
+                        <div>
+                          <div style={{
+                            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                            fontSize: 10, color: g.cor, fontWeight: 700, marginBottom: 3,
+                          }}>{e.fn}</div>
+                          <div style={{ color: 'var(--text)', fontWeight: 600, fontSize: 12 }}>
+                            {e.descricao}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 2 }}>Gatilho</div>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{e.gatilho}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 2 }}>Destinatário</div>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{e.destinatario}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                Todos os envios passam por <code>send_email()</code> em <code>services/email_service.py</code>.
+                Se SMTP_HOST não estiver configurado no servidor, os e-mails são <strong>simulados</strong> (aparecem no log do Render mas não chegam ao destinatário).
+              </p>
+            </div>
+          )
+        })()}
+      </Card>
+
       {/* Variáveis de ambiente */}
       <Card titulo="Variáveis de ambiente">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
