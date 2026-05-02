@@ -17,3 +17,9 @@ id = "0OIH89c710YjjllCXeQvH"
 uri = "file://backend/email_templates_supabase/gravan_templates_supabase.zip"
 type = "unspecified"
 title = "Templates Supabase — Gravan (5 arquivos HTML)"
+
+[[outputs]]
+id = "TNfHGHL-axltCy-f0uTXW"
+uri = "file://frontend/public/gravan_descricao.pdf"
+type = "pdf"
+title = "Gravan — Descrição Completa da Plataforma"
