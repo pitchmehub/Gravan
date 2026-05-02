@@ -56,7 +56,7 @@ class DossieService:
 
     def gerar(self, obra_id: str, user_id: str) -> dict:
         obra        = self._buscar_obra(obra_id)
-        contrato    = self._buscar_contrato_assinado(obra_id)
+        contrato    = self._buscar_contrato_assinado(obra_id, obra)
         autores     = self._buscar_autores(obra_id)
         editoras    = self._buscar_editoras_dos_autores(autores)
         interprete  = self._extrair_interprete(contrato)
@@ -152,7 +152,14 @@ class DossieService:
             raise ValueError("Arquivo de áudio não cadastrado para esta obra.")
         return obra
 
-    def _buscar_contrato_assinado(self, obra_id: str) -> dict:
+    def _buscar_contrato_assinado(self, obra_id: str, obra: dict) -> dict:
+        """
+        Busca o contrato de edição na seguinte ordem:
+          1. contratos_edicao  — contrato Gravan assinado pelo compositor
+          2. contracts_edicao  — contrato entre compositor e editora interna
+          3. Contrato sintético — fallback quando nenhum existe
+        """
+        # 1. Contrato Gravan
         r = (
             self.sb.table("contratos_edicao")
             .select("*")
@@ -160,17 +167,63 @@ class DossieService:
             .limit(1)
             .execute()
         )
-        if not r.data:
-            raise ValueError(
-                "Contrato de edição não encontrado para esta obra. "
-                "O dossiê só pode ser gerado para obras cujo contrato "
-                "de edição foi registrado na plataforma Gravan."
+        if r.data:
+            contrato = r.data[0]
+            if not contrato.get("assinado_em"):
+                dados = contrato.get("dados_titular") or {}
+                contrato["assinado_em"] = dados.get("data_assinatura") or contrato.get("created_at", "")
+            return contrato
+
+        # 2. Contrato editora interna (agregado)
+        try:
+            r2 = (
+                self.sb.table("contracts_edicao")
+                .select("*")
+                .eq("obra_id", obra_id)
+                .order("created_at", desc=True)
+                .limit(1)
+                .execute()
             )
-        contrato = r.data[0]
-        if not contrato.get("assinado_em"):
-            dados = contrato.get("dados_titular") or {}
-            contrato["assinado_em"] = dados.get("data_assinatura") or ""
-        return contrato
+        except Exception:
+            r2 = None
+
+        if r2 and r2.data:
+            c = r2.data[0]
+            assinado_em = (
+                c.get("completed_at")
+                or c.get("signed_by_autor_at")
+                or c.get("created_at", "")
+            )
+            return {
+                "id":            c["id"],
+                "obra_id":       obra_id,
+                "assinado_em":   assinado_em,
+                "created_at":    c.get("created_at", ""),
+                "conteudo":      c.get("contract_text") or c.get("contract_html") or "",
+                "dados_titular": {},
+                "interprete":    {},
+                "versao":        c.get("versao") or "v1.0",
+                "ip_assinatura": c.get("autor_ip_hash") or "",
+            }
+
+        # 3. Fallback sintético
+        editora_nome = obra.get("editora_terceira_nome") or "Editora Independente"
+        return {
+            "id":            obra_id,
+            "obra_id":       obra_id,
+            "assinado_em":   obra.get("created_at", ""),
+            "created_at":    obra.get("created_at", ""),
+            "dados_titular": {},
+            "interprete":    {},
+            "conteudo":      (
+                f"DECLARAÇÃO DE REGISTRO\n\n"
+                f"O titular da obra declara que a mesma está sob gestão "
+                f"da editora: {editora_nome}.\n\n"
+                f"Este dossiê foi gerado pela plataforma Gravan como "
+                f"registro de autoria e integridade da obra."
+            ),
+            "versao":        "v1.0",
+        }
 
     def _buscar_autores(self, obra_id: str) -> list:
         autores = self._buscar_em_coautorias(obra_id)
