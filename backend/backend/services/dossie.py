@@ -72,7 +72,7 @@ class DossieService:
         Retorna a linha inserida na tabela `dossies` (com `id` único).
         """
         obra        = self._buscar_obra(obra_id)
-        contrato    = self._buscar_contrato_assinado(obra_id)
+        contrato    = self._buscar_contrato_assinado(obra_id, obra)
         autores     = self._buscar_autores(obra_id)
         interprete  = self._extrair_interprete(contrato)
         audio_bytes = self._download_audio(obra["audio_path"])
@@ -183,14 +183,11 @@ class DossieService:
             raise ValueError("Arquivo de áudio não cadastrado para esta obra.")
         return obra
 
-    def _buscar_contrato_assinado(self, obra_id: str) -> dict:
+    def _buscar_contrato_assinado(self, obra_id: str, obra: dict) -> dict:
         """
-        Busca o contrato de edição assinado pelo titular ao cadastrar
-        a obra.
-
-        Tabela correta: `contratos_edicao` (não confundir com
-        `contracts_edicao`, que é entre compositores e editoras
-        externas).
+        Busca o contrato de edição assinado pelo titular.
+        Para obras com editora terceira (sem contrato Gravan), retorna
+        um contrato sintético baseado nos dados da própria obra.
         """
         r = (
             self.sb.table("contratos_edicao")
@@ -200,20 +197,37 @@ class DossieService:
             .limit(1)
             .execute()
         )
-        if not r.data:
-            raise ValueError(
-                "Contrato de edição não encontrado para esta obra. "
-                "O dossiê só pode ser gerado para obras cujo contrato "
-                "de edição foi registrado na plataforma Gravan."
-            )
-        contrato = r.data[0]
-        if not contrato.get("assinado_em"):
-            dados = contrato.get("dados_titular") or {}
-            contrato["assinado_em"] = (
-                dados.get("data_assinatura")
-                or contrato.get("created_at", "")
-            )
-        return contrato
+        if r.data:
+            contrato = r.data[0]
+            if not contrato.get("assinado_em"):
+                dados = contrato.get("dados_titular") or {}
+                contrato["assinado_em"] = (
+                    dados.get("data_assinatura")
+                    or contrato.get("created_at", "")
+                )
+            return contrato
+
+        # Obras sem contrato Gravan (ex: editora terceira) — contrato sintético
+        editora_nome = (
+            obra.get("editora_terceira_nome")
+            or "Editora Independente"
+        )
+        return {
+            "id":           obra_id,
+            "obra_id":      obra_id,
+            "assinado_em":  obra.get("created_at", ""),
+            "created_at":   obra.get("created_at", ""),
+            "dados_titular": {},
+            "interprete":   {},
+            "conteudo":     (
+                f"DECLARAÇÃO DE REGISTRO\n\n"
+                f"O titular da obra declara que a mesma está sob gestão "
+                f"da editora: {editora_nome}.\n\n"
+                f"Este dossiê foi gerado pela plataforma Gravan como "
+                f"registro de autoria e integridade da obra."
+            ),
+            "versao":       "v1.0",
+        }
 
     def _buscar_autores(self, obra_id: str) -> list:
         """
