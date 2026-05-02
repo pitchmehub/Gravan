@@ -105,9 +105,14 @@ class DossieService:
         except Exception:
             pass
 
+        # contrato_id só pode ser preenchido quando o contrato vem de
+        # contratos_edicao (FK). Contratos de editora interna ou sintéticos
+        # não têm linha nessa tabela — passa NULL para evitar violação de FK.
+        contrato_id_fk = str(contrato["id"]) if contrato.get("_origem_gravan") else None
+
         row = {
             "obra_id":      obra_id,
-            "contrato_id":  str(contrato["id"]),
+            "contrato_id":  contrato_id_fk,
             "gerado_por":   user_id,
             "storage_path": storage_path,
             "hash_sha256":  hash_sha256,
@@ -172,6 +177,7 @@ class DossieService:
             if not contrato.get("assinado_em"):
                 dados = contrato.get("dados_titular") or {}
                 contrato["assinado_em"] = dados.get("data_assinatura") or contrato.get("created_at", "")
+            contrato["_origem_gravan"] = True
             return contrato
 
         # 2. Contrato editora interna (agregado)
