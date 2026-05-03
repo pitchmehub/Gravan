@@ -35,6 +35,7 @@ from db.supabase_client import get_supabase
 from middleware.auth import require_auth
 from services.dossie import DossieService
 from utils.audit import log_event
+from app import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -150,6 +151,7 @@ def _abort_internal(action: str, exc: Exception) -> None:
 # ══════════════════════════════════════════════════════════════════
 @dossie_bp.route("/obras/<string:obra_id>", methods=["POST"])
 @require_auth
+@limiter.limit("10 per hour")
 def gerar_dossie(obra_id: str):
     """Gera o dossiê de uma obra. Dados vêm SOMENTE do contrato assinado."""
     if not _is_valid_uuid(obra_id):
@@ -366,6 +368,7 @@ def visualizar_dossie(dossie_id: str):
 # ══════════════════════════════════════════════════════════════════
 @dossie_bp.route("/<string:dossie_id>/download", methods=["GET"])
 @require_auth
+@limiter.limit("20 per hour")
 def download_dossie(dossie_id: str):
     """Faz o download do ZIP do dossiê."""
     if not _is_valid_uuid(dossie_id):

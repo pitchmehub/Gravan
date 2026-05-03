@@ -15,6 +15,7 @@ from middleware.auth import require_auth
 from db.supabase_client import get_supabase
 from utils.audit import log_event
 from utils.crypto import encrypt_pii, decrypt_pii
+from app import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,7 @@ def lookup_by_email():
 @publishers_bp.post("")
 @publishers_bp.post("/")
 @require_auth
+@limiter.limit("3 per hour")
 def criar_publisher():
     """Promove o usuário logado a EDITORA. Espera os campos PJ no body."""
     # Editora é PJ: não exigimos dados pessoais (nome/CPF do responsável)
@@ -137,6 +139,7 @@ def obter_me():
 
 @publishers_bp.put("/me")
 @require_auth
+@limiter.limit("20 per hour")
 def atualizar_me():
     data = request.get_json(silent=True) or {}
     sb = get_supabase()

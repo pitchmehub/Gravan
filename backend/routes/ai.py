@@ -12,6 +12,7 @@ from middleware.auth import require_auth
 from db.supabase_client import get_supabase
 from services.ai_letra import transcrever_audio_bytes, transcrever_obra_async
 from services.ai_capa import gerar_e_salvar_capa, gerar_url_capa
+from app import limiter
 
 log = logging.getLogger(__name__)
 ai_bp = Blueprint("ai", __name__)
@@ -21,6 +22,7 @@ MAX_AUDIO_BYTES = 10 * 1024 * 1024  # 10 MB
 
 @ai_bp.route("/transcrever", methods=["POST"])
 @require_auth
+@limiter.limit("5 per hour")
 def transcrever_audio_upload():
     """
     Transcreve um arquivo .mp3 enviado pelo usuário (sem persistir).
@@ -53,6 +55,7 @@ def transcrever_audio_upload():
 
 @ai_bp.route("/obras/<obra_id>/gerar-capa", methods=["POST"])
 @require_auth
+@limiter.limit("10 per hour")
 def gerar_capa_obra(obra_id):
     """Gera (ou regera) a capa da obra via Pollinations.ai."""
     sb = get_supabase()
@@ -81,6 +84,7 @@ def gerar_capa_obra(obra_id):
 
 @ai_bp.route("/obras/<obra_id>/transcrever", methods=["POST"])
 @require_auth
+@limiter.limit("5 per hour")
 def retranscrever_obra(obra_id):
     """
     Re-transcreve o áudio de uma obra já cadastrada.

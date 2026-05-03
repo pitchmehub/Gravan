@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request, g, abort
 from middleware.auth import require_auth
 from db.supabase_client import get_supabase
 from services.migrations_status import summary as migrations_summary
+from app import limiter
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -1073,6 +1074,7 @@ def painel_saques():
 
 @admin_bp.route("/saques/<saque_id>/forcar-liberar", methods=["POST"])
 @require_auth
+@limiter.limit("30 per hour")
 def forcar_liberar_saque(saque_id):
     """Força liberação imediata de saque aguardando_liberacao."""
     _check_admin()
@@ -1093,6 +1095,7 @@ def forcar_liberar_saque(saque_id):
 
 @admin_bp.route("/saques/<saque_id>/cancelar-admin", methods=["POST"])
 @require_auth
+@limiter.limit("30 per hour")
 def cancelar_saque_admin(saque_id):
     """Admin cancela saque e devolve o valor à wallet."""
     _check_admin()
@@ -1295,6 +1298,8 @@ def listar_contratos_admin():
 
 
 @admin_bp.route("/test-email", methods=["POST"])
+@require_auth
+@limiter.limit("5 per hour")
 def test_email():
     """
     Dispara um e-mail de teste para validar a configuração SMTP.

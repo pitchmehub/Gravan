@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify, g, abort
 from middleware.auth import require_auth, require_role
 from db.supabase_client import get_supabase
 from utils.sanitizer import sanitize_text
+from app import limiter
 
 catalogo_bp = Blueprint("catalogo", __name__)
 
@@ -151,6 +152,7 @@ def listar_comentarios(obra_id):
 
 @catalogo_bp.route("/<obra_id>/comentarios", methods=["POST"])
 @require_auth
+@limiter.limit("30 per hour")
 def criar_comentario(obra_id):
     data = request.get_json(force=True, silent=True) or {}
     conteudo_raw = data.get("conteudo", "")
@@ -202,6 +204,7 @@ from services.ofertas import (
 
 @catalogo_bp.route("/<obra_id>/ofertas", methods=["POST"])
 @require_auth
+@limiter.limit("20 per hour")
 def criar_oferta(obra_id):
     """
     Body:
@@ -292,6 +295,7 @@ def criar_oferta(obra_id):
 @catalogo_bp.route("/ofertas/<oferta_id>/responder", methods=["PATCH"])
 @require_auth
 @require_role("compositor")
+@limiter.limit("60 per hour")
 def responder_oferta(oferta_id):
     """
     Body:
@@ -337,6 +341,7 @@ def responder_oferta(oferta_id):
 
 @catalogo_bp.route("/ofertas/<oferta_id>/cancelar", methods=["PATCH"])
 @require_auth
+@limiter.limit("30 per hour")
 def cancelar_oferta(oferta_id):
     """
     Intérprete cancela a sua própria oferta enquanto ela ainda está pendente
@@ -394,6 +399,7 @@ def cancelar_oferta(oferta_id):
 @catalogo_bp.route("/ofertas/<oferta_id>/contra-propor", methods=["POST"])
 @require_auth
 @require_role("compositor")
+@limiter.limit("20 per hour")
 def contra_propor_oferta(oferta_id):
     """
     Compositor sugere outro valor. A oferta original vai para
@@ -466,6 +472,7 @@ def contra_propor_oferta(oferta_id):
 
 @catalogo_bp.route("/ofertas/<oferta_id>/responder-contraproposta", methods=["PATCH"])
 @require_auth
+@limiter.limit("60 per hour")
 def responder_contraproposta(oferta_id):
     """
     Intérprete responde a uma contraproposta do compositor.

@@ -10,6 +10,7 @@ import json
 from flask import Blueprint, jsonify, request, abort, g
 from middleware.auth import require_auth
 from db.supabase_client import get_supabase
+from app import limiter
 
 landing_bp = Blueprint("landing", __name__)
 
@@ -52,6 +53,7 @@ def get_landing_content():
 
 @landing_bp.route("/content", methods=["PUT"])
 @require_auth
+@limiter.limit("20 per hour")
 def update_landing_content():
     """Admin-only — salva nova configuração no Supabase."""
     sb = get_supabase()

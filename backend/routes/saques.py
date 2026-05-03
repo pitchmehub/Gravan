@@ -119,6 +119,7 @@ def iniciar():
 # ──────────────────────────────────────────────────────────
 @saques_bp.route("/<saque_id>/confirmar", methods=["POST"])
 @require_auth
+@limiter.limit("10 per minute; 30 per hour")
 def confirmar(saque_id):
     data = request.get_json(silent=True) or {}
     codigo = (data.get("codigo") or "").strip()
@@ -203,6 +204,7 @@ def reenviar(saque_id):
 # ──────────────────────────────────────────────────────────
 @saques_bp.route("/<saque_id>/cancelar", methods=["POST"])
 @require_auth
+@limiter.limit("20 per hour")
 def cancelar_app(saque_id):
     data = request.get_json(silent=True) or {}
     motivo = (data.get("motivo") or "")[:300]

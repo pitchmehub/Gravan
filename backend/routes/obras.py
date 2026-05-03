@@ -11,6 +11,7 @@ from middleware.auth import require_auth
 from services.obras import ObraService
 from db.supabase_client import get_supabase
 from utils.crypto import hash_ip, decrypt_pii
+from app import limiter
 
 obras_bp = Blueprint("obras", __name__)
 
@@ -24,6 +25,7 @@ def _get_perfil():
 @obras_bp.route("", methods=["POST"])
 @obras_bp.route("/", methods=["POST"])
 @require_auth
+@limiter.limit("20 per hour")
 def criar_obra():
     perfil = _get_perfil()
     if not perfil:
@@ -422,6 +424,7 @@ def criar_obra():
 
 @obras_bp.route("/<obra_id>", methods=["DELETE"])
 @require_auth
+@limiter.limit("10 per hour")
 def excluir_obra(obra_id):
     sb = get_supabase()
     obra = sb.table("obras").select("id, titular_id, audio_path").eq("id", obra_id).single().execute()
