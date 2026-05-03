@@ -12,10 +12,6 @@ export function migratePWA() {
         return Promise.all(keys.map(function (k) { return caches.delete(k) }))
       }).then(function () {
         localStorage.setItem(KEY, '1')
-        if (!sessionStorage.getItem('gravan_pwa_reloaded')) {
-          sessionStorage.setItem('gravan_pwa_reloaded', '1')
-          window.location.reload()
-        }
       }).catch(function () { localStorage.setItem(KEY, '1') })
     } else {
       localStorage.setItem(KEY, '1')
