@@ -75,9 +75,9 @@ export default function NovaObra() {
  const [showContrato, setShowContrato] = useState(false)
  const [showUpgrade, setShowUpgrade] = useState(false)
 
- // Faixa de preço varia com o plano: Free R$500–R$1.000, PRO R$500–R$10.000
+ // Faixa de preço varia com o plano: Free R$50–R$1.000, PRO R$50–R$10.000
  const isPro = isPerfilPro(perfil)
- const PRECO_MIN = 500
+ const PRECO_MIN = 50
  const PRECO_MAX = isPro ? 10000 : 1000
 
  useEffect(() => {
@@ -370,8 +370,8 @@ export default function NovaObra() {
  />
  <small style={{ color: 'var(--text-muted)', fontSize: 11 }}>
    {isPro
-     ? '✓ Plano PRO: R$ 500 a R$ 10.000'
-     : 'Plano Grátis: R$ 500 a R$ 1.000. Para vender mais caro, '}
+     ? '✓ Plano PRO: R$ 50 a R$ 10.000'
+     : 'Plano Grátis: R$ 50 a R$ 1.000. Para vender mais caro, '}
    {!isPro && (
      <button
        type="button"
@@ -660,7 +660,7 @@ export default function NovaObra() {
    open={showUpgrade}
    onClose={() => setShowUpgrade(false)}
    titulo="Para precificar acima de R$ 1.000, assine o PRO"
-   mensagem="O plano Grátis permite obras de R$ 500 a R$ 1.000. Com o PRO, você precifica até R$ 10.000 e ainda pode enviar e receber propostas de licenciamento."
+   mensagem="O plano Grátis permite obras de R$ 50 a R$ 1.000. Com o PRO, você precifica até R$ 10.000 e ainda pode enviar e receber propostas de licenciamento."
    contexto={{
      obra: {
        nome,
