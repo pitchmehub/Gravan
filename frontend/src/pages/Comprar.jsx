@@ -8,9 +8,9 @@ function fmt(cents) {
 }
 
 const METODOS = [
- { id: 'pix',     label: 'PIX',              desc: 'QR Code gerado na hora · aprovação imediata · sem taxas extras', icon: '🏦' },
  { id: 'credito', label: 'Cartão de Crédito', desc: 'Visa, Mastercard, Elo, Amex',                                    icon: '💳' },
  { id: 'debito',  label: 'Cartão de Débito',  desc: 'Débito à vista',                                                 icon: '💳' },
+ { id: 'pix',     label: 'PIX',              desc: 'Em breve · aguardando ativação na Stripe', icon: '🏦', disabled: true },
 ]
 
 export default function Comprar() {
@@ -184,19 +184,25 @@ export default function Comprar() {
  <label key={m.id} style={{
  display: 'flex', alignItems: 'center', gap: 14,
  padding: '13px 16px', borderRadius: 'var(--radius-md)',
- border: `2px solid ${metodo === m.id ? 'var(--brand)' : 'var(--border)'}`,
- background: metodo === m.id ? 'var(--brand-light)' : 'var(--surface)',
- cursor: 'pointer', transition: 'all .15s',
+ border: `2px solid ${m.disabled ? 'var(--border)' : metodo === m.id ? 'var(--brand)' : 'var(--border)'}`,
+ background: m.disabled ? 'var(--surface-2)' : metodo === m.id ? 'var(--brand-light)' : 'var(--surface)',
+ cursor: m.disabled ? 'not-allowed' : 'pointer',
+ opacity: m.disabled ? 0.5 : 1,
+ transition: 'all .15s',
  }}>
  <input
  type="radio" name="metodo" value={m.id}
  checked={metodo === m.id}
- onChange={() => setMetodo(m.id)}
+ onChange={() => !m.disabled && setMetodo(m.id)}
+ disabled={m.disabled}
  style={{ accentColor: 'var(--brand)', width: 16, height: 16 }}
  />
  <span style={{ fontSize: 20 }}>{m.icon}</span>
  <div>
- <div style={{ fontWeight: 600, fontSize: 14 }}>{m.label}</div>
+ <div style={{ fontWeight: 600, fontSize: 14 }}>
+ {m.label}
+ {m.disabled && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', background: 'var(--border)', padding: '2px 7px', borderRadius: 99 }}>Em breve</span>}
+ </div>
  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{m.desc}</div>
  </div>
  </label>

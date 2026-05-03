@@ -180,7 +180,10 @@ def criar_checkout():
         )
     except stripe.StripeError as e:
         msg = e.user_message or str(e)
-        abort(500, description=f"Erro Stripe: {msg}")
+        # PIX ou outro método não ativado na conta Stripe
+        if "invalid" in str(msg).lower() and "payment method" in str(msg).lower():
+            abort(422, description="Este método de pagamento não está disponível no momento. Por favor, escolha Cartão de Crédito.")
+        abort(422, description=f"Erro no pagamento: {msg}")
     except Exception as e:
         abort(500, description=f"Erro ao criar checkout: {str(e)}")
 
