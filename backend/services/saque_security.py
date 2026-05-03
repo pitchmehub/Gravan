@@ -49,7 +49,7 @@ log = logging.getLogger("gravan.saque")
 # ────────── Configurações ──────────
 OTP_VALIDADE_MIN          = 10
 OTP_MAX_TENTATIVAS        = 5
-JANELA_LIBERACAO_HORAS    = int(os.environ.get("SAQUE_JANELA_HORAS", "24"))
+JANELA_LIBERACAO_HORAS    = int(os.environ.get("SAQUE_JANELA_HORAS", "12"))
 # Sem limites por valor/quantidade — o único requisito é ter saldo disponível.
 VALOR_MIN_CENTS           = 1  # qualquer valor positivo é aceito
 

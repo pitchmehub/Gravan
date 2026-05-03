@@ -66,9 +66,9 @@ def criar_obra():
         abort(422, description="'preco_cents' deve ser inteiro >= 100.")
 
     # ── Faixa de preço por plano ────────────────────────────────────
-    # STARTER (grátis):  R$ 50 a R$ 1.000
-    # PRO (assinante):   R$ 50 a R$ 10.000
-    PRECO_MIN_CENTS = 5_000      # R$ 50,00
+    # STARTER (grátis):  R$ 500 a R$ 1.000
+    # PRO (assinante):   R$ 500 a R$ 10.000
+    PRECO_MIN_CENTS = 50_000     # R$ 500,00
     PRECO_MAX_STARTER = 100_000  # R$ 1.000,00
     PRECO_MAX_PRO = 1_000_000    # R$ 10.000,00
 
@@ -77,7 +77,7 @@ def criar_obra():
     is_pro_titular = plano_titular == "PRO" and status_ass in ("ativa", "cancelada", "past_due")
 
     if preco_cents < PRECO_MIN_CENTS:
-        abort(422, description="Valor mínimo da obra é R$ 50,00.")
+        abort(422, description="Valor mínimo da obra é R$ 500,00.")
 
     if is_pro_titular:
         if preco_cents > PRECO_MAX_PRO:

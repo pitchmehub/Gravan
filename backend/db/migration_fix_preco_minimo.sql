@@ -16,8 +16,8 @@ BEGIN
    WHERE id = NEW.titular_id
    LIMIT 1;
 
-  IF NEW.preco_cents < 5000 THEN
-    RAISE EXCEPTION 'Valor minimo de licenciamento: R$ 50,00';
+  IF NEW.preco_cents < 50000 THEN
+    RAISE EXCEPTION 'Valor minimo de licenciamento: R$ 500,00';
   END IF;
 
   IF v_plano = 'PRO' AND v_status IN ('ativa', 'cancelada', 'past_due') THEN
