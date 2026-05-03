@@ -114,12 +114,15 @@ class ObraService:
 
         # 5. Upload do áudio
         audio_path = f"{titular_id}/{obra_id}.mp3"
-        self.sb.storage.from_(AUDIO_BUCKET).upload(
-            path=audio_path,
-            file=audio_bytes,
-            file_options={"content-type": "audio/mpeg"},
-        )
-        self.sb.table("obras").update({"audio_path": audio_path}).eq("id", obra_id).execute()
+        try:
+            self.sb.storage.from_(AUDIO_BUCKET).upload(
+                path=audio_path,
+                file=audio_bytes,
+                file_options={"content-type": "audio/mpeg"},
+            )
+            self.sb.table("obras").update({"audio_path": audio_path}).eq("id", obra_id).execute()
+        except Exception as _audio_err:
+            print(f"[obras] upload de audio falhou (não fatal): {_audio_err}")
 
         # 6. Inserir coautorias (só se houver)
         rows = [
