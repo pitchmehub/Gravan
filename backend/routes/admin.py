@@ -537,25 +537,94 @@ def listar_saques():
 @admin_bp.route("/saques/<saque_id>/aprovar", methods=["POST"])
 @require_auth
 def aprovar_saque_admin(saque_id):
-    _check_admin()
-    data = request.get_json(force=True, silent=True) or {}
-    acao = data.get("acao")  # pago | processando | rejeitado
-    motivo = data.get("motivo")
+    """
+    Atualiza o status de um saque manualmente pelo admin.
 
-    if acao not in ("pago", "processando", "rejeitado"):
-        abort(422, description="Acao invalida.")
+    SEGURANÇA:
+    - Nunca dispara Transfers Stripe (esse papel é exclusivo do cron liberar_pendentes).
+    - 'pago': apenas para saques em 'processando' (cron já enviou o Transfer).
+    - 'rejeitado' de saque em 'processando': wallet JÁ foi debitada → reconstitui antes.
+    - 'rejeitado' de saque em 'aguardando_liberacao': wallet ainda não debitada → só cancela.
+    - UPDATE condicional com WHERE status=<status_atual> evita race com o cron.
+    """
+    _check_admin()
+    import logging as _lg
+    _admin_log = _lg.getLogger("gravan.admin")
+
+    data   = request.get_json(force=True, silent=True) or {}
+    acao   = data.get("acao")   # pago | rejeitado
+    motivo = (data.get("motivo") or "")[:300]
+
+    if acao not in ("pago", "rejeitado"):
+        abort(422, description="Ação inválida. Use 'pago' ou 'rejeitado'.")
 
     sb = get_supabase()
-    try:
-        sb.rpc("aprovar_saque", {
-            "p_saque_id": saque_id,
-            "p_acao":     acao,
-            "p_motivo":   motivo,
-        }).execute()
-    except Exception as e:
-        abort(500, description=f"Erro ao aprovar saque: {str(e)}")
 
-    return jsonify({"ok": True, "acao": acao}), 200
+    saque_r = sb.table("saques").select(
+        "id, status, perfil_id, valor_cents"
+    ).eq("id", saque_id).maybe_single().execute()
+    saque = saque_r.data if saque_r else None
+    if not saque:
+        abort(404, description="Saque não encontrado.")
+
+    status_atual = saque.get("status")
+    EDITAVEIS    = ("processando", "aguardando_liberacao")
+
+    if status_atual not in EDITAVEIS:
+        abort(422, description=(
+            f"Saque com status '{status_atual}' não pode ser editado manualmente. "
+            f"Apenas saques em {EDITAVEIS} podem ser alterados pelo admin."
+        ))
+
+    # 'pago' só faz sentido se o cron já debitou e enviou o Transfer.
+    if acao == "pago" and status_atual != "processando":
+        abort(422, description=(
+            "Só é possível marcar como 'pago' um saque que já está em 'processando' "
+            "(ou seja, o cron já criou a Stripe Transfer). Use 'rejeitado' para cancelar."
+        ))
+
+    # Se rejeitando um saque em 'processando', a wallet JÁ foi debitada pelo cron.
+    # Reconstitui o saldo ANTES de atualizar o status para evitar perda de fundos.
+    if acao == "rejeitado" and status_atual == "processando":
+        try:
+            from services.saque_security import _reconstitui_wallet
+            _reconstitui_wallet(
+                sb,
+                saque["perfil_id"],
+                int(saque["valor_cents"]),
+                f"Rejeitado pelo admin: {motivo or 'sem motivo'}",
+            )
+        except Exception as e:
+            _admin_log.error(
+                "Falha ao reconstituir wallet admin (saque=%s): %s", saque_id, e
+            )
+            abort(500, description="Erro ao reconstituir wallet. Ação cancelada para evitar perda de fundos.")
+
+    # UPDATE condicional: só afeta o saque se ainda estiver no status esperado.
+    # Previne race condition entre dois admins ou entre admin e cron.
+    update_data = {"status": acao}
+    if acao == "rejeitado":
+        update_data["cancelado_motivo"] = motivo or "Rejeitado pelo administrador"
+
+    try:
+        upd = sb.table("saques").update(update_data).eq(
+            "id", saque_id
+        ).eq("status", status_atual).execute()
+        if not (upd.data if upd else None):
+            abort(409, description=(
+                "O saque foi modificado por outro processo antes desta ação. "
+                "Recarregue a lista e tente novamente."
+            ))
+    except Exception as e:
+        if hasattr(e, "code") and e.code == 409:
+            raise
+        abort(500, description=f"Erro ao atualizar saque: {str(e)}")
+
+    _admin_log.info(
+        "Admin %s marcou saque %s como '%s' (era '%s'). Motivo: %s",
+        "admin", saque_id, acao, status_atual, motivo or "—",
+    )
+    return jsonify({"ok": True, "acao": acao, "saque_id": saque_id}), 200
 
 
 # ═══════════════════════════════════════════════════════════

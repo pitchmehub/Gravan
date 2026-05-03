@@ -50,8 +50,8 @@ log = logging.getLogger("gravan.saque")
 OTP_VALIDADE_MIN          = 10
 OTP_MAX_TENTATIVAS        = 5
 JANELA_LIBERACAO_HORAS    = int(os.environ.get("SAQUE_JANELA_HORAS", "12"))
-# Sem limites por valor/quantidade — o único requisito é ter saldo disponível.
-VALOR_MIN_CENTS           = 1  # qualquer valor positivo é aceito
+# Mínimo de R$ 10,00 — abaixo disso o custo operacional (email OTP, Transfer) supera o valor.
+VALOR_MIN_CENTS           = 1_000  # R$ 10,00
 
 
 # ────────── Helpers de hash com pepper ──────────
@@ -267,18 +267,25 @@ def confirmar_otp(saque_id: str, perfil_id: str, codigo: str, frontend_origin: s
         }).eq("id", saque_id).execute()
         raise ValueError("Código inválido.")
 
-    # Sucesso → agenda liberação para 24h
+    # Sucesso → agenda liberação atomicamente via UPDATE condicional.
+    # A cláusula .eq("status", "pendente_otp") garante que, se dois requests
+    # chegarem simultaneamente com o mesmo OTP correto, apenas UM irá
+    # transitar o status. O segundo verá data=[] e lançará erro.
     cancel_token  = secrets.token_urlsafe(32)
     libera_em_dt  = _now() + timedelta(hours=JANELA_LIBERACAO_HORAS)
 
-    sb.table("saques").update({
+    upd = sb.table("saques").update({
         "status":            "aguardando_liberacao",
         "confirmado_em":     _now().isoformat(),
         "liberar_em":        libera_em_dt.isoformat(),
         "cancel_token_hash": _hash_token(cancel_token),
-        "otp_hash":          None,         # já não precisa mais
+        "otp_hash":          None,
         "otp_expires_at":    None,
-    }).eq("id", saque_id).execute()
+    }).eq("id", saque_id).eq("status", "pendente_otp").execute()
+
+    # Se nenhuma linha foi afetada, outro request já confirmou este OTP.
+    if not (upd.data if upd else None):
+        raise ValueError("Este saque já foi confirmado ou cancelado por outra sessão.")
 
     # E-mail de confirmação + link "não fui eu"
     perfil = sb.table("perfis").select("email, nome, nome_artistico") \
@@ -291,7 +298,7 @@ def confirmar_otp(saque_id: str, perfil_id: str, codigo: str, frontend_origin: s
         valor_brl=_fmt_brl(saque["valor_cents"]),
         libera_em=libera_em_str, cancel_url=cancel_url,
     )
-    send_email(perfil.get("email", ""), "Gravan — Saque agendado (24h)", html, text)
+    send_email(perfil.get("email", ""), "Gravan — Saque agendado (12h)", html, text)
 
     return {
         "saque_id":   saque_id,
@@ -365,14 +372,22 @@ def liberar_pendentes(limite: int = 25) -> dict:
         rpc = sb.rpc("saques_a_liberar", {"p_limit": limite}).execute()
         a_processar = rpc.data or []
     except Exception as e:
-        log.error("Falha ao chamar saques_a_liberar: %s — fallback select.", e)
+        log.error("Falha ao chamar saques_a_liberar: %s — fallback select com lock condicional.", e)
         agora = _now().isoformat()
         sel = (sb.table("saques").select("*")
                .eq("status", "aguardando_liberacao")
                .lte("liberar_em", agora).limit(limite).execute())
-        a_processar = sel.data or []
-        for s in a_processar:
-            sb.table("saques").update({"status": "processando"}).eq("id", s["id"]).execute()
+        candidatos = sel.data or []
+        # UPDATE condicional: só marca 'processando' se ainda estiver 'aguardando_liberacao'.
+        # Isso evita que dois workers (ex: dois gunicorn workers) processem o mesmo saque
+        # quando o RPC com FOR UPDATE SKIP LOCKED está indisponível.
+        a_processar = []
+        for s in candidatos:
+            upd = sb.table("saques").update({"status": "processando"}).eq(
+                "id", s["id"]
+            ).eq("status", "aguardando_liberacao").execute()
+            if upd.data:  # linha realmente travada/atualizada por este worker
+                a_processar.append({**s, "status": "processando"})
 
     # Expira OTPs antigos de uma vez
     try:
@@ -465,19 +480,56 @@ def _debitar_wallet_atomico(sb, perfil_id: str, valor_cents: int, saque_id: str)
 
 
 def _reconstitui_wallet(sb, perfil_id: str, valor_cents: int, motivo: str) -> None:
-    """Reverte um débito já feito. Chamado quando os Transfers Stripe falham."""
+    """
+    Reverte um débito já feito. Chamado quando os Transfers Stripe falham.
+
+    Tenta primeiro via RPC atômica. Se falhar, usa UPDATE direto como fallback.
+    Em NENHUMA hipótese silencia o erro sem ao menos tentar corrigir —
+    isso garantia que a wallet fique com saldo zerado permanentemente.
+    """
+    rpc_erro = None
     try:
         sb.rpc("creditar_wallet", {
             "p_perfil_id":   perfil_id,
             "p_valor_cents": valor_cents,
         }).execute()
-        log.info("Wallet reconstituída para %s (+%d cents): %s", perfil_id, valor_cents, motivo)
+        log.info("Wallet reconstituída via RPC para %s (+%d cents): %s", perfil_id, valor_cents, motivo)
+        return
     except Exception as e:
-        log.error(
-            "CRÍTICO: falha ao reconstituir wallet de %s (+%d cents) após erro Stripe. "
-            "Requer reconciliação manual. Motivo: %s. Erro reconstituição: %s",
-            perfil_id, valor_cents, motivo, e,
+        rpc_erro = e
+        log.warning(
+            "RPC creditar_wallet falhou para %s (+%d cents): %s — tentando fallback direto.",
+            perfil_id, valor_cents, e,
         )
+
+    # Fallback: UPDATE direto incrementando saldo_cents.
+    # Menos atômico que o RPC, mas garante que o usuário não perca fundos
+    # em caso de indisponibilidade temporária do RPC.
+    try:
+        w = sb.table("wallets").select("saldo_cents") \
+            .eq("perfil_id", perfil_id).maybe_single().execute()
+        saldo_atual = ((w.data if w else None) or {}).get("saldo_cents", 0) or 0
+        sb.table("wallets").upsert({
+            "perfil_id":   perfil_id,
+            "saldo_cents": saldo_atual + valor_cents,
+        }).execute()
+        log.info(
+            "Wallet reconstituída via fallback direto para %s (+%d cents): %s",
+            perfil_id, valor_cents, motivo,
+        )
+    except Exception as e2:
+        # Ambos os métodos falharam: perda de fundos confirmada.
+        # Requer intervenção manual IMEDIATA.
+        log.error(
+            "CRÍTICO IRREVERSÍVEL: AMBOS os métodos de reconstituição falharam "
+            "para perfil=%s, valor=%d cents. REQUER RECONCILIAÇÃO MANUAL IMEDIATA. "
+            "Motivo saque: %s | Erro RPC: %s | Erro fallback: %s",
+            perfil_id, valor_cents, motivo, rpc_erro, e2,
+        )
+        raise RuntimeError(
+            f"Reconstituição de wallet falhou por dois métodos. "
+            f"Perfil={perfil_id}, valor={valor_cents}. Reconciliação manual necessária."
+        ) from e2
 
 
 def _processar_um_saque(sb, saque: dict) -> None:

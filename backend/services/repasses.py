@@ -540,13 +540,25 @@ def creditar_wallets_por_transacao(
 
 def executar_saque_stripe(perfil_id: str, valor_cents: int) -> dict:
     """
-    Solicita um saque via Stripe Connect.
-    1. Valida que o perfil tem Connect ativo
-    2. Valida saldo na wallet
-    3. Cria Transfer Stripe → conta Connect do usuário
-    4. Debita wallet + insere em `saques` com status='processando'
-    Retorna dict com saque_id e stripe_transfer_id.
+    DEPRECIADA — NÃO USAR DIRETAMENTE.
+
+    Esta função legada possui múltiplas vulnerabilidades de segurança:
+    - Sem OTP (sem confirmação por e-mail).
+    - Sem janela de segurança de 12h.
+    - Sem verificação de pagamentos rastreáveis (source_transaction).
+    - Débito da wallet NÃO-atômico (leitura-cálculo-escrita sem lock).
+    - Ordem errada: Transfer Stripe ANTES de debitar wallet.
+
+    Use o fluxo seguro em services/saque_security.py:
+        iniciar_saque() → confirmar_otp() → liberar_pendentes() cron
+
+    Esta função está bloqueada e lançará RuntimeError se chamada.
     """
+    raise RuntimeError(
+        "executar_saque_stripe() está desativada por razões de segurança. "
+        "Use o fluxo OTP em services/saque_security.py."
+    )
+    # ── código original preservado para referência histórica — NUNCA EXECUTADO ──
     _ensure_key()
     sb = get_supabase()
 

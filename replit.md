@@ -1,5 +1,53 @@
 # Gravan — Marketplace de Obras Musicais
 
+### Auditoria de Segurança Financeira — Saques & Wallets (mai/2026)
+Auditoria completa de todos os fluxos financeiros. **8 vulnerabilidades corrigidas:**
+
+1. **CRÍTICA — `executar_saque_stripe` legada bloqueada** (`services/repasses.py`):
+   Função tinha fluxo completamente inseguro (sem OTP, sem janela, debit não-atômico na
+   ordem errada). Agora lança `RuntimeError` imediatamente se chamada, com código original
+   preservado como comentário histórico.
+
+2. **CRÍTICA — `_reconstitui_wallet` com duplo fallback** (`services/saque_security.py`):
+   Antes silenciava falha de re-crédito. Agora tenta RPC `creditar_wallet` → se falhar,
+   faz UPDATE direto → se ambos falharem, lança `RuntimeError` com log "CRÍTICO IRREVERSÍVEL"
+   para forçar reconciliação manual imediata.
+
+3. **CRÍTICA — `confirmar_otp` com UPDATE atômico condicional** (`services/saque_security.py`):
+   Race condition: dois requests simultâneos podiam ambos passar o check de `pendente_otp`.
+   Fix: `.eq("status", "pendente_otp")` no UPDATE e verificação de `upd.data` — se vazio,
+   outro request já confirmou.
+
+4. **ALTA — `reenviar-otp` sem rate limit** (`routes/saques.py`):
+   Rota não tinha `@limiter.limit()`. Agora limitada a 5/hour.
+
+5. **ALTA — `liberar_pendentes` fallback inseguro** (`services/saque_security.py`):
+   Quando RPC `saques_a_liberar` falha, o fallback fazia SELECT + UPDATE separados sem lock.
+   Fix: UPDATE condicional com `.eq("status", "aguardando_liberacao")` — só processa saques
+   que este worker realmente travou (sem processamento duplo).
+
+6. **ALTA — Admin `aprovar_saque` reescrito sem RPC perigosa** (`routes/admin.py`):
+   Antes chamava RPC `aprovar_saque` cegamente (comportamento desconhecido). Agora:
+   - Aceita apenas `pago` ou `rejeitado` (removido `processando` que não fazia sentido).
+   - `pago` só permitido para saques em `processando` (cron já debitou e enviou Transfer).
+   - `rejeitado` de saque em `processando`: reconstitui wallet ANTES de atualizar status.
+   - UPDATE condicional com WHERE status=<status_atual> previne race com cron.
+
+7. **MÉDIA — `VALOR_MIN_CENTS` elevado de 1 para 1.000** (`services/saque_security.py`):
+   Mínimo era R$ 0,01. Agora R$ 10,00 (evita spam de OTP e Transfers para valores irrisórios).
+
+8. **BAIXA — Frontend corrigido** (`frontend/src/pages/Saques.jsx`):
+   Todos os textos "24h" e badge "Em janela de 24h" corrigidos para "12h" (consistente
+   com `JANELA_LIBERACAO_HORAS = 12`).
+
+**Arquivos modificados:** `backend/services/saque_security.py`, `backend/services/repasses.py`,
+`backend/routes/saques.py`, `backend/routes/admin.py`, `frontend/src/pages/Saques.jsx`.
+
+**SQL pendente (usuário deve rodar no Supabase):** `backend/db/migration_debitar_wallet_atomico.sql`
+(cria RPCs atômicas `debitar_wallet` / `creditar_wallet` e constraint `CHECK (saldo_cents >= 0)`).
+
+
+
 ### Recibo Fiscal Mensal + Bulk Upload da Editora (abr/2026)
 - **Recibo fiscal mensal** para compositores e editoras: novo serviço
   `backend/services/recibo_fiscal.py` agrega `pagamentos_compositores`

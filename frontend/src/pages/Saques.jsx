@@ -10,7 +10,7 @@ function fmt(cents) {
 
 const STATUS_BADGE = {
  pendente_otp: { bg: '#FEF3C7', cor: '#92400E', label: ' Aguardando código' },
- aguardando_liberacao: { bg: '#DBEAFE', cor: '#1E40AF', label: '⏳ Em janela de 24h' },
+ aguardando_liberacao: { bg: '#DBEAFE', cor: '#1E40AF', label: '⏳ Em janela de 12h' },
  processando: { bg: 'var(--brand-light)', cor: 'var(--brand)', label: '↻ Processando' },
  pago: { bg: 'var(--success-bg)', cor: 'var(--success)', label: '✓ Pago' },
  rejeitado: { bg: 'var(--error-bg)', cor: 'var(--error)', label: '✕ Rejeitado' },
@@ -120,7 +120,7 @@ export default function Saques() {
  <h1 style={{ fontSize: 24, fontWeight: 800 }}>Meus ganhos</h1>
  <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>
  Sua receita das vendas acumula aqui. Cada saque exige confirmação por
- e-mail e tem janela de segurança de 24 h antes de ser enviado.
+ e-mail e tem janela de segurança de 12 h antes de ser enviado.
  </p>
 
  <div style={{
@@ -172,14 +172,14 @@ export default function Saques() {
  padding: 16, marginBottom: 16, borderRadius: 12, fontSize: 13,
  background: 'var(--success-bg)', color: 'var(--success)',
  }}>
- <strong>✓ Conta conectada.</strong> Você pode solicitar saques com qualquer valor disponível. Após a solicitação, confirme pelo código enviado ao seu e-mail (OTP) — o valor é liberado após uma janela de segurança de 24 horas.
+ <strong>✓ Conta conectada.</strong> Você pode solicitar saques com qualquer valor disponível. Após a solicitação, confirme pelo código enviado ao seu e-mail (OTP) — o valor é liberado após uma janela de segurança de 12 horas.
  </div>
 
  <div className="card" style={{ marginBottom: 24 }}>
  <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Solicitar saque</h2>
  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
  Após confirmar o valor, enviaremos um <strong>código de 6 dígitos</strong> para
- o seu e-mail. O saque só será efetivado <strong>24 h depois</strong> da confirmação,
+ o seu e-mail. O saque só será efetivado <strong>12 h depois</strong> da confirmação,
  e durante esse tempo você pode cancelar a qualquer momento.
  </p>
 

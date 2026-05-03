@@ -167,6 +167,7 @@ def confirmar(saque_id):
 # ──────────────────────────────────────────────────────────
 @saques_bp.route("/<saque_id>/reenviar-otp", methods=["POST"])
 @require_auth
+@limiter.limit("5 per hour")
 def reenviar(saque_id):
     """Cancela o saque atual e cria um novo com mesmo valor — gera novo OTP."""
     from db.supabase_client import get_supabase
