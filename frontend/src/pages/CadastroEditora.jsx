@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../lib/api'
 import StepperCadastro from '../components/StepperCadastro'
-import useIsMobile from '../hooks/useIsMobile'
 
 function fmtCNPJ(v) {
  const d = v.replace(/\D/g, '').slice(0, 14)
@@ -29,7 +28,6 @@ function fmtCEP(v) {
 export default function CadastroEditora() {
  const { refreshPerfil } = useAuth()
  const navigate = useNavigate()
- const isMobile = useIsMobile()
  const [loading, setLoading] = useState(false)
  const [error, setError] = useState('')
  const [form, setForm] = useState({
@@ -78,7 +76,7 @@ export default function CadastroEditora() {
  <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
  <fieldset style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
  <legend style={{ fontSize: 13, fontWeight: 700, padding: '0 8px' }}>Dados da empresa</legend>
- <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
  <div><label style={labelStyle}>Razão Social *</label>
  <input style={inputStyle} value={form.razao_social} onChange={e => set('razao_social', e.target.value)} required /></div>
  <div><label style={labelStyle}>Nome Fantasia *</label>
@@ -92,7 +90,7 @@ export default function CadastroEditora() {
 
  <fieldset style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
  <legend style={{ fontSize: 13, fontWeight: 700, padding: '0 8px' }}>Endereço da empresa</legend>
- <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: 12 }}>
+ <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
  <div><label style={labelStyle}>Rua *</label>
  <input style={inputStyle} value={form.endereco_rua} onChange={e => set('endereco_rua', e.target.value)} required /></div>
  <div><label style={labelStyle}>Número *</label>
@@ -104,8 +102,8 @@ export default function CadastroEditora() {
  <div><label style={labelStyle}>Bairro *</label>
  <input style={inputStyle} value={form.endereco_bairro} onChange={e => set('endereco_bairro', e.target.value)} required /></div>
  </div>
- <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '2fr 1fr 1fr', gap: 12, marginTop: 12 }}>
- <div style={{ gridColumn: isMobile ? '1 / -1' : undefined }}><label style={labelStyle}>Cidade *</label>
+ <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 12, marginTop: 12 }}>
+ <div><label style={labelStyle}>Cidade *</label>
  <input style={inputStyle} value={form.endereco_cidade} onChange={e => set('endereco_cidade', e.target.value)} required /></div>
  <div><label style={labelStyle}>UF *</label>
  <input style={inputStyle} maxLength={2} value={form.endereco_uf} onChange={e => set('endereco_uf', e.target.value.toUpperCase())} required /></div>

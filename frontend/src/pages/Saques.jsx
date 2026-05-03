@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../lib/api'
 import SaqueOTPModal from '../components/SaqueOTPModal'
-import useIsMobile from '../hooks/useIsMobile'
 
 function fmt(cents) {
  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -23,7 +22,6 @@ const STATUS_BADGE = {
 
 export default function Saques() {
  const navigate = useNavigate()
- const isMobile = useIsMobile()
  const [params] = useSearchParams()
  const [wallet, setWallet] = useState(null)
  const [connect, setConnect] = useState(null)
@@ -118,7 +116,7 @@ export default function Saques() {
  const podeSacar = connectAtivo && disponivel > 0
 
  return (
- <div style={{ padding: isMobile ? '0 0 16px' : 32, maxWidth: 880 }}>
+ <div style={{ padding: 32, maxWidth: 880 }}>
  <h1 style={{ fontSize: 24, fontWeight: 800 }}>Meus ganhos</h1>
  <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>
  Sua receita das vendas acumula aqui. Cada saque exige confirmação por

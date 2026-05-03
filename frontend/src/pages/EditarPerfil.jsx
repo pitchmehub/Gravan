@@ -6,7 +6,6 @@ import { supabase } from '../lib/supabase'
 import ImageCropper from '../components/ImageCropper'
 import PushToggle from '../components/PushToggle'
 import { IconSun, IconMoon } from '../components/Icons'
-import useIsMobile from '../hooks/useIsMobile'
 
 const MAX_AVATAR = 2 * 1024 * 1024 // 2 MB
 const MAX_CAPA = 5 * 1024 * 1024 // 5 MB
@@ -15,7 +14,6 @@ export default function EditarPerfil() {
  const { perfil, refreshPerfil } = useAuth()
  const { theme, toggle: toggleTheme } = useTheme()
  const navigate = useNavigate()
- const isMobile = useIsMobile()
  const avatarFileRef = useRef(null)
  const capaFileRef = useRef(null)
 
@@ -390,7 +388,7 @@ export default function EditarPerfil() {
  {/* Info de conta (somente leitura) */}
  <div className="card" style={{ marginBottom: 20, background: 'var(--surface-2)' }}>
  <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Informações da conta</h2>
- <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, fontSize: 13 }}>
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: 13 }}>
  <div>
  <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>Email</div>
  <div style={{ fontWeight: 500 }}>{perfil?.email}</div>

@@ -8,7 +8,6 @@ import ContratoEdicaoModal from '../components/ContratoEdicaoModal'
 import UpgradeProModal from '../components/UpgradeProModal'
 import { isPerfilPro } from '../components/SeloPro'
 import { IconSparkles, IconHourglass } from '../components/Icons'
-import useIsMobile from '../hooks/useIsMobile'
 
 const MAX_BYTES = 10 * 1024 * 1024
 const MAX_AUTORES = 10
@@ -21,7 +20,6 @@ const GENEROS_PERMITIDOS = [
 export default function NovaObra() {
  const { perfil } = useAuth()
  const navigate = useNavigate()
- const isMobile = useIsMobile()
 
  const [nome, setNome] = useState('')
  const [letra, setLetra] = useState('')
@@ -240,7 +238,7 @@ export default function NovaObra() {
  }
 
  return (
- <div style={{ padding: isMobile ? '0 0 16px' : 32, maxWidth: 680 }}>
+ <div style={{ padding: 32, maxWidth: 680 }}>
  <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Nova Obra</h1>
  <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 28 }}>
  Cadastre sua composição musical na plataforma.
@@ -336,7 +334,7 @@ export default function NovaObra() {
   </small>
  </div>
 
- <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
  <div className="form-group">
  <label className="form-label">Gênero *</label>
  <select

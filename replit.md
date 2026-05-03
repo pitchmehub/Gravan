@@ -1,18 +1,5 @@
 # Gravan — Marketplace de Obras Musicais
 
-### Otimização Mobile (mai/2026)
-- **Hook compartilhado `useIsMobile`** criado em `frontend/src/hooks/useIsMobile.js` (breakpoint 768px, reactive via resize listener).
-- **Grids responsivos** corrigidos em 6 páginas críticas. Todos os layouts `1fr 1fr`, `2fr 1fr`, `2fr 1fr 1fr`, `1fr 1fr 80px 110px` e `1fr 180px` agora colapsam para 1–2 colunas em mobile:
-  - `EscolherTipoPerfil.jsx` — cards de perfil empilhados em mobile
-  - `NovaObra.jsx` — grid Gênero/Preço empilhado
-  - `AceitarOferta.jsx` — todos os grids de dados da oferta + cadastro PJ
-  - `CadastroEditora.jsx` — dados da empresa + endereço
-  - `EditarPerfil.jsx` — informações da conta
-  - `Agregados.jsx` — cadastro de artista + endereço + termo (BlocoTermoEditora)
-- **Paddings internos responsivos** em `Dashboard.jsx`, `Saques.jsx`, `MinhasObras.jsx` e `NovaObra.jsx` — `padding: 32` → `0 0 16px` em mobile (o `main-content` já provê 12px de padding lateral).
-- **Planos.jsx** — `minmax(320px)` → `minmax(280px)` para funcionar em telas de 320px.
-- Navegação mobile (`SideMenu`, `GlobalTopBar`) já estava bem implementada — sem alterações necessárias.
-
 ### Auditoria de Segurança Financeira — Saques & Wallets (mai/2026)
 Auditoria completa de todos os fluxos financeiros. **8 vulnerabilidades corrigidas:**
 

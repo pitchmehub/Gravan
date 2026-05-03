@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext'
 import { usePlayer } from '../contexts/PlayerContext'
 import { api } from '../lib/api'
 import { IconPlay } from '../components/Icons'
-import useIsMobile from '../hooks/useIsMobile'
 
 function fmt(cents) {
  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents ?? 0) / 100)
@@ -49,7 +48,6 @@ export default function Dashboard() {
  const { perfil } = useAuth()
  const navigate = useNavigate()
  const { playObra } = usePlayer()
- const isMobile = useIsMobile()
  const [data, setData] = useState(null)
  const [loading, setLoading] = useState(true)
  const [error, setError] = useState(null)
@@ -125,7 +123,7 @@ export default function Dashboard() {
  const segundosDesde = Math.floor((Date.now() - lastUpdate) / 1000)
 
  return (
- <div style={{ padding: isMobile ? '0 0 16px' : 32, maxWidth: 1100, minHeight: '100vh' }}>
+ <div style={{ padding: 32, maxWidth: 1100, minHeight: '100vh' }}>
 
  {/* ── Header ───────────────────────────── */}
  <div style={{

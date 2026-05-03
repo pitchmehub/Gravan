@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
-import useIsMobile from '../hooks/useIsMobile'
 
 function fmt(cents) {
  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents ?? 0) / 100)
@@ -28,7 +27,6 @@ export default function AceitarOferta() {
  const { token } = useParams()
  const navigate = useNavigate()
  const { user, perfil, refreshPerfil, loading: authLoading } = useAuth()
- const isMobile = useIsMobile()
 
  const [oferta, setOferta] = useState(null)
  const [loading, setLoading] = useState(true)
@@ -116,7 +114,7 @@ export default function AceitarOferta() {
  <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 24, marginBottom: 24 }}>
  <div style={{ fontSize: 12, color: 'var(--text-muted)', letterSpacing: 1.2, fontWeight: 600 }}>NOVA OFERTA DE LICENCIAMENTO</div>
  <h1 style={{ fontSize: 24, fontWeight: 700, marginTop: 6 }}>{oTituloObra}</h1>
- <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14, fontSize: 14 }}>
+ <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, fontSize: 14 }}>
  <div><div style={labelStyle}>COMPOSITOR</div><div>{oCompositor}</div></div>
  <div><div style={labelStyle}>COMPRADOR (INTÉRPRETE)</div><div>{oComprador}</div></div>
  <div><div style={labelStyle}>VALOR DA OFERTA</div><div style={{ fontWeight: 700, color: 'var(--brand)', fontSize: 18 }}>{fmt(oValorCents)}</div></div>
@@ -171,7 +169,7 @@ export default function AceitarOferta() {
  </p>
  <fieldset style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 16, marginBottom: 12 }}>
  <legend style={{ fontSize: 13, fontWeight: 700, padding: '0 8px' }}>Empresa</legend>
- <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
  <div><label style={labelStyle}>Razão Social *</label>
  <input style={inputStyle} value={form.razao_social} onChange={e => set('razao_social', e.target.value)} required /></div>
  <div><label style={labelStyle}>Nome Fantasia *</label>
@@ -184,7 +182,7 @@ export default function AceitarOferta() {
  </fieldset>
  <fieldset style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 16, marginBottom: 12 }}>
  <legend style={{ fontSize: 13, fontWeight: 700, padding: '0 8px' }}>Responsável legal</legend>
- <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
  <div><label style={labelStyle}>Nome *</label>
  <input style={inputStyle} value={form.responsavel_nome} onChange={e => set('responsavel_nome', e.target.value)} required /></div>
  <div><label style={labelStyle}>CPF *</label>
@@ -193,7 +191,7 @@ export default function AceitarOferta() {
  </fieldset>
  <fieldset style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 16, marginBottom: 12 }}>
  <legend style={{ fontSize: 13, fontWeight: 700, padding: '0 8px' }}>Endereço</legend>
- <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: 12 }}>
+ <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
  <div><label style={labelStyle}>Rua *</label>
  <input style={inputStyle} value={form.endereco_rua} onChange={e => set('endereco_rua', e.target.value)} required /></div>
  <div><label style={labelStyle}>Número *</label>
@@ -205,8 +203,8 @@ export default function AceitarOferta() {
  <div><label style={labelStyle}>Complemento</label>
  <input style={inputStyle} value={form.endereco_compl} onChange={e => set('endereco_compl', e.target.value)} /></div>
  </div>
- <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '2fr 1fr 1fr', gap: 12, marginTop: 12 }}>
- <div style={{ gridColumn: isMobile ? '1 / -1' : undefined }}><label style={labelStyle}>Cidade *</label>
+ <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 12, marginTop: 12 }}>
+ <div><label style={labelStyle}>Cidade *</label>
  <input style={inputStyle} value={form.endereco_cidade} onChange={e => set('endereco_cidade', e.target.value)} required /></div>
  <div><label style={labelStyle}>UF *</label>
  <input style={inputStyle} maxLength={2} value={form.endereco_uf} onChange={e => set('endereco_uf', e.target.value.toUpperCase())} required /></div>

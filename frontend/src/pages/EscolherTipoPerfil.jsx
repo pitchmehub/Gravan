@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../lib/api'
 import StepperCadastro from '../components/StepperCadastro'
-import useIsMobile from '../hooks/useIsMobile'
 
 // Apenas 2 categorias (ARTISTA / EDITORA), apresentadas em cards grandes.
 // ARTISTA → role 'compositor'
@@ -26,7 +25,6 @@ const TIPOS = [
 export default function EscolherTipoPerfil() {
  const { refreshPerfil } = useAuth()
  const navigate = useNavigate()
- const isMobile = useIsMobile()
  const [escolhido, setEscolhido] = useState(null)
  const [loading, setLoading] = useState(false)
  const [erro, setErro] = useState('')
@@ -64,7 +62,7 @@ export default function EscolherTipoPerfil() {
  Como você vai usar a plataforma? Escolha um perfil para continuar.
  </p>
 
- <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
  {TIPOS.map(t => (
  <button key={t.id}
  onClick={() => setEscolhido(t.id)}

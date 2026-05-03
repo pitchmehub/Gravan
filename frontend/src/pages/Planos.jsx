@@ -94,7 +94,7 @@ export default function Planos() {
  {!loading && (
  <div style={{
  display: 'grid', gap: 20,
- gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
  }}>
  {/* STARTER */}
  <article data-testid="plano-starter" style={cardStyle(false)}>

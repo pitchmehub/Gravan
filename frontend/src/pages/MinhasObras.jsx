@@ -5,7 +5,6 @@ import { usePlayer } from '../contexts/PlayerContext'
 import { supabase } from '../lib/supabase'
 import { api } from '../lib/api'
 import { IconPlay, IconPause, IconSparkles, IconHourglass } from '../components/Icons'
-import useIsMobile from '../hooks/useIsMobile'
 
 function fmt(cents) {
  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents ?? 0) / 100)
@@ -15,7 +14,6 @@ export default function MinhasObras() {
  const { perfil } = useAuth()
  const navigate = useNavigate()
  const { playObra, obra: obraAtual, playing } = usePlayer()
- const isMobile = useIsMobile()
 
  const [obras, setObras] = useState([])
  const [loading, setLoading] = useState(true)
@@ -93,7 +91,7 @@ export default function MinhasObras() {
  if (loading) return <div style={{ padding: 32 }}><p style={{ color: 'var(--text-muted)' }}>Carregando…</p></div>
 
  return (
- <div className="page-slide-up" style={{ padding: isMobile ? '0 0 16px' : 32, maxWidth: 920 }}>
+ <div className="page-slide-up" style={{ padding: 32, maxWidth: 920 }}>
  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
  <div>
  <h1 style={{ fontSize: 24, fontWeight: 800 }}>Minhas obras</h1>

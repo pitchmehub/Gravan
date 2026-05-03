@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { api } from '../lib/api'
-import useIsMobile from '../hooks/useIsMobile'
 
 function fmtCPF(v) {
  const d = v.replace(/\D/g, '').slice(0, 11)
@@ -29,7 +28,6 @@ const EMPTY_CADASTRAR = {
 const EMPTY_ADICIONAR = { email: '', responsavel_aceite: '', responsavel_cpf: '', aceitou_termo: false }
 
 export default function Agregados() {
- const isMobile = useIsMobile()
  const [aba, setAba]           = useState('lista')   // 'lista' | 'cadastrar' | 'adicionar' | 'convites'
  const [lista, setLista]       = useState([])
  const [convites, setConvites] = useState([])
@@ -221,7 +219,7 @@ export default function Agregados() {
    Sem o aceite do artista, nenhuma obra é administrada em seu nome.
  </p>
 
- <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
  <div><label style={lbl}>Nome completo *</label><input style={inputStyle} value={formC.nome_completo} onChange={e => setC('nome_completo', e.target.value)} required /></div>
  <div><label style={lbl}>Nome artístico *</label><input style={inputStyle} value={formC.nome_artistico} onChange={e => setC('nome_artistico', e.target.value)} required /></div>
  <div><label style={lbl}>RG *</label><input style={inputStyle} value={formC.rg} onChange={e => setC('rg', e.target.value)} required /></div>
@@ -230,12 +228,12 @@ export default function Agregados() {
  </div>
 
  <h4 style={{ fontSize: 12, fontWeight: 700, marginTop: 14, marginBottom: 8, color: 'var(--text-muted)' }}>Endereço</h4>
- <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr', gap: 10 }}>
+ <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 10 }}>
  <div><label style={lbl}>Rua</label><input style={inputStyle} value={formC.endereco_rua} onChange={e => setC('endereco_rua', e.target.value)} /></div>
  <div><label style={lbl}>Número</label><input style={inputStyle} value={formC.endereco_numero} onChange={e => setC('endereco_numero', e.target.value)} /></div>
  <div><label style={lbl}>Compl.</label><input style={inputStyle} value={formC.endereco_compl} onChange={e => setC('endereco_compl', e.target.value)} /></div>
  </div>
- <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 80px 110px', gap: 10, marginTop: 10 }}>
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 80px 110px', gap: 10, marginTop: 10 }}>
  <div><label style={lbl}>Bairro</label><input style={inputStyle} value={formC.endereco_bairro} onChange={e => setC('endereco_bairro', e.target.value)} /></div>
  <div><label style={lbl}>Cidade</label><input style={inputStyle} value={formC.endereco_cidade} onChange={e => setC('endereco_cidade', e.target.value)} /></div>
  <div><label style={lbl}>UF</label><input style={inputStyle} maxLength={2} value={formC.endereco_uf} onChange={e => setC('endereco_uf', e.target.value.toUpperCase())} /></div>
@@ -305,7 +303,6 @@ export default function Agregados() {
 function BlocoTermoEditora({ responsavel, onResponsavel, responsavelCpf, onResponsavelCpf, aceitou, onAceitou, showTermo, setShowTermo, modo }) {
  const inputStyle = { width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 13 }
  const lbl = { fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 3, display: 'block' }
- const isMobile = useIsMobile()
  return (
    <div style={{ marginTop: 18, padding: 14, background: 'var(--surface-2, #fafafa)', border: '1px solid var(--border)', borderRadius: 8 }}>
      <h4 style={{ fontSize: 13, fontWeight: 700, margin: '0 0 4px' }}>Termo de Agregação e Representação Editorial</h4>
@@ -331,7 +328,7 @@ function BlocoTermoEditora({ responsavel, onResponsavel, responsavelCpf, onRespo
      <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '4px 0 8px' }}>
        Identifique a pessoa física que está fazendo esta solicitação em nome da editora:
      </p>
-     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 180px', gap: 10 }}>
+     <div style={{ display: 'grid', gridTemplateColumns: '1fr 180px', gap: 10 }}>
        <div><label style={lbl}>Nome de quem está solicitando *</label>
          <input style={inputStyle} value={responsavel} onChange={e => onResponsavel(e.target.value)}
                 placeholder="Ex: Maria da Silva" required minLength={5} />
