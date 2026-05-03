@@ -419,18 +419,86 @@ def _buscar_charge_id_da_transacao(sb, transacao_id: str) -> Optional[str]:
         return None
 
 
+def _debitar_wallet_atomico(sb, perfil_id: str, valor_cents: int, saque_id: str) -> None:
+    """
+    Debita a wallet via RPC com SELECT FOR UPDATE (exclusão mútua real por linha).
+    Lança RuntimeError se saldo insuficiente ou carteira não encontrada.
+    Esta é a ÚNICA forma de debitar saldo — nunca fazer UPDATE direto.
+    """
+    try:
+        res = sb.rpc("debitar_wallet", {
+            "p_perfil_id":   perfil_id,
+            "p_valor_cents": valor_cents,
+            "p_saque_id":    saque_id,
+        }).execute()
+        resultado = res.data if res else None
+        # PostgREST pode retornar lista ou dict
+        if isinstance(resultado, list):
+            resultado = resultado[0] if resultado else None
+        if not resultado or not resultado.get("ok"):
+            erro = (resultado or {}).get("erro", "Saldo insuficiente.")
+            raise RuntimeError(f"Débito recusado pelo banco: {erro}")
+    except RuntimeError:
+        raise
+    except Exception as e:
+        # RPC não existe ainda → fallback seguro com checagem manual + UPDATE condicional
+        log.warning("RPC debitar_wallet indisponível (%s) — usando fallback com checagem.", e)
+        saldo = _saldo_atual(sb, perfil_id)
+        if saldo < valor_cents:
+            raise RuntimeError(
+                f"Saldo insuficiente (fallback): {_fmt_brl(saldo)} disponíveis, "
+                f"{_fmt_brl(valor_cents)} solicitados."
+            )
+        # UPDATE condicional: só debita se saldo ainda for suficiente.
+        # Não é 100% atômico sem FOR UPDATE, mas é muito melhor que o upsert cego.
+        novo = saldo - valor_cents
+        sb.table("wallets").update({"saldo_cents": novo}).eq(
+            "perfil_id", perfil_id
+        ).gte("saldo_cents", valor_cents).execute()
+        # Verifica se o UPDATE de fato alterou algo (saldo pode ter caído entre a leitura e o UPDATE)
+        saldo_pos = _saldo_atual(sb, perfil_id)
+        if saldo_pos != novo:
+            raise RuntimeError(
+                "Débito falhou por condição de corrida — saldo alterado concorrentemente. "
+                "Saque não processado."
+            )
+
+
+def _reconstitui_wallet(sb, perfil_id: str, valor_cents: int, motivo: str) -> None:
+    """Reverte um débito já feito. Chamado quando os Transfers Stripe falham."""
+    try:
+        sb.rpc("creditar_wallet", {
+            "p_perfil_id":   perfil_id,
+            "p_valor_cents": valor_cents,
+        }).execute()
+        log.info("Wallet reconstituída para %s (+%d cents): %s", perfil_id, valor_cents, motivo)
+    except Exception as e:
+        log.error(
+            "CRÍTICO: falha ao reconstituir wallet de %s (+%d cents) após erro Stripe. "
+            "Requer reconciliação manual. Motivo: %s. Erro reconstituição: %s",
+            perfil_id, valor_cents, motivo, e,
+        )
+
+
 def _processar_um_saque(sb, saque: dict) -> None:
     """
     Libera um saque criando UMA Stripe Transfer por charge de origem,
     cada uma com `source_transaction=ch_xxx` (obrigatório no Brasil).
 
-    Estratégia:
-      1. Busca pagamentos_compositores pendentes do perfil em FIFO.
-      2. Para cada um, garante o `stripe_charge_id` (lazy lookup do PI).
-      3. Cria 1 Transfer por charge, consumindo até bater valor_cents.
-         O último pagamento pode ser parcialmente sacado (split).
-      4. Em caso de erro Stripe no meio, reverte os Transfers já feitos.
-      5. Marca os pagamentos como 'pago' e debita a wallet.
+    ORDEM OBRIGATÓRIA DE SEGURANÇA (nunca alterar):
+      0. Valida saldo e pagamentos rastreáveis.
+      1. DEBITA WALLET ATOMICAMENTE (RPC com FOR UPDATE) — antes de qualquer chamada Stripe.
+         Se falhar aqui, nada externo foi modificado.
+      2. Cria Stripe Transfers.
+         Se qualquer Transfer falhar → reverte Transfers criados + RECONSTITUI wallet.
+      3. Atualiza pagamentos_compositores (marcação de uso).
+      4. Finaliza saque como 'pago'.
+
+    Isso garante que:
+      - Nunca se gasta mais do que o saldo real (constraint + RPC com lock).
+      - Dois processos paralelos para o mesmo perfil não causam double-spend
+        (o segundo bloqueia no FOR UPDATE e vê saldo já decrementado).
+      - Em caso de falha Stripe, a wallet é restaurada antes de propagar o erro.
     """
     perfil_id   = saque["perfil_id"]
     valor_cents = int(saque["valor_cents"])
@@ -439,12 +507,12 @@ def _processar_um_saque(sb, saque: dict) -> None:
     if not acc_id:
         raise RuntimeError("Conta Stripe não vinculada no saque.")
 
-    # Re-checa saldo (pode ter mudado nas 24h)
+    # ── 0a) Valida saldo atual ──
     saldo = _saldo_atual(sb, perfil_id)
     if saldo < valor_cents:
         raise RuntimeError(f"Saldo insuficiente no momento da liberação ({_fmt_brl(saldo)}).")
 
-    # ── 1) Busca pagamentos pendentes em FIFO ──
+    # ── 0b) Valida pagamentos rastreáveis suficientes ──
     pend_q = (sb.table("pagamentos_compositores")
               .select("id, valor_cents, transacao_id, stripe_charge_id, "
                       "coautoria_id, share_pct, perfil_id")
@@ -462,7 +530,7 @@ def _processar_um_saque(sb, saque: dict) -> None:
             f"vinculada — só é possível sacar valores até esse limite."
         )
 
-    # ── 2) Garante charge_id em cada pagamento ──
+    # ── 0c) Garante charge_id em cada pagamento ──
     for p in pendentes:
         if not p.get("stripe_charge_id"):
             ch_id = _buscar_charge_id_da_transacao(sb, p["transacao_id"])
@@ -472,21 +540,35 @@ def _processar_um_saque(sb, saque: dict) -> None:
                 }).eq("id", p["id"]).execute()
                 p["stripe_charge_id"] = ch_id
 
-    # ── 3) Cria Transfers por charge ──
+    # ══════════════════════════════════════════════════════════════
+    # PASSO 1 — DÉBITO ATÔMICO ANTES DE QUALQUER CHAMADA STRIPE
+    # Qualquer falha aqui é segura: nenhum Transfer foi criado ainda.
+    # ══════════════════════════════════════════════════════════════
+    _debitar_wallet_atomico(sb, perfil_id, valor_cents, saque_id)
+    log.info("Wallet debitada atomicamente: perfil=%s, valor=%d, saque=%s",
+             perfil_id, valor_cents, saque_id)
+
+    # ══════════════════════════════════════════════════════════════
+    # PASSO 2 — Cria Stripe Transfers (após débito confirmado)
+    # Em caso de falha: reverte Transfers + RECONSTITUI wallet.
+    # ══════════════════════════════════════════════════════════════
     restante = valor_cents
-    transfers_criados: list = []         # [(tr_id, pag_id, consumido, original)]
+    transfers_criados: list = []
+    stripe_falhou = False
+    stripe_erro_msg = ""
+
     for p in pendentes:
         if restante <= 0:
             break
         if not p.get("stripe_charge_id"):
-            # Reverte o que já foi feito antes de abortar
-            _reverter_transfers(transfers_criados)
-            raise RuntimeError(
+            stripe_falhou = True
+            stripe_erro_msg = (
                 f"Pagamento {p['id']} (transação {p['transacao_id']}) sem "
-                f"charge Stripe vinculada. Não é possível sacar o valor pedido."
+                f"charge Stripe vinculada."
             )
-        original   = int(p["valor_cents"])
-        consumir   = min(original, restante)
+            break
+        original = int(p["valor_cents"])
+        consumir = min(original, restante)
         try:
             tr = stripe.Transfer.create(
                 amount=consumir,
@@ -502,19 +584,27 @@ def _processar_um_saque(sb, saque: dict) -> None:
             )
         except stripe.StripeError as e:
             log.error("Stripe Transfer falhou no pag %s: %s", p["id"], e)
-            _reverter_transfers(transfers_criados)
-            raise RuntimeError(
+            stripe_falhou = True
+            stripe_erro_msg = (
                 f"Stripe rejeitou Transfer do pagamento {p['id']}: "
                 f"{getattr(e, 'user_message', None) or str(e)}"
             )
+            break
         transfers_criados.append((tr.id, p["id"], consumir, original, p))
         restante -= consumir
 
-    # ── 4) Atualiza pagamentos (consumo total ou parcial) ──
+    if stripe_falhou:
+        # Reverte os Transfers parcialmente criados
+        _reverter_transfers(transfers_criados)
+        # Reconstitui o saldo que foi debitado — débito nunca deve ficar sem Transfer
+        _reconstitui_wallet(sb, perfil_id, valor_cents,
+                            f"rollback após falha Stripe: {stripe_erro_msg}")
+        raise RuntimeError(stripe_erro_msg)
+
+    # ── Passo 3) Atualiza pagamentos (consumo total ou parcial) ──
     agora_iso = _now().isoformat()
     for tr_id, pag_id, consumido, original, orig_row in transfers_criados:
         if consumido >= original:
-            # Pagamento totalmente sacado
             sb.table("pagamentos_compositores").update({
                 "saque_id":            saque_id,
                 "status":              "pago",
@@ -522,7 +612,6 @@ def _processar_um_saque(sb, saque: dict) -> None:
                 "liberado_em":         agora_iso,
             }).eq("id", pag_id).execute()
         else:
-            # Parcial: encolhe o original (continua pendente) e cria filho 'pago'
             sb.table("pagamentos_compositores").update({
                 "valor_cents": original - consumido,
             }).eq("id", pag_id).execute()
@@ -539,12 +628,7 @@ def _processar_um_saque(sb, saque: dict) -> None:
                 "liberado_em":        agora_iso,
             }).execute()
 
-    # ── 5) Debita wallet + finaliza saque ──
-    novo_saldo = saldo - valor_cents
-    sb.table("wallets").upsert({
-        "perfil_id": perfil_id, "saldo_cents": novo_saldo,
-    }).execute()
-
+    # ── Passo 4) Finaliza saque ──
     primary_tr = transfers_criados[0][0] if transfers_criados else None
     sb.table("saques").update({
         "status":             "pago",

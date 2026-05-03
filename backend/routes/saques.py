@@ -51,12 +51,50 @@ def _frontend_origin() -> str:
 # ──────────────────────────────────────────────────────────
 @saques_bp.route("/iniciar", methods=["POST"])
 @require_auth
+@limiter.limit("10 per hour")
 def iniciar():
     data = request.get_json(silent=True) or {}
+
+    # ── Camada de rota: validação independente do service ──────────────────
+    # Esta camada não confia no frontend. Mesmo que o frontend envie qualquer
+    # valor, a rota valida por conta própria antes de chamar o service.
     try:
         valor_cents = int(data.get("valor_cents") or 0)
     except (TypeError, ValueError):
-        abort(422, description="Valor inválido.")
+        abort(422, description="Valor inválido: 'valor_cents' deve ser inteiro.")
+
+    if valor_cents <= 0:
+        abort(422, description="Valor do saque deve ser positivo.")
+
+    if valor_cents > 50_000_000:  # R$ 500.000 — teto absoluto anti-overflow
+        abort(422, description="Valor excede o limite máximo permitido por saque.")
+
+    # Valida saldo disponível diretamente no banco — independente do frontend
+    sb = get_supabase()
+    try:
+        wallet_row = sb.table("wallets").select("saldo_cents").eq(
+            "perfil_id", g.user.id
+        ).maybe_single().execute()
+        saldo_db = ((wallet_row.data if wallet_row else None) or {}).get("saldo_cents") or 0
+
+        saques_pendentes = sb.table("saques").select("valor_cents, status").eq(
+            "perfil_id", g.user.id
+        ).in_("status", ["pendente_otp", "aguardando_liberacao", "processando"]).execute()
+        reservado_db = sum(
+            int(s["valor_cents"] or 0) for s in (saques_pendentes.data or [])
+        )
+        disponivel_db = max(0, saldo_db - reservado_db)
+
+        if valor_cents > disponivel_db:
+            abort(422, description=(
+                f"Saldo insuficiente. Disponível: R$ {disponivel_db / 100:,.2f}. "
+                f"Solicitado: R$ {valor_cents / 100:,.2f}."
+            ).replace(",", "X").replace(".", ",").replace("X", "."))
+    except Exception as e:
+        if hasattr(e, "code") and e.code in (400, 422):
+            raise
+        log.warning("Checagem de saldo na rota falhou (%s) — service fará nova validação.", e)
+    # ───────────────────────────────────────────────────────────────────────
 
     try:
         r = iniciar_saque(
